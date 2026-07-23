@@ -53,7 +53,7 @@ export default function V2OnboardPage() {
   const skip = () => router.push("/auth/signup?next=/v2/profile-setup");
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "2.4rem 2.4rem 0", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
         <div style={{ display: "flex", gap: "0.6rem" }}>
           {Array.from({ length: total }).map((_, i) => (

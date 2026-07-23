@@ -7,7 +7,7 @@ export default function V2SplashPage() {
   const router = useRouter();
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2.4rem", position: "relative", overflow: "hidden" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2.4rem", position: "relative", overflow: "hidden" }}>
       <motion.div
         aria-hidden
         animate={{ opacity: [0.15, 0.3, 0.15], scale: [1, 1.06, 1] }}

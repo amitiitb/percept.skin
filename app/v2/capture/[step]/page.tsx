@@ -289,7 +289,7 @@ export default function V2CapturePage() {
 
   if (showPhaseTransition) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem", textAlign: "center" }}>
+      <div style={{ minHeight: "100dvh", background: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem", textAlign: "center" }}>
         <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1.6rem" }}>Face done!</p>
         <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4rem)", fontWeight: 400, color: "#fff", marginBottom: "1.6rem" }}>Now hair &amp; scalp</h1>
         <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.7)", marginBottom: "4rem" }}>About 2 more minutes.</p>
@@ -305,7 +305,7 @@ export default function V2CapturePage() {
   const chipText = checking ? "Checking..." : issues.length === 0 ? "Good lighting" : ISSUE_MESSAGES[primaryIssue];
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.6rem 2rem" }}>
         <button onClick={() => router.back()} aria-label="Go back" style={{ width: "4.4rem", height: "4.4rem", borderRadius: "50%", border: "1px solid var(--line)", background: "none", cursor: "pointer" }}>
           <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ margin: "auto" }}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>

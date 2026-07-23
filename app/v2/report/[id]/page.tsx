@@ -101,10 +101,10 @@ export default function V2ReportPage() {
     });
   }, [sessionId]);
 
-  if (loading || !purchased) return <div style={{ minHeight: "100vh", background: "var(--canvas)" }} />;
+  if (loading || !purchased) return <div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />;
   if (notFound) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "2rem" }}>
+      <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "2rem" }}>
         <p style={{ fontSize: "1.8rem", color: "var(--secondary)" }}>Report not found or you don&apos;t have access.</p>
         <PrimaryButton fullWidth={false} onClick={() => router.push("/v2/dashboard")}>Back to dashboard</PrimaryButton>
       </div>
@@ -112,7 +112,7 @@ export default function V2ReportPage() {
   }
   if (session?.status !== "complete") {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "2rem" }}>
+      <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "2rem" }}>
         <p style={{ fontSize: "1.8rem", color: "var(--secondary)" }}>This scan is still processing.</p>
         <PrimaryButton fullWidth={false} onClick={() => router.push("/v2/dashboard")}>Back to dashboard</PrimaryButton>
       </div>
@@ -138,7 +138,7 @@ export default function V2ReportPage() {
   const priority = sorted.slice(-3).map((m) => m.metricName);
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
 
         {/* Glow Score first — Design review Decision #12 */}

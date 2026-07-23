@@ -12,7 +12,7 @@ declare global {
 
 export default function V2CheckoutPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "var(--canvas)" }} />}>
+    <Suspense fallback={<div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />}>
       <V2CheckoutInner />
     </Suspense>
   );
@@ -89,7 +89,7 @@ function V2CheckoutInner() {
 
   if (state === "success") {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2rem", padding: "4rem", textAlign: "center" }}>
+      <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2rem", padding: "4rem", textAlign: "center" }}>
         <p style={{ fontSize: "2.4rem", color: "var(--primary)" }}>You&apos;re Premium 🎉</p>
         <p style={{ fontSize: "1.6rem", color: "var(--secondary)" }}>Your full report is unlocked.</p>
         <button onClick={() => router.push("/v2/dashboard")} style={{ marginTop: "1.2rem", background: "var(--primary)", color: "#fff", border: "none", borderRadius: "9999px", padding: "1.6rem 3.2rem", fontSize: "1.6rem", cursor: "pointer" }}>
@@ -100,7 +100,7 @@ function V2CheckoutInner() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2.4rem", textAlign: "center" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2.4rem", textAlign: "center" }}>
       <p style={{ fontSize: "1.4rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>Billing summary</p>
       <h1 style={{ fontSize: "2.8rem", color: "var(--primary)", marginBottom: "0.8rem" }}>Glowmetry Premium — {plan.label}</h1>
       <p style={{ fontSize: "1.8rem", color: "var(--secondary)", marginBottom: "0.8rem" }}>${plan.price} billed every {plan.period} (sandbox)</p>

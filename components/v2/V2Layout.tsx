@@ -33,12 +33,12 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
     padding: "5.6rem 6.4rem",
     position: "sticky",
     top: 0,
-    height: "100vh",
+    height: "100dvh",
     overflow: "hidden",
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex" }}>
       <div className="v2-left" style={panelL}>
         <div style={{
           position: "absolute", inset: 0, opacity: 0.035,
@@ -68,7 +68,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
         </div>
       </div>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
         <div className="v2-mobile-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.6rem 2rem", borderBottom: "1px solid var(--line)" }}>
           {showBack ? (
             <button onClick={handleBack} aria-label="Go back" style={{ width: "4.4rem", height: "4.4rem", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "1px solid var(--line)", color: "var(--secondary)", background: "transparent", cursor: "pointer" }}>

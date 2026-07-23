@@ -90,7 +90,7 @@ export default function V2ProfileSetupPage() {
   }
 
   if (authLoading) {
-    return <div style={{ minHeight: "100vh", background: "var(--canvas)" }} />;
+    return <div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />;
   }
 
   return (

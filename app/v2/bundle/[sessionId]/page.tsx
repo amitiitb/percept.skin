@@ -209,10 +209,10 @@ export default function V2BundlePage() {
     setSelected(new Set(MODULES.map((m) => m.id)));
   }
 
-  if (!authChecked) return <div style={{ minHeight: "100vh", background: "var(--canvas)" }} />;
+  if (!authChecked) return <div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", padding: "4rem 2rem 8rem" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2rem 8rem" }}>
       <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
 
         {/* Subtle, non-blocking analysis indicator */}

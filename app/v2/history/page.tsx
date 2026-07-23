@@ -23,13 +23,13 @@ export default function V2HistoryPage() {
     });
   }, []);
 
-  if (loading) return <div style={{ minHeight: "100vh", background: "var(--canvas)" }} />;
+  if (loading) return <div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />;
 
   const scored = rows.filter((r) => r.status === "complete" && r.overall_score !== null);
   const delta = scored.length >= 2 ? (scored[0].overall_score! - scored[scored.length - 1].overall_score!) : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
       <div style={{ maxWidth: "88rem", margin: "0 auto" }}>
         <button
           onClick={() => router.push("/v2/dashboard")}

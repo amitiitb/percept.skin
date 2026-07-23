@@ -55,7 +55,7 @@ export default function V2SettingsPage() {
     router.push("/v2/splash");
   }
 
-  if (loading) return <div style={{ minHeight: "100vh", background: "var(--canvas)" }} />;
+  if (loading) return <div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />;
 
   const Row = ({ label, action }: { label: string; action: React.ReactNode }) => (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.2rem", padding: "1.8rem 0", borderBottom: "1px solid var(--line)" }}>
@@ -65,7 +65,7 @@ export default function V2SettingsPage() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "1.6rem", padding: "2rem 3.2rem", borderBottom: "1px solid var(--line)" }}>
         <button
           onClick={() => router.push("/v2/dashboard")}

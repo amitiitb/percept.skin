@@ -18,7 +18,7 @@ export default function V2PlansPage() {
   const [selected, setSelected] = useState<PlanId>("annual");
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
       <div style={{ maxWidth: "96rem", margin: "0 auto" }}>
         <h1 style={{ fontSize: "3.6rem", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "1.2rem" }}>
           Choose your plan

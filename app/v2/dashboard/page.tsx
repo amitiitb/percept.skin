@@ -50,11 +50,11 @@ export default function V2DashboardPage() {
   }
 
   if (loading) {
-    return <div style={{ minHeight: "100vh", background: "var(--canvas)" }} />;
+    return <div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />;
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
           <div>

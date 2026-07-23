@@ -61,7 +61,7 @@ export default function V2ProcessingPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2.4rem", textAlign: "center" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2.4rem", textAlign: "center" }}>
       {error ? (
         <>
           <p style={{ fontSize: "2rem", color: "var(--primary)", marginBottom: "1.2rem" }}>We hit a snag</p>
