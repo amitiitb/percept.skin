@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280">
+  <defs>
+    <linearGradient id="lens-l" x1="10%" y1="5%" x2="80%" y2="90%">
+      <stop offset="0%"   stop-color="#26263a" stop-opacity="0.88"/>
+      <stop offset="50%"  stop-color="#0c0c18" stop-opacity="0.96"/>
+      <stop offset="100%" stop-color="#16162a" stop-opacity="0.86"/>
+    </linearGradient>
+    <linearGradient id="lens-r" x1="90%" y1="5%" x2="20%" y2="90%">
+      <stop offset="0%"   stop-color="#26263a" stop-opacity="0.88"/>
+      <stop offset="50%"  stop-color="#0c0c18" stop-opacity="0.96"/>
+      <stop offset="100%" stop-color="#16162a" stop-opacity="0.86"/>
+    </linearGradient>
+    <linearGradient id="shine-l" x1="0%" y1="0%" x2="60%" y2="60%">
+      <stop offset="0%"   stop-color="#fff" stop-opacity="0.14"/>
+      <stop offset="35%"  stop-color="#fff" stop-opacity="0.02"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shine-r" x1="100%" y1="0%" x2="40%" y2="60%">
+      <stop offset="0%"   stop-color="#fff" stop-opacity="0.14"/>
+      <stop offset="35%"  stop-color="#fff" stop-opacity="0.02"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="frm" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#3a3a3a"/>
+      <stop offset="20%"  stop-color="#181818"/>
+      <stop offset="65%"  stop-color="#0e0e0e"/>
+      <stop offset="100%" stop-color="#262626"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#999"/>
+      <stop offset="50%"  stop-color="#ddd"/>
+      <stop offset="100%" stop-color="#777"/>
+    </linearGradient>
+    <mask id="m">
+      <rect width="800" height="280" fill="white"/>
+      <rect x="140" y="72" width="144" height="66" rx="4" fill="black"/>
+      <ellipse cx="205" cy="174" rx="58" ry="40" fill="black"/>
+      <rect x="516" y="72" width="144" height="66" rx="4" fill="black"/>
+      <ellipse cx="595" cy="174" rx="58" ry="40" fill="black"/>
+      <rect x="288" y="82" width="224" height="36" fill="black"/>
+    </mask>
+  </defs>
+  <!-- Lens fills -->
+  <rect x="116" y="52" width="192" height="100" rx="12" fill="url(#lens-l)"/>
+  <ellipse cx="205" cy="174" rx="74" ry="54" fill="url(#lens-l)"/>
+  <rect x="492" y="52" width="192" height="100" rx="12" fill="url(#lens-r)"/>
+  <ellipse cx="595" cy="174" rx="74" ry="54" fill="url(#lens-r)"/>
+  <!-- Shine -->
+  <rect x="116" y="52" width="192" height="100" rx="12" fill="url(#shine-l)"/>
+  <rect x="492" y="52" width="192" height="100" rx="12" fill="url(#shine-r)"/>
+  <ellipse cx="205" cy="174" rx="74" ry="54" fill="url(#shine-l)"/>
+  <ellipse cx="595" cy="174" rx="74" ry="54" fill="url(#shine-r)"/>
+  <!-- Frame -->
+  <g mask="url(#m)">
+    <rect x="116" y="52" width="192" height="100" rx="12" fill="url(#frm)"/>
+    <ellipse cx="205" cy="174" rx="74" ry="54" fill="url(#frm)"/>
+    <rect x="492" y="52" width="192" height="100" rx="12" fill="url(#frm)"/>
+    <ellipse cx="595" cy="174" rx="74" ry="54" fill="url(#frm)"/>
+    <path d="M308,74 Q360,66 400,68 Q440,66 492,74 L492,90 Q440,82 400,84 Q360,82 308,90 Z" fill="url(#frm)"/>
+    <path d="M116,80 L34,72 Q26,71 25,80 Q25,90 34,91 L115,98 Z" fill="url(#frm)"/>
+    <path d="M684,80 L766,72 Q774,71 775,80 Q775,90 766,91 L685,98 Z" fill="url(#frm)"/>
+  </g>
+  <!-- Metal bridge between ovals -->
+  <rect x="284" y="153" width="232" height="7" rx="3" fill="url(#metal)"/>
+</svg>

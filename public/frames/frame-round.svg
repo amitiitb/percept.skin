@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280">
+  <defs>
+    <mask id="m">
+      <rect width="800" height="280" fill="white"/>
+      <circle cx="200" cy="130" r="62" fill="black"/>
+      <circle cx="600" cy="130" r="62" fill="black"/>
+    </mask>
+  </defs>
+  <g mask="url(#m)" fill="#111">
+    <circle cx="200" cy="130" r="82"/>
+    <circle cx="600" cy="130" r="82"/>
+    <!-- Bridge -->
+    <path d="M282,118 Q340,108 400,112 Q460,108 518,118 L518,130 Q460,124 400,128 Q340,124 282,130 Z"/>
+    <!-- Left temple -->
+    <path d="M120,112 L34,104 Q26,103 25,112 Q25,122 34,123 L119,130 Z"/>
+    <!-- Right temple -->
+    <path d="M680,112 L766,104 Q774,103 775,112 Q775,122 766,123 L681,130 Z"/>
+    <!-- Hinge blocks -->
+    <rect x="112" y="106" width="14" height="22" rx="2"/>
+    <rect x="674" y="106" width="14" height="22" rx="2"/>
+  </g>
+</svg>

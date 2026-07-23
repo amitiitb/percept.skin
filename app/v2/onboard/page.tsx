@@ -1,0 +1,117 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+
+const SCREENS = [
+  {
+    eyebrow: "Personal beauty analysis",
+    title: "Guided photographs, understood by AI",
+    body: "Glowmetry analyzes your skin, face, hair, and scalp using a short guided photo session — no lab visit, no waiting.",
+  },
+  {
+    eyebrow: "Detailed personal insights",
+    title: "See what's really going on",
+    body: "Skin texture, fine lines, pores, pigmentation, facial balance, hair density, scalp visibility, estimated skin age, and personalised recommendations.",
+  },
+  {
+    eyebrow: "Track improvement",
+    title: "Watch it change over time",
+    body: "Save every report and compare future scans under similar lighting to see visible changes over weeks and months.",
+  },
+] as const;
+
+function SampleReportPreview() {
+  // Design review Decision #15 — static/illustrative sample, no backend call, no fake account.
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem", filter: "saturate(0.9)" }}>
+      <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1.6rem" }}>Sample report</p>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "1.2rem", marginBottom: "0.8rem" }}>
+        <strong style={{ fontSize: "6rem", fontWeight: 300, color: "var(--primary)", lineHeight: 1 }}>78</strong>
+        <span style={{ fontSize: "1.6rem", color: "var(--secondary)" }}>Glow Score · Good</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginTop: "2.4rem" }}>
+        {["Skin texture", "Hydration", "Hair density", "Scalp visibility"].map((m) => (
+          <div key={m} style={{ background: "var(--wash)", borderRadius: "0.8rem", padding: "1.6rem" }}>
+            <p style={{ fontSize: "1.2rem", color: "var(--secondary)", margin: "0 0 0.6rem" }}>{m}</p>
+            <strong style={{ fontSize: "2rem", color: "var(--primary)", fontWeight: 500 }}>{60 + (m.length % 30)}</strong>
+          </div>
+        ))}
+      </div>
+      <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "2rem" }}>This is what your own report will look like — illustrative only.</p>
+    </div>
+  );
+}
+
+export default function V2OnboardPage() {
+  const router = useRouter();
+  const [step, setStep] = useState(0); // 0-2 = explainer screens, 3 = sample report preview
+  const total = 4;
+
+  const next = () => (step < total - 1 ? setStep(step + 1) : router.push("/auth/signup?next=/v2/profile-setup"));
+  const skip = () => router.push("/auth/signup?next=/v2/profile-setup");
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "2.4rem 2.4rem 0", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
+        <div style={{ display: "flex", gap: "0.6rem" }}>
+          {Array.from({ length: total }).map((_, i) => (
+            <div key={i} style={{ width: "3.2rem", height: "0.4rem", borderRadius: "9999px", background: i <= step ? "var(--primary)" : "var(--line)" }} />
+          ))}
+        </div>
+        {step < total - 1 && (
+          <button onClick={skip} style={{ background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer" }}>
+            Skip
+          </button>
+        )}
+      </div>
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "2.4rem", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
+        <AnimatePresence mode="wait">
+          <motion.div key={step} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.28 }}>
+            {step < 3 ? (
+              <>
+                <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
+                  {SCREENS[step].eyebrow}
+                </p>
+                <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4.4rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: "2rem" }}>
+                  {SCREENS[step].title}
+                </h1>
+                <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "52rem" }}>
+                  {SCREENS[step].body}
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
+                  See it before you sign up
+                </p>
+                <h1 style={{ fontSize: "clamp(2.4rem, 5vw, 3.6rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.1, marginBottom: "2.4rem" }}>
+                  Here&apos;s what you&apos;ll get
+                </h1>
+                <SampleReportPreview />
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div style={{ padding: "2.4rem", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
+        <p style={{ fontSize: "1.2rem", color: "var(--muted)", lineHeight: 1.5, marginBottom: "2rem", textAlign: "center" }}>
+          Glowmetry offers cosmetic and wellness insights and is not a substitute for professional medical advice.
+        </p>
+        <div style={{ display: "flex", gap: "1.2rem" }}>
+          {step > 0 && (
+            <div style={{ flex: 1 }}>
+              <PrimaryButton variant="outline" onClick={() => setStep(step - 1)}>Back</PrimaryButton>
+            </div>
+          )}
+          <div style={{ flex: 1 }}>
+            <PrimaryButton onClick={next}>{step < total - 1 ? "Continue →" : "Get Started →"}</PrimaryButton>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

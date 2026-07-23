@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280">
+  <defs>
+    <mask id="m">
+      <rect width="800" height="280" fill="white"/>
+      <!-- Left teardrop inner -->
+      <path d="M142,94 L258,94 Q258,96 256,106 Q250,148 228,172 Q212,190 200,191 Q188,190 172,172 Q150,148 144,106 Q142,96 142,94 Z" fill="black"/>
+      <!-- Right teardrop inner -->
+      <path d="M542,94 L658,94 Q658,96 656,106 Q650,148 628,172 Q612,190 600,191 Q588,190 572,172 Q550,148 544,106 Q542,96 542,94 Z" fill="black"/>
+    </mask>
+  </defs>
+  <!-- Thin metal frames (dark charcoal, not thick black) -->
+  <g mask="url(#m)" fill="#2a2a2a">
+    <!-- Left teardrop outer -->
+    <path d="M130,88 L270,88 Q274,88 274,92 Q276,132 258,168 Q238,200 200,202 Q162,200 142,168 Q124,132 126,92 Q126,88 130,88 Z"/>
+    <!-- Right teardrop outer -->
+    <path d="M530,88 L670,88 Q674,88 674,92 Q676,132 658,168 Q638,200 600,202 Q562,200 542,168 Q524,132 526,92 Q526,88 530,88 Z"/>
+    <!-- Double bridge top -->
+    <rect x="272" y="90" width="256" height="7" rx="3"/>
+    <!-- Double bridge bottom -->
+    <rect x="284" y="105" width="232" height="5" rx="2"/>
+    <!-- Nose pad left -->
+    <ellipse cx="296" cy="120" rx="5" ry="8"/>
+    <!-- Nose pad right -->
+    <ellipse cx="504" cy="120" rx="5" ry="8"/>
+    <!-- Left thin temple -->
+    <path d="M130,96 L36,106 Q30,108 30,114 Q30,120 36,120 L128,112 Z"/>
+    <!-- Right thin temple -->
+    <path d="M670,96 L764,106 Q770,108 770,114 Q770,120 764,120 L672,112 Z"/>
+  </g>
+</svg>

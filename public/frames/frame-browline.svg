@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280">
+  <defs>
+    <mask id="m">
+      <rect width="800" height="280" fill="white"/>
+      <!-- Left: thick top inner cutout -->
+      <rect x="140" y="72" width="144" height="66" rx="4" fill="black"/>
+      <!-- Left: lower wire inner circle -->
+      <ellipse cx="205" cy="174" rx="58" ry="40" fill="black"/>
+      <!-- Right thick top inner -->
+      <rect x="516" y="72" width="144" height="66" rx="4" fill="black"/>
+      <!-- Right lower wire inner -->
+      <ellipse cx="595" cy="174" rx="58" ry="40" fill="black"/>
+      <!-- Bridge hole -->
+      <rect x="288" y="82" width="224" height="36" fill="black"/>
+    </mask>
+  </defs>
+  <g mask="url(#m)" fill="#111">
+    <!-- Left thick browline bar -->
+    <rect x="116" y="52" width="192" height="100" rx="12"/>
+    <!-- Left lower wire oval (thin) -->
+    <ellipse cx="205" cy="174" rx="74" ry="54" fill="#111"/>
+    <!-- Right thick browline bar -->
+    <rect x="492" y="52" width="192" height="100" rx="12"/>
+    <!-- Right lower wire oval -->
+    <ellipse cx="595" cy="174" rx="74" ry="54" fill="#111"/>
+    <!-- Bridge -->
+    <path d="M308,74 Q360,66 400,68 Q440,66 492,74 L492,90 Q440,82 400,84 Q360,82 308,90 Z"/>
+    <!-- Left temple -->
+    <path d="M116,80 L34,72 Q26,71 25,80 Q25,90 34,91 L115,98 Z"/>
+    <!-- Right temple -->
+    <path d="M684,80 L766,72 Q774,71 775,80 Q775,90 766,91 L685,98 Z"/>
+  </g>
+  <!-- Thin wire rim on lower ovals only -->
+  <ellipse cx="205" cy="174" rx="74" ry="54" fill="none" stroke="#111" stroke-width="4"/>
+  <ellipse cx="595" cy="174" rx="74" ry="54" fill="none" stroke="#111" stroke-width="4"/>
+</svg>

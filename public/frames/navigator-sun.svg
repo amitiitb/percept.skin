@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280">
+  <!-- Left navigator (large teardrop, flat top) -->
+  <path d="M128,88 L278,88 Q288,88 288,100 Q290,148 268,175 Q242,198 200,198 Q158,198 140,175 Q118,148 118,100 Q118,88 128,88 Z" fill="rgba(20,20,20,0.72)" stroke="#222" stroke-width="5"/>
+  <!-- Right navigator -->
+  <path d="M672,88 L522,88 Q512,88 512,100 Q510,148 532,175 Q558,198 600,198 Q642,198 660,175 Q682,148 682,100 Q682,88 672,88 Z" fill="rgba(20,20,20,0.72)" stroke="#222" stroke-width="5"/>
+  <!-- Bridge -->
+  <path d="M288,95 Q400,85 512,95" fill="none" stroke="#666" stroke-width="4"/>
+  <!-- Temples -->
+  <line x1="128" y1="100" x2="38" y2="95" stroke="#666" stroke-width="5" stroke-linecap="round"/>
+  <line x1="672" y1="100" x2="762" y2="95" stroke="#666" stroke-width="5" stroke-linecap="round"/>
+</svg>

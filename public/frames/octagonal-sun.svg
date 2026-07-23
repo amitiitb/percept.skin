@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280">
+  <!-- Left octagonal lens -->
+  <polygon points="162,62 238,62 278,100 278,160 238,198 162,198 122,160 122,100" fill="rgba(10,10,30,0.68)" stroke="#222" stroke-width="5" stroke-linejoin="round"/>
+  <!-- Right octagonal lens -->
+  <polygon points="562,62 638,62 678,100 678,160 638,198 562,198 522,160 522,100" fill="rgba(10,10,30,0.68)" stroke="#222" stroke-width="5" stroke-linejoin="round"/>
+  <!-- Bridge -->
+  <path d="M278,118 Q400,108 522,118" fill="none" stroke="#555" stroke-width="4"/>
+  <!-- Temples -->
+  <line x1="122" y1="118" x2="38" y2="112" stroke="#555" stroke-width="5" stroke-linecap="round"/>
+  <line x1="678" y1="118" x2="762" y2="112" stroke="#555" stroke-width="5" stroke-linecap="round"/>
+</svg>

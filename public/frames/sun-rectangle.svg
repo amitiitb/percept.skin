@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280">
+  <defs>
+    <linearGradient id="lens-l" x1="10%" y1="5%" x2="80%" y2="90%">
+      <stop offset="0%"   stop-color="#26263a" stop-opacity="0.90"/>
+      <stop offset="50%"  stop-color="#0c0c18" stop-opacity="0.97"/>
+      <stop offset="100%" stop-color="#16162a" stop-opacity="0.88"/>
+    </linearGradient>
+    <linearGradient id="lens-r" x1="90%" y1="5%" x2="20%" y2="90%">
+      <stop offset="0%"   stop-color="#26263a" stop-opacity="0.90"/>
+      <stop offset="50%"  stop-color="#0c0c18" stop-opacity="0.97"/>
+      <stop offset="100%" stop-color="#16162a" stop-opacity="0.88"/>
+    </linearGradient>
+    <linearGradient id="shine-l" x1="0%" y1="0%" x2="70%" y2="70%">
+      <stop offset="0%"   stop-color="#fff" stop-opacity="0.16"/>
+      <stop offset="30%"  stop-color="#fff" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shine-r" x1="100%" y1="0%" x2="30%" y2="70%">
+      <stop offset="0%"   stop-color="#fff" stop-opacity="0.16"/>
+      <stop offset="30%"  stop-color="#fff" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="frm" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#404040"/>
+      <stop offset="20%"  stop-color="#181818"/>
+      <stop offset="65%"  stop-color="#0e0e0e"/>
+      <stop offset="100%" stop-color="#282828"/>
+    </linearGradient>
+    <mask id="m">
+      <rect width="800" height="280" fill="white"/>
+      <path d="M136,84 L284,84 Q290,84 290,92 L290,192 Q290,200 284,200 L136,200 Q130,200 130,192 L130,92 Q130,84 136,84 Z" fill="black"/>
+      <path d="M516,84 L670,84 Q676,84 676,92 L676,192 Q676,200 670,200 L516,200 Q510,200 510,192 L510,92 Q510,84 516,84 Z" fill="black"/>
+    </mask>
+  </defs>
+  <!-- Lens fills with gradient -->
+  <path d="M114,62 L306,62 Q318,62 318,74 L318,214 Q318,226 306,226 L114,226 Q102,226 102,214 L102,74 Q102,62 114,62 Z" fill="url(#lens-l)"/>
+  <path d="M494,62 L686,62 Q698,62 698,74 L698,214 Q698,226 686,226 L494,226 Q482,226 482,214 L482,74 Q482,62 494,62 Z" fill="url(#lens-r)"/>
+  <!-- Shine/reflection overlay -->
+  <path d="M114,62 L306,62 Q318,62 318,74 L318,214 Q318,226 306,226 L114,226 Q102,226 102,214 L102,74 Q102,62 114,62 Z" fill="url(#shine-l)"/>
+  <path d="M494,62 L686,62 Q698,62 698,74 L698,214 Q698,226 686,226 L494,226 Q482,226 482,214 L482,74 Q482,62 494,62 Z" fill="url(#shine-r)"/>
+  <!-- Frame rim -->
+  <g mask="url(#m)">
+    <path d="M114,62 L306,62 Q318,62 318,74 L318,214 Q318,226 306,226 L114,226 Q102,226 102,214 L102,74 Q102,62 114,62 Z" fill="url(#frm)"/>
+    <path d="M494,62 L686,62 Q698,62 698,74 L698,214 Q698,226 686,226 L494,226 Q482,226 482,214 L482,74 Q482,62 494,62 Z" fill="url(#frm)"/>
+    <path d="M318,100 Q360,90 400,92 Q440,90 482,100 L482,116 Q440,106 400,108 Q360,106 318,116 Z" fill="url(#frm)"/>
+    <path d="M102,100 L34,92 Q26,91 25,100 Q25,110 34,111 L101,118 Z" fill="url(#frm)"/>
+    <path d="M698,100 L766,92 Q774,91 775,100 Q775,110 766,111 L699,118 Z" fill="url(#frm)"/>
+    <rect x="94" y="92" width="14" height="24" rx="2" fill="url(#frm)"/>
+    <rect x="692" y="92" width="14" height="24" rx="2" fill="url(#frm)"/>
+  </g>
+  <!-- Top edge highlight -->
+</svg>

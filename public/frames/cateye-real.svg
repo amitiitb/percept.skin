@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="280" viewBox="0 0 800 280">
+  <!-- Left cat-eye lens: wider at top-outer -->
+  <path d="M140,155 Q138,100 175,70 Q210,48 260,60 Q290,65 292,90 Q294,130 270,158 Q240,175 200,175 Q160,172 140,155 Z" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linejoin="round"/>
+  <!-- Right cat-eye lens (mirrored) -->
+  <path d="M660,155 Q662,100 625,70 Q590,48 540,60 Q510,65 508,90 Q506,130 530,158 Q560,175 600,175 Q640,172 660,155 Z" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-linejoin="round"/>
+  <!-- Bridge -->
+  <path d="M292,108 Q400,98 508,108" fill="none" stroke="#1a1a1a" stroke-width="5"/>
+  <!-- Temples -->
+  <line x1="140" y1="140" x2="42" y2="110" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/>
+  <line x1="660" y1="140" x2="758" y2="110" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round"/>
+</svg>
