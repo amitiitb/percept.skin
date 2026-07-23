@@ -78,6 +78,18 @@ export const useFunnelV2Store = create<FunnelV2State & FunnelV2Actions>()(
       storage: createJSONStorage(() =>
         typeof window !== "undefined" ? localStorage : ({ getItem: () => null, setItem: () => {}, removeItem: () => {}, length: 0, clear: () => {}, key: () => null } as unknown as Storage)
       ),
+      // Raw captured photos are full-resolution base64 data URLs — persisting
+      // them grows this blob into multiple MB within a handful of steps and
+      // can hit localStorage's quota (especially on iOS Safari), silently
+      // breaking every subsequent write once the browser starts rejecting
+      // setItem calls. Photos are already durably saved to Supabase Storage
+      // the moment each step completes, so nothing is lost by keeping the
+      // in-memory copy out of the persisted blob — a refresh mid-capture just
+      // means re-shooting the current step's photo, not losing prior ones.
+      partialize: (state) => {
+        const { photos: _photos, signedPhotos: _signedPhotos, ...rest } = state;
+        return rest;
+      },
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
       },

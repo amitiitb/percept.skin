@@ -101,16 +101,17 @@ export default function V2OnboardPage() {
         <p style={{ fontSize: "1.2rem", color: "var(--muted)", lineHeight: 1.5, marginBottom: "2rem", textAlign: "center" }}>
           Glowmetry offers cosmetic and wellness insights and is not a substitute for professional medical advice.
         </p>
-        <div style={{ display: "flex", gap: "1.2rem" }}>
-          {step > 0 && (
-            <div style={{ flex: 1 }}>
-              <PrimaryButton variant="outline" onClick={() => setStep(step - 1)}>Back</PrimaryButton>
-            </div>
-          )}
-          <div style={{ flex: 1 }}>
-            <PrimaryButton onClick={next}>{step < total - 1 ? "Continue →" : "Get Started →"}</PrimaryButton>
-          </div>
-        </div>
+        {/* CTA always gets full width — a long label like "Get Started →" was
+            wrapping to two lines when squeezed into a 50/50 split with Back. */}
+        <PrimaryButton onClick={next}>{step < total - 1 ? "Continue →" : "Get Started →"}</PrimaryButton>
+        {step > 0 && (
+          <button
+            onClick={() => setStep(step - 1)}
+            style={{ display: "block", width: "100%", marginTop: "1.2rem", padding: "1rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", textAlign: "center" }}
+          >
+            ← Back
+          </button>
+        )}
       </div>
     </div>
   );

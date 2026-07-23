@@ -48,6 +48,7 @@ export function PrimaryButton({
     fontWeight: 500,
     letterSpacing: 0,
     lineHeight: 1,
+    whiteSpace: "nowrap",
     width: fullWidth ? "100%" : "auto",
     cursor: off ? "not-allowed" : "pointer",
     opacity: disabled ? 0.38 : 1,

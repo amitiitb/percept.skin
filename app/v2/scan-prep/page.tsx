@@ -4,14 +4,12 @@ import { V2Layout } from "@/components/v2/V2Layout";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 const CHECKLIST = [
-  "Use natural or evenly distributed light",
-  "Remove glasses",
-  "Remove heavy makeup where possible",
-  "Keep hair away from your face",
-  "Do not use beauty filters",
-  "Clean your camera lens",
-  "Keep a neutral expression unless instructed otherwise",
-  "Use your rear camera for scalp shots, where practical",
+  "Even, natural lighting",
+  "Remove glasses & heavy makeup",
+  "Hair off your face, no filters",
+  "Clean camera lens",
+  "Neutral expression unless told otherwise",
+  "Rear camera for scalp shots",
 ];
 
 export default function V2ScanPrepPage() {
@@ -19,31 +17,55 @@ export default function V2ScanPrepPage() {
 
   return (
     <V2Layout headline="Get ready to scan" sub="A few minutes of setup makes a big difference in your results." progress={35} backHref="/v2/dashboard">
-      <div style={{ maxWidth: "64rem" }}>
-        <p style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1.2rem" }}>
-          About 3-5 minutes
+      {/* Fixed bottom CTA bar — guarantees the button is visible on load
+          regardless of checklist length, instead of competing with it for
+          vertical space in normal document flow. */}
+      <div className="v2-scanprep-body" style={{ maxWidth: "64rem", paddingBottom: "11rem" }}>
+        <p style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1rem" }}>
+          3-5 minutes
         </p>
-        <h1 style={{ fontSize: "clamp(2.6rem, 5vw, 3.6rem)", fontWeight: 400, color: "var(--primary)", marginBottom: "3.2rem" }}>
+        <h1 style={{ fontSize: "clamp(2.6rem, 5vw, 3.6rem)", fontWeight: 400, color: "var(--primary)", marginBottom: "2.4rem" }}>
           Before we start
         </h1>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.6rem", marginBottom: "4rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem", marginBottom: "2.4rem" }}>
           {CHECKLIST.map((item) => (
             <div key={item} style={{ display: "flex", gap: "1.2rem", alignItems: "flex-start" }}>
-              <span style={{ flexShrink: 0, width: "2.4rem", height: "2.4rem", borderRadius: "50%", border: "1px solid var(--line-strong)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: "0.1rem" }}>
+              <span style={{ flexShrink: 0, width: "2.2rem", height: "2.2rem", borderRadius: "50%", border: "1px solid var(--line-strong)", display: "flex", alignItems: "center", justifyContent: "center", marginTop: "0.1rem" }}>
                 <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </span>
-              <span style={{ fontSize: "1.6rem", color: "var(--secondary)", lineHeight: 1.5 }}>{item}</span>
+              <span style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.4 }}>{item}</span>
             </div>
           ))}
         </div>
 
-        <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginBottom: "2.4rem", lineHeight: 1.5 }}>
-          Client-side checks estimate lighting and framing but aren&apos;t perfectly accurate — do your best with the tips above.
+        <p style={{ fontSize: "1.3rem", color: "var(--muted)", lineHeight: 1.5 }}>
+          These checks estimate lighting and framing — not exact, but a good guide.
         </p>
-
-        <PrimaryButton onClick={() => router.push("/v2/capture/0")}>I&apos;m ready →</PrimaryButton>
       </div>
+
+      <div className="v2-scanprep-cta" style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 20,
+        display: "flex", justifyContent: "center",
+        padding: "1.6rem 2rem calc(env(safe-area-inset-bottom, 0px) + 1.6rem)",
+        background: "linear-gradient(to top, var(--canvas) 60%, transparent)",
+      }}>
+        <div style={{ width: "100%", maxWidth: "64rem" }}>
+          <PrimaryButton onClick={() => router.push("/v2/capture/0")}>I&apos;m ready →</PrimaryButton>
+        </div>
+      </div>
+
+      <style>{`
+        @media (min-width: 1024px) {
+          .v2-scanprep-body { padding-bottom: 0 !important; }
+          .v2-scanprep-cta {
+            position: static !important;
+            background: none !important;
+            padding: 3.2rem 0 0 !important;
+            justify-content: flex-start !important;
+          }
+        }
+      `}</style>
     </V2Layout>
   );
 }
