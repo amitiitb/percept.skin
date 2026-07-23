@@ -89,7 +89,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
           </div>
         )}
 
-        <motion.div key={headline} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} style={{ flex: 1, display: "flex", flexDirection: "column", padding: "2.8rem 2rem 4rem", width: "100%" }} className="v2-content">
+        <motion.div key={headline} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "2.8rem 2rem 4rem", width: "100%" }} className="v2-content">
           {children}
         </motion.div>
       </div>

@@ -17,10 +17,14 @@ export default function V2ScanPrepPage() {
 
   return (
     <V2Layout headline="Get ready to scan" sub="A few minutes of setup makes a big difference in your results." progress={35} backHref="/v2/dashboard">
-      {/* Fixed bottom CTA bar — guarantees the button is visible on load
-          regardless of checklist length, instead of competing with it for
-          vertical space in normal document flow. */}
-      <div className="v2-scanprep-body" style={{ maxWidth: "64rem", paddingBottom: "11rem" }}>
+      {/* Plain normal document flow — a fixed-position CTA bar was tried here
+          and reverted: position:fixed is unreliable inside embedded webviews
+          (in-app browsers etc treat it as document-relative, not viewport-
+          relative, so the button rendered far below the fold instead of
+          pinned). Trimming the checklist to 6 short items keeps total page
+          height within a normal mobile viewport without needing any
+          positioning trick. */}
+      <div style={{ width: "100%", maxWidth: "64rem" }}>
         <p style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1rem" }}>
           3-5 minutes
         </p>
@@ -39,33 +43,12 @@ export default function V2ScanPrepPage() {
           ))}
         </div>
 
-        <p style={{ fontSize: "1.3rem", color: "var(--muted)", lineHeight: 1.5 }}>
+        <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginBottom: "2.4rem", lineHeight: 1.5 }}>
           These checks estimate lighting and framing — not exact, but a good guide.
         </p>
-      </div>
 
-      <div className="v2-scanprep-cta" style={{
-        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 20,
-        display: "flex", justifyContent: "center",
-        padding: "1.6rem 2rem calc(env(safe-area-inset-bottom, 0px) + 1.6rem)",
-        background: "linear-gradient(to top, var(--canvas) 60%, transparent)",
-      }}>
-        <div style={{ width: "100%", maxWidth: "64rem" }}>
-          <PrimaryButton onClick={() => router.push("/v2/capture/0")}>I&apos;m ready →</PrimaryButton>
-        </div>
+        <PrimaryButton onClick={() => router.push("/v2/capture/0")}>I&apos;m ready →</PrimaryButton>
       </div>
-
-      <style>{`
-        @media (min-width: 1024px) {
-          .v2-scanprep-body { padding-bottom: 0 !important; }
-          .v2-scanprep-cta {
-            position: static !important;
-            background: none !important;
-            padding: 3.2rem 0 0 !important;
-            justify-content: flex-start !important;
-          }
-        }
-      `}</style>
     </V2Layout>
   );
 }
