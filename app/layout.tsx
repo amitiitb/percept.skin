@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "/start",
+    url: "/v2/splash",
     siteName: "Glowmetry",
     title: "Glowmetry | See Your Skin More Clearly",
     description,
