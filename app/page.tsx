@@ -19,10 +19,13 @@ const OLD_WAY = [
 ];
 const OLD_WAY_TOTAL = OLD_WAY.reduce((s, i) => s + i.price, 0);
 
-const APPEARANCE_STATS = [
-  { stat: "9%", label: "Lower pay", body: "Workers rated below-average looking earned about 9% less per hour than average-looking peers, across a wide range of jobs." },
-  { stat: "5%", label: "Pay premium", body: "Workers rated above-average looking earned about 5% more per hour than average, the same research found." },
-  { stat: "Every occupation", label: "No exceptions", body: "The wage gap held across every occupation studied, not just customer-facing or public-facing roles." },
+// Hourly-pay index relative to "average" perceived appearance (Hamermesh &
+// Biddle), normalized to the highest value so bar widths stay honest to the
+// real relative gap rather than an exaggerated infographic scale.
+const BAR_DATA = [
+  { label: "Below average", value: "-9%", width: (91 / 105) * 100, highlight: false },
+  { label: "Average", value: "Baseline", width: (100 / 105) * 100, highlight: false },
+  { label: "Above average", value: "+5%", width: 100, highlight: true },
 ];
 
 const WHY_ITEMS = [
@@ -183,19 +186,25 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             The research
           </p>
-          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "#fff", textAlign: "center", lineHeight: 1.2, maxWidth: "72rem", margin: "0 auto 5.6rem" }}>
-            Looking your best is not just about how you feel. Economists have measured how much it affects your career too.
+          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "#fff", textAlign: "center", lineHeight: 1.2, maxWidth: "60rem", margin: "0 auto 5.6rem" }}>
+            Presentation is a measurable business asset
           </h2>
 
-          <div className="glowmetry-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2rem", marginBottom: "3.2rem" }}>
-            {APPEARANCE_STATS.map((s) => (
-              <div key={s.label} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "1.6rem", padding: "3.2rem" }}>
-                <strong style={{ display: "block", fontSize: "clamp(3.2rem, 5vw, 4.4rem)", fontWeight: 800, color: GOLD, lineHeight: 1, marginBottom: "0.8rem" }}>{s.stat}</strong>
-                <p style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "1.2rem" }}>{s.label}</p>
-                <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{s.body}</p>
+          <div style={{ maxWidth: "64rem", margin: "0 auto 2.4rem" }}>
+            {BAR_DATA.map((row) => (
+              <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "1.6rem", marginBottom: "2rem" }}>
+                <span style={{ flexShrink: 0, width: "13rem", fontSize: "1.3rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{row.label}</span>
+                <div style={{ flex: 1, height: "1.6rem", background: "rgba(255,255,255,0.08)", borderRadius: "9999px", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${row.width}%`, background: row.highlight ? GOLD : "rgba(255,255,255,0.4)", borderRadius: "9999px" }} />
+                </div>
+                <strong style={{ flexShrink: 0, width: "5.6rem", textAlign: "right", fontSize: "1.8rem", fontWeight: 800, color: row.highlight ? GOLD : "#fff" }}>{row.value}</strong>
               </div>
             ))}
           </div>
+
+          <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.75)", textAlign: "center", maxWidth: "56rem", margin: "0 auto 3.2rem" }}>
+            Hourly pay by perceived appearance, every occupation studied, no exceptions.
+          </p>
 
           <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.45)", textAlign: "center" }}>
             Source: Hamermesh and Biddle, Beauty and the Labor Market, American Economic Review, NBER Working Paper No. 4518.
@@ -330,8 +339,8 @@ export default function LandingPage() {
 
       <footer style={{ background: "var(--primary)", padding: "6.4rem 3.2rem 2.4rem" }}>
         <div style={{ maxWidth: "128rem", margin: "0 auto" }}>
-          <div className="glowmetry-footer-grid" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr 1fr", gap: "4rem", paddingBottom: "4rem", borderBottom: "1px solid rgba(255,255,255,0.14)" }}>
-            <div>
+          <div className="glowmetry-footer-grid" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: "4rem", paddingBottom: "4rem", borderBottom: "1px solid rgba(255,255,255,0.14)" }}>
+            <div className="glowmetry-footer-brand">
               <span style={{ fontSize: "1.8rem", fontWeight: 600, letterSpacing: "0.02em", color: "#fff" }}>
                 Glow<span style={{ color: "var(--rose)" }}>metry</span>
               </span>
@@ -351,19 +360,21 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div>
-              <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Legal</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-                <a href="/privacy" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Privacy Policy</a>
-                <a href="/terms" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Terms of Service</a>
+            <div className="glowmetry-footer-legalsupport" style={{ display: "flex", gap: "4rem" }}>
+              <div>
+                <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Legal</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+                  <a href="/privacy" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Privacy Policy</a>
+                  <a href="/terms" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Terms of Service</a>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Support</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-                <a href="mailto:support@glowmetry.com" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>support@glowmetry.com</a>
-                <a href="#faq" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Help & FAQ</a>
+              <div>
+                <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Support</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+                  <a href="mailto:support@glowmetry.com" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>support@glowmetry.com</a>
+                  <a href="#faq" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Help & FAQ</a>
+                </div>
               </div>
             </div>
           </div>
@@ -384,11 +395,11 @@ export default function LandingPage() {
           .glowmetry-hero-grid { grid-template-columns: 1fr !important; }
           .glowmetry-why-grid { grid-template-columns: 1fr !important; }
           .glowmetry-experts-grid { grid-template-columns: 1fr !important; }
-          .glowmetry-stats-grid { grid-template-columns: 1fr !important; }
           .glowmetry-footer-grid { grid-template-columns: 1fr 1fr !important; row-gap: 3.2rem !important; }
+          .glowmetry-footer-brand { grid-column: 1 / -1 !important; }
         }
         @media (max-width: 520px) {
-          .glowmetry-footer-grid { grid-template-columns: 1fr !important; }
+          .glowmetry-footer-legalsupport { flex-direction: column !important; gap: 2.4rem !important; }
         }
         @media (max-width: 700px) {
           .glowmetry-pricing-compare { grid-template-columns: 1fr !important; }
