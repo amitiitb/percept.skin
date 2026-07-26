@@ -79,7 +79,7 @@ export default function ColourAnalysisPanel({ sessionId, photo, initialAnalysis 
       <div style={{ borderTop: "1px solid var(--line)", paddingTop: "4rem", marginTop: "3.2rem" }}>
         <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "1rem" }}>Your Colour Analysis</h2>
         <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2rem", lineHeight: 1.5 }}>
-          Discover your seasonal palette, best clothing colours, colours to avoid, and best metal tone — personalised to your skin tone.
+          Discover your seasonal palette, best clothing colours, colours to avoid, and best metal tone, personalised to your skin tone.
         </p>
         {error && <p style={{ color: "var(--rose)", fontSize: "1.4rem", marginBottom: "1.6rem" }}>{error}</p>}
         <PrimaryButton fullWidth={false} onClick={fetchAnalysis} loading={loading}>Get My Colour Analysis →</PrimaryButton>

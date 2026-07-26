@@ -57,7 +57,7 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
     <div style={{ borderTop: "1px solid var(--line)", paddingTop: "4rem", marginTop: "3.2rem" }}>
       <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.8rem" }}>Try a Hairstyle</h2>
       <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2.4rem", lineHeight: 1.5 }}>
-        See an AI-generated preview of a new style on your own photo. Illustrative only — actual results vary by stylist.
+        See an AI-generated preview of a new style on your own photo. Illustrative only, actual results vary by stylist.
       </p>
 
       <div style={{ display: "flex", gap: "1.2rem", flexWrap: "wrap", marginBottom: "2.4rem" }}>
@@ -83,14 +83,14 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
 
       {state === "loading" && (
         <div style={{ background: "var(--wash)", borderRadius: "1.2rem", padding: "6rem 2rem", textAlign: "center" }}>
-          <p style={{ fontSize: "1.5rem", color: "var(--secondary)" }}>Generating your {active} preview — this takes a few seconds…</p>
+          <p style={{ fontSize: "1.5rem", color: "var(--secondary)" }}>Generating your {active} preview, this takes a few seconds…</p>
         </div>
       )}
 
       {state === "done" && resultUrl && (
         <div style={{ maxWidth: "40rem" }}>
           <img src={resultUrl} alt={`${active} preview`} style={{ width: "100%", borderRadius: "1.2rem", border: "1px solid var(--line)" }} />
-          <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1rem" }}>AI-generated preview — {active}</p>
+          <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1rem" }}>AI-generated preview: {active}</p>
         </div>
       )}
     </div>

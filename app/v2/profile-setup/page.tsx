@@ -94,7 +94,7 @@ export default function V2ProfileSetupPage() {
   }
 
   return (
-    <V2Layout headline="A few quick details" sub="This helps personalise your report — nothing here is shared or sold." progress={20} showBack={false}>
+    <V2Layout headline="A few quick details" sub="This helps personalise your report. Nothing here is shared or sold." progress={20} showBack={false}>
       <div style={{ display: "flex", flexDirection: "column", gap: "3.2rem", maxWidth: "64rem" }}>
         <div>
           <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Name</label>
@@ -143,14 +143,20 @@ export default function V2ProfileSetupPage() {
           </div>
         </div>
 
-        <div onClick={() => setConsent((v) => !v)} style={{ display: "flex", gap: "1.2rem", cursor: "pointer" }}>
-          <span style={{ flexShrink: 0, marginTop: "0.2rem", width: "2rem", height: "2rem", borderRadius: "0.4rem", border: `2px solid ${consent ? "var(--primary)" : "var(--line-strong)"}`, background: consent ? "var(--primary)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={consent}
+          onClick={() => setConsent((v) => !v)}
+          style={{ display: "flex", gap: "1.2rem", cursor: "pointer", background: "none", border: "none", padding: 0, textAlign: "left" }}
+        >
+          <span aria-hidden style={{ flexShrink: 0, marginTop: "0.2rem", width: "2rem", height: "2rem", borderRadius: "0.4rem", border: `2px solid ${consent ? "var(--primary)" : "var(--line-strong)"}`, background: consent ? "var(--primary)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {consent && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           </span>
           <span style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55 }}>
             I consent to Glowmetry processing my uploaded photographs to generate my analysis. Photos are never used to train AI models without separate explicit consent.
           </span>
-        </div>
+        </button>
 
         {error && <p style={{ color: "var(--rose)", fontSize: "1.4rem" }}>{error}</p>}
 

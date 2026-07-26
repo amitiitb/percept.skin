@@ -53,15 +53,15 @@ function buildWelcomeEmail(name: string): string {
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Welcome to Glowmetry</title>
 <style>
-  body { margin:0; padding:0; background:#FAF9F6; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#2B3530; }
+  body { margin:0; padding:0; background:#E8E7E5; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#003934; }
   .wrap { max-width:560px; margin:0 auto; padding:48px 24px; }
-  .logo { font-size:22px; font-weight:600; letter-spacing:-0.02em; color:#2B3530; }
-  .logo span { color:#C8503A; }
-  .card { background:#fff; border:1px solid #DDD9D0; border-radius:12px; padding:48px 40px; margin-top:32px; }
+  .logo { font-size:22px; font-weight:600; letter-spacing:-0.02em; color:#003934; }
+  .logo span { color:#1A9E8F; }
+  .card { background:#fff; border:1px solid #D6D3CD; border-radius:12px; padding:48px 40px; margin-top:32px; }
   h1 { font-size:26px; font-weight:300; line-height:1.2; letter-spacing:-0.02em; margin:0 0 12px; }
-  p { font-size:15px; line-height:1.65; color:#6B7B71; margin:0 0 24px; }
-  .btn { display:inline-block; background:#2B3530; color:#fff; font-size:16px; font-weight:500; padding:16px 36px; border-radius:9999px; text-decoration:none; letter-spacing:-0.01em; }
-  .footer { margin-top:40px; font-size:12px; color:#9EAA9E; }
+  p { font-size:15px; line-height:1.65; color:#4D6560; margin:0 0 24px; }
+  .btn { display:inline-block; background:#003934; color:#fff; font-size:16px; font-weight:500; padding:16px 36px; border-radius:9999px; text-decoration:none; letter-spacing:-0.01em; }
+  .footer { margin-top:40px; font-size:12px; color:#8C9B97; }
 </style>
 </head>
 <body>

@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
       });
     } catch { /* best-effort only */ }
 
-    let userMessage = "Frame preview generation failed — try again shortly";
-    if (isRefusal) userMessage = "Couldn't generate that frame preview — try a different style";
-    if (isQuota) userMessage = "AI frame preview is temporarily unavailable — this feature needs billing enabled on the Gemini API project. Contact support.";
+    let userMessage = "Frame preview generation failed, try again shortly";
+    if (isRefusal) userMessage = "Couldn't generate that frame preview, try a different style";
+    if (isQuota) userMessage = "AI frame preview is temporarily unavailable. This feature needs billing enabled on the Gemini API project. Contact support.";
 
     return NextResponse.json(
       { error: userMessage },

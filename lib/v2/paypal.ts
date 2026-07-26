@@ -52,7 +52,7 @@ export async function createOrder(planId: PlanId, userId: string): Promise<{ ord
       // a client-supplied planId a second time.
       purchase_units: [{
         amount: { currency_code: "USD", value: plan.price },
-        description: `Glowmetry Premium — ${plan.label}`,
+        description: `Glowmetry Premium: ${plan.label}`,
         custom_id: `${userId}:${planId}`,
       }],
     }),
@@ -82,7 +82,15 @@ export async function captureOrder(orderId: string): Promise<{ status: string; p
   const token = await getAccessToken();
   const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders/${orderId}/capture`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    // Without this, PayPal's v2 capture endpoint returns a MINIMAL response
+    // (id, status, payment_source, links only) that omits purchase_units
+    // entirely — including custom_id. The code below reads custom_id from the
+    // capture response and treats an empty value as "already captured,
+    // nothing to write" (see 422 branch above); without this header, EVERY
+    // real first-time capture hits that same empty-string path and silently
+    // skips persisting the purchase. Confirmed live: a real sandbox payment
+    // returned 200 with no row ever written to the DB.
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Prefer: "return=representation" },
   });
   // 422 UNPROCESSABLE_ENTITY with ORDER_ALREADY_CAPTURED means the order was
   // captured through some path other than this exact call — not necessarily
@@ -135,7 +143,10 @@ export async function captureOrderRaw(orderId: string): Promise<{ status: string
   const token = await getAccessToken();
   const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders/${orderId}/capture`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    // See captureOrder above — without this header the response omits
+    // custom_id, and a genuinely first-time capture gets misread as an
+    // already-captured no-op, silently skipping the purchase-row write.
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Prefer: "return=representation" },
   });
   // See captureOrder above — "already captured" doesn't imply our server ever
   // recorded it, so look up the real order instead of returning an empty customId.

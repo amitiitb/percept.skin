@@ -34,12 +34,16 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#FAF9F6",
+  themeColor: "#E8E7E5",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* Satoshi via Fontshare's CDN API, self-hosting the font file needs ITF's written consent */}
+        <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap" />
+      </head>
       <ReactLenis root>
         <body className="antialiased">
           {children}

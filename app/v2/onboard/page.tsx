@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
@@ -8,7 +9,7 @@ const SCREENS = [
   {
     eyebrow: "Personal beauty analysis",
     title: "Guided photographs, understood by AI",
-    body: "Glowmetry analyzes your skin, face, hair, and scalp using a short guided photo session — no lab visit, no waiting.",
+    body: "Glowmetry analyzes your skin, face, hair, and scalp using a short guided photo session. No lab visit, no waiting.",
   },
   {
     eyebrow: "Detailed personal insights",
@@ -39,7 +40,7 @@ function SampleReportPreview() {
           </div>
         ))}
       </div>
-      <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "2rem" }}>This is what your own report will look like — illustrative only.</p>
+      <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "2rem" }}>This is what your own report will look like, illustrative only.</p>
     </div>
   );
 }
@@ -78,9 +79,20 @@ export default function V2OnboardPage() {
                 <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4.4rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: "2rem" }}>
                   {SCREENS[step].title}
                 </h1>
-                <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "52rem" }}>
+                <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "52rem", marginBottom: step === 0 ? "3.2rem" : 0 }}>
                   {SCREENS[step].body}
                 </p>
+                {step === 0 && (
+                  <div style={{ position: "relative", width: "100%", maxWidth: "32rem", aspectRatio: "4/5", borderRadius: "1.6rem", overflow: "hidden" }}>
+                    <Image
+                      src="/assets/selfie-capture-guide.png"
+                      alt="Guided photo capture with an on-screen framing guide"
+                      fill
+                      sizes="(max-width: 700px) 100vw, 32rem"
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                )}
               </>
             ) : (
               <>

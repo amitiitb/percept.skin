@@ -57,9 +57,9 @@ export async function POST(req: NextRequest) {
       });
     } catch { /* best-effort only */ }
 
-    let userMessage = "Style generation failed — try again shortly";
-    if (isRefusal) userMessage = "Couldn't generate that style — try a different one";
-    if (isQuota) userMessage = "Style generation is temporarily unavailable — this feature needs billing enabled on the Gemini API project. Contact support.";
+    let userMessage = "Style generation failed, try again shortly";
+    if (isRefusal) userMessage = "Couldn't generate that style, try a different one";
+    if (isQuota) userMessage = "Style generation is temporarily unavailable. This feature needs billing enabled on the Gemini API project. Contact support.";
 
     return NextResponse.json(
       { error: userMessage },

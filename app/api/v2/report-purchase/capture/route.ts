@@ -25,8 +25,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (!customId) {
-      // Idempotent double-submit (ORDER_ALREADY_CAPTURED) — the purchase row
-      // from the first successful capture already exists, nothing new to write.
+      // Expected only via the 422 ORDER_ALREADY_CAPTURED branch in
+      // captureOrderRaw (real double-submit, row already exists). Reaching
+      // here on a fresh 200 capture means custom_id didn't come back on the
+      // response — log loudly rather than silently assuming success, since
+      // that exact gap once caused a real captured payment to leave zero
+      // purchase row (fixed by adding Prefer: return=representation, but
+      // this stays as a tripwire in case PayPal's response shape changes again).
+      logV2.warn("v2_report_purchase_capture_empty_custom_id", { user_id: auth.userId, order_id: orderId, status });
       return NextResponse.json({ status: "complete" });
     }
 
@@ -51,6 +57,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logV2.error("v2_report_purchase_capture_failed", { user_id: auth.userId, order_id: orderId, message });
-    return NextResponse.json({ error: "Payment verification failed — please contact support if you were charged" }, { status: 500 });
+    return NextResponse.json({ error: "Payment verification failed. Please contact support if you were charged" }, { status: 500 });
   }
 }

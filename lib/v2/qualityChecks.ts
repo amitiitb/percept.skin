@@ -100,9 +100,9 @@ export async function runQualityChecks(img: HTMLImageElement): Promise<QualityRe
 }
 
 export const ISSUE_MESSAGES: Record<QualityIssue, string> = {
-  no_face: "We couldn't detect a face — try better lighting and face the camera directly.",
-  multiple_faces: "More than one face detected — make sure you're alone in frame.",
-  too_dark: "This photo is too dark — move to a well-lit area and retake.",
-  too_blurry: "This photo looks blurry — hold steady and retake.",
-  model_unavailable: "Live quality check unavailable — you can still continue, we'll review during processing.",
+  no_face: "We couldn't detect a face. Try better lighting and face the camera directly.",
+  multiple_faces: "More than one face detected. Make sure you're alone in frame.",
+  too_dark: "This photo is too dark. Move to a well-lit area and retake.",
+  too_blurry: "This photo looks blurry. Hold steady and retake.",
+  model_unavailable: "Live quality check unavailable. You can still continue, we'll review during processing.",
 };

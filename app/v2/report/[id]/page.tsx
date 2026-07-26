@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { ScoreReveal } from "@/components/v2/ScoreReveal";
 import ColourAnalysisPanel from "@/components/v2/ColourAnalysisPanel";
 import HairstylePanel from "@/components/v2/HairstylePanel";
 import GlassesVirtualTryOn from "@/components/v2/GlassesVirtualTryOn";
@@ -133,7 +134,17 @@ export default function V2ReportPage() {
   const hairMetrics = hasHairstyle ? metrics.filter((m) => m.category === "hair") : [];
   const score = session.overall_score ?? 0;
 
-  const sorted = [...metrics].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  // /api/v2/analyse always computes skin+face+hair metrics regardless of what
+  // was purchased (analysis kicks off before purchase, in the bundle-page
+  // background fetch). The summary strip must only surface categories the
+  // user actually paid for, or it leaks metric names from unpurchased modules.
+  const purchasedCategories = new Set<MetricCategory>([
+    ...(hasSkin ? (["skin", "face"] as MetricCategory[]) : []),
+    ...(hasHairstyle ? (["hair"] as MetricCategory[]) : []),
+  ]);
+  const sorted = metrics
+    .filter((m) => purchasedCategories.has(m.category))
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
   const strongest = sorted.slice(0, 3).map((m) => m.metricName);
   const priority = sorted.slice(-3).map((m) => m.metricName);
 
@@ -141,13 +152,22 @@ export default function V2ReportPage() {
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
 
+        <button
+          onClick={() => router.push("/v2/dashboard")}
+          style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0, marginBottom: "2.4rem" }}
+        >
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          Dashboard
+        </button>
+
         {/* Glow Score first — Design review Decision #12 */}
         <div style={{ textAlign: "center", marginBottom: "4.8rem" }}>
-          <strong style={{ fontSize: "9.6rem", fontWeight: 200, color: "var(--primary)", lineHeight: 1 }}>{score}</strong>
-          <p style={{ fontSize: "2rem", color: "var(--secondary)", marginTop: "0.8rem" }}>{verdictFor(score)} · Glow Score</p>
+          <ScoreReveal score={score} />
+          <p style={{ fontSize: "2rem", color: "var(--secondary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Glow Score</p>
           {session.skin_age !== null && (
             <p style={{ fontSize: "1.5rem", color: "var(--muted)", marginTop: "1.2rem" }}>Estimated skin age: {session.skin_age}</p>
           )}
+          {sorted.length > 0 && (
           <div style={{ display: "flex", gap: "3.2rem", justifyContent: "center", marginTop: "2.4rem", flexWrap: "wrap" }}>
             <div>
               <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Strongest</p>
@@ -158,6 +178,7 @@ export default function V2ReportPage() {
               <p style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{priority.join(" · ")}</p>
             </div>
           </div>
+          )}
         </div>
 
         {/* Only purchased modules render — no locked/empty sections (bundle-first model) */}

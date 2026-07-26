@@ -119,7 +119,7 @@ export default function V2BundlePage() {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify({ sessionId, modules: [...selected] }),
         });
-        if (!res.ok) { setPayState("failed"); setPayError("Payment service unavailable — try again shortly"); throw new Error("create-order failed"); }
+        if (!res.ok) { setPayState("failed"); setPayError("Payment service unavailable, try again shortly"); throw new Error("create-order failed"); }
         const data = await res.json() as { orderId: string };
         return data.orderId;
       },
@@ -146,12 +146,12 @@ export default function V2BundlePage() {
           }
           router.push(`/v2/report/${sessionId}`);
         } catch {
-          setPayError("We couldn't verify this payment — contact support if you were charged.");
+          setPayError("We couldn't verify this payment. Contact support if you were charged.");
           setPayState("failed");
         }
       },
       onCancel: () => setPayState("cancelled"),
-      onError: () => { setPayError("Payment service unavailable — try again shortly"); setPayState("failed"); },
+      onError: () => { setPayError("Payment service unavailable, try again shortly"); setPayState("failed"); },
     }).render(buttonRef.current);
   }
 
@@ -166,7 +166,7 @@ export default function V2BundlePage() {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify({ sessionId, contactPhone: consultPhone || undefined }),
         });
-        if (!res.ok) { setConsultPayState("failed"); setConsultPayError("Payment service unavailable — try again shortly"); throw new Error("create-order failed"); }
+        if (!res.ok) { setConsultPayState("failed"); setConsultPayError("Payment service unavailable, try again shortly"); throw new Error("create-order failed"); }
         const data = await res.json() as { orderId: string };
         return data.orderId;
       },
@@ -188,12 +188,12 @@ export default function V2BundlePage() {
           }
           setConsultPayState("success");
         } catch {
-          setConsultPayError("We couldn't verify this payment — contact support if you were charged.");
+          setConsultPayError("We couldn't verify this payment. Contact support if you were charged.");
           setConsultPayState("failed");
         }
       },
       onCancel: () => setConsultPayState("cancelled"),
-      onError: () => { setConsultPayError("Payment service unavailable — try again shortly"); setConsultPayState("failed"); },
+      onError: () => { setConsultPayError("Payment service unavailable, try again shortly"); setConsultPayState("failed"); },
     }).render(consultButtonRef.current);
   }
 
@@ -353,7 +353,7 @@ export default function V2BundlePage() {
         </div>
 
         {payState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{payError}</p>}
-        {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled — no charge was made.</p>}
+        {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
         {payState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
 
         <div style={{ opacity: payState === "confirming" ? 0.4 : 1, pointerEvents: payState === "confirming" ? "none" : "auto" }}>
@@ -372,7 +372,7 @@ export default function V2BundlePage() {
           <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem", maxWidth: "56rem", margin: "0 auto" }}>
             <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", margin: "0 0 0.8rem" }}>Doctor Consultation</h2>
             <p style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "2rem" }}>
-              A certified dermatologist reviews your case and follows up directly — no AI, a real person. We&apos;ll contact you within 24 hours after payment.
+              A certified dermatologist reviews your case and follows up directly. No AI, a real person. We&apos;ll contact you within 24 hours after payment.
             </p>
 
             {consultPayState === "success" ? (
@@ -397,7 +397,7 @@ export default function V2BundlePage() {
                 </div>
 
                 {consultPayState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{consultPayError}</p>}
-                {consultPayState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled — no charge was made.</p>}
+                {consultPayState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
                 {consultPayState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
 
                 <div style={{ opacity: consultPayState === "confirming" ? 0.4 : 1, pointerEvents: consultPayState === "confirming" ? "none" : "auto" }}>

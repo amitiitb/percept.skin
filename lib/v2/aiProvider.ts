@@ -43,7 +43,7 @@ function mockMetrics(names: string[], category: MetricCategory, seed: number, pr
       metricName,
       score,
       label: labelFor(score),
-      confidence: "Based on mock data — image quality checks passed",
+      confidence: "Based on mock data, image quality checks passed",
       explanation: `${metricName} appears within a typical range for your profile.`,
       recommendation: "Consistent skincare and good lighting for future scans will refine this estimate.",
       isPremium: i >= premiumFrom,
@@ -94,7 +94,7 @@ export const mockProvider: AnalysisProvider = {
         hairScalp: ["Scalp cleansing", "Reduced heat styling"],
       },
       limitations: photoCount < 15
-        ? ["Some photos were missing or low quality — retake for a more complete report."]
+        ? ["Some photos were missing or low quality. Retake for a more complete report."]
         : [],
       professionalConsultationNote:
         "This is a cosmetic and wellness estimate, not a medical diagnosis. Consult a qualified dermatologist for any visible change that concerns you.",

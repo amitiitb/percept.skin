@@ -97,7 +97,7 @@ function SignupForm() {
             Create your account.
           </h1>
           <p style={{ marginTop: "1.4rem", fontSize: "1.6rem", color: "var(--secondary)", lineHeight: 1.6 }}>
-            Takes a minute — then we'll guide you through your guided scan.
+            Takes a minute, then we'll guide you through your guided scan.
           </p>
         </div>
 

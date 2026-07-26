@@ -63,7 +63,7 @@ export default function FrameAIPanel({ sessionId, photo, isPremium, onRequirePre
         AI Photorealistic Preview
       </p>
       <p style={{ fontSize: "1.4rem", color: "var(--secondary)", marginBottom: "2rem", lineHeight: 1.5 }}>
-        Studio-quality generated preview of each frame on your own photo — like a retail virtual try-on. Illustrative only.
+        Studio-quality generated preview of each frame on your own photo, like a retail virtual try-on. Illustrative only.
       </p>
 
       <div style={{ display: "flex", gap: "1.2rem", flexWrap: "wrap", marginBottom: "2.4rem" }}>
@@ -89,14 +89,14 @@ export default function FrameAIPanel({ sessionId, photo, isPremium, onRequirePre
 
       {state === "loading" && (
         <div style={{ background: "var(--wash)", borderRadius: "1.2rem", padding: "6rem 2rem", textAlign: "center" }}>
-          <p style={{ fontSize: "1.5rem", color: "var(--secondary)" }}>Generating your {active} preview — this takes a few seconds…</p>
+          <p style={{ fontSize: "1.5rem", color: "var(--secondary)" }}>Generating your {active} preview, this takes a few seconds…</p>
         </div>
       )}
 
       {state === "done" && resultUrl && (
         <div style={{ maxWidth: "40rem" }}>
           <img src={resultUrl} alt={`${active} AI preview`} style={{ width: "100%", borderRadius: "1.2rem", border: "1px solid var(--line)" }} />
-          <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1rem" }}>AI-generated preview — {active}</p>
+          <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1rem" }}>AI-generated preview: {active}</p>
         </div>
       )}
     </div>

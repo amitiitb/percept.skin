@@ -26,7 +26,7 @@ const VARIANT: Record<string, CSSProperties> = {
 };
 
 const HOVER: Record<string, CSSProperties> = {
-  primary: { background: "#3A463F" },
+  primary: { background: "#0A4F49" },
   outline: { background: "var(--wash)", borderColor: "var(--primary)" },
   ghost:   { background: "var(--wash)", color: "var(--primary)" },
 };

@@ -4,13 +4,17 @@ import { useRouter } from "next/navigation";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { PLANS, type PlanId } from "@/lib/v2/paypal";
 
+// Each scan report is unlocked separately via per-module purchase at checkout
+// (see /v2/bundle) regardless of subscription status — a subscription here
+// does NOT unlock report content, only the cross-scan trend feature below.
+// Copy must not imply otherwise (it did before this pass, and no longer does).
 const FREE_FEATURES = [
-  "One introductory scan", "Basic Glow Score", "Limited skin overview",
-  "Limited hair overview", "Three basic recommendations",
+  "Unlimited guided scans (pay per report)", "Full report for any scan you unlock",
+  "Saved report history",
 ];
 const PREMIUM_FEATURES = [
-  "Full skin, face, and hair report", "Skin age analysis", "Detailed recommendations",
-  "Downloadable report", "Saved report history", "Progress tracking & scan comparison",
+  "Everything in Free", "Glow Score trend across all your scans",
+  "Metric-by-metric progress comparison, scan over scan",
 ];
 
 export default function V2PlansPage() {
@@ -20,11 +24,18 @@ export default function V2PlansPage() {
   return (
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
       <div style={{ maxWidth: "96rem", margin: "0 auto" }}>
+        <button
+          onClick={() => router.push("/v2/dashboard")}
+          style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0, marginBottom: "3.2rem" }}
+        >
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          Dashboard
+        </button>
         <h1 style={{ fontSize: "3.6rem", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "1.2rem" }}>
-          Choose your plan
+          Track your progress
         </h1>
         <p style={{ fontSize: "1.6rem", color: "var(--secondary)", textAlign: "center", marginBottom: "4.8rem" }}>
-          Free plan works forever. Upgrade any time.
+          Every report is unlocked per scan at checkout. Premium adds trend tracking across scans.
         </p>
 
         <div className="v2-plan-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginBottom: "4.8rem" }}>

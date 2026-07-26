@@ -1,6 +1,7 @@
 "use client";
 import { ReactNode, CSSProperties } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 interface Props {
@@ -40,11 +41,14 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
   return (
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex" }}>
       <div className="v2-left" style={panelL}>
-        <div style={{
-          position: "absolute", inset: 0, opacity: 0.035,
-          backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }} />
+        <Image
+          src="/assets/onboarding-moody-portrait.png"
+          alt=""
+          fill
+          sizes="42vw"
+          style={{ objectFit: "cover", objectPosition: "center" }}
+        />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(43,53,48,0.94) 0%, rgba(43,53,48,0.55) 55%, rgba(43,53,48,0.25) 100%)" }} />
         <a href="/v2/splash" style={{
           position: "relative", zIndex: 1,
           fontSize: "2.2rem", fontWeight: 600, color: "#fff", letterSpacing: "-0.02em",
@@ -64,7 +68,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
           )}
         </motion.div>
         <div style={{ position: "relative", zIndex: 1, fontSize: "1.2rem", color: "rgba(255,255,255,0.3)" }}>
-          Cosmetic & wellness insights — not a medical diagnosis
+          Cosmetic & wellness insights, not a medical diagnosis
         </div>
       </div>
 

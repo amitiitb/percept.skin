@@ -9,7 +9,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <div style={{
       minHeight: "100vh",
-      background: "var(--canvas, #FAFAF8)",
+      background: "var(--canvas, #E8E7E5)",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -17,14 +17,14 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       padding: "3.2rem 2.4rem",
       textAlign: "center",
     }}>
-      <span style={{ fontSize: "2.2rem", fontWeight: 600, color: "var(--primary, #111B1E)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
-        Glow<span style={{ color: "var(--rose, #D9546A)" }}>metry</span>
+      <span style={{ fontSize: "2.2rem", fontWeight: 600, color: "var(--primary, #003934)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
+        Glow<span style={{ color: "var(--rose, #1A9E8F)" }}>metry</span>
       </span>
 
-      <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4rem)", fontWeight: 600, color: "var(--primary, #111B1E)", lineHeight: 1.1, letterSpacing: "-0.025em", marginBottom: "1.6rem" }}>
+      <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4rem)", fontWeight: 600, color: "var(--primary, #003934)", lineHeight: 1.1, letterSpacing: "-0.025em", marginBottom: "1.6rem" }}>
         Something went wrong.
       </h1>
-      <p style={{ fontSize: "1.6rem", color: "var(--secondary, #5A6B72)", lineHeight: 1.6, maxWidth: "42rem", marginBottom: "4rem" }}>
+      <p style={{ fontSize: "1.6rem", color: "var(--secondary, #4D6560)", lineHeight: 1.6, maxWidth: "42rem", marginBottom: "4rem" }}>
         An unexpected error occurred. Your progress is saved on this device, try again and you&apos;ll pick up where you left off.
       </p>
 
@@ -33,7 +33,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           onClick={reset}
           style={{
             height: "5.2rem", padding: "0 3.2rem", borderRadius: "9999px",
-            background: "var(--primary, #111B1E)", color: "#fff", border: "none",
+            background: "var(--primary, #003934)", color: "#fff", border: "none",
             fontSize: "1.5rem", fontWeight: 500, cursor: "pointer",
           }}
         >
@@ -44,7 +44,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           style={{
             display: "inline-flex", alignItems: "center", justifyContent: "center",
             height: "5.2rem", padding: "0 3.2rem", borderRadius: "9999px",
-            border: "1px solid var(--line-strong, #C8C4BB)", color: "var(--primary, #111B1E)",
+            border: "1px solid var(--line-strong, #B9B6AE)", color: "var(--primary, #003934)",
             fontSize: "1.5rem", fontWeight: 500, textDecoration: "none",
           }}
         >

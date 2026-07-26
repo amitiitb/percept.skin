@@ -4,12 +4,7 @@ const FACE_STEPS: Array<[PhotoType, string, string]> = [
   ["face_front", "Front face", "Look straight at the camera with a neutral expression"],
   ["face_left", "Left angle", "Turn your head slowly to show your left side"],
   ["face_right", "Right angle", "Turn your head slowly to show your right side"],
-  ["forehead", "Forehead close-up", "Position your forehead inside the guide"],
-  ["eye_left", "Left eye close-up", "Position your left eye inside the guide"],
-  ["eye_right", "Right eye close-up", "Position your right eye inside the guide"],
-  ["nose_cheek", "Nose & cheek", "Position your nose and cheek inside the guide"],
-  ["smile", "Smile", "Give a natural smile"],
-  ["chin_jaw", "Chin & jaw", "Position your chin and jawline inside the guide"],
+  ["face_detail", "Close-up", "Move closer so your forehead, eyes, nose, and cheeks fill the frame"],
 ];
 
 const HAIR_STEPS: Array<[PhotoType, string, string]> = [
@@ -17,7 +12,7 @@ const HAIR_STEPS: Array<[PhotoType, string, string]> = [
   ["temple_left", "Left temple", "Show your left temple area"],
   ["temple_right", "Right temple", "Show your right temple area"],
   ["scalp_top", "Top of scalp", "Tilt your head down slightly to show the top of your scalp"],
-  ["crown", "Crown area", "Show the crown of your head — use the rear camera if easier"],
+  ["crown", "Crown area", "Show the crown of your head, use the rear camera if easier"],
   ["hair_parting", "Hair parting close-up", "Show your natural hair parting up close"],
 ];
 

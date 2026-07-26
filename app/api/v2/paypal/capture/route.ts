@@ -55,6 +55,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logV2.error("v2_paypal_capture_failed", { user_id: auth.userId, order_id: orderId, message });
-    return NextResponse.json({ error: "Payment verification failed — please contact support if you were charged" }, { status: 500 });
+    return NextResponse.json({ error: "Payment verification failed. Please contact support if you were charged" }, { status: 500 });
   }
 }

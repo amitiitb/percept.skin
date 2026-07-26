@@ -16,12 +16,12 @@ export async function POST(req: NextRequest) {
   const customId = `${auth.userId}|${sessionId ?? "-"}|${contactPhone ?? "-"}`;
 
   try {
-    const { orderId } = await createCustomOrder(DOCTOR_CONSULTATION_PRICE, "Glowmetry — Doctor Consultation", customId);
+    const { orderId } = await createCustomOrder(DOCTOR_CONSULTATION_PRICE, "Glowmetry: Doctor Consultation", customId);
     logV2.info("v2_consultation_order_created", { user_id: auth.userId, session_id: sessionId, order_id: orderId });
     return NextResponse.json({ orderId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logV2.error("v2_consultation_order_create_failed", { user_id: auth.userId, message });
-    return NextResponse.json({ error: "Payment service unavailable — try again shortly" }, { status: 502 });
+    return NextResponse.json({ error: "Payment service unavailable, try again shortly" }, { status: 502 });
   }
 }

@@ -23,10 +23,13 @@ export interface UserProfileV2 {
   consentGiven: boolean;
 }
 
-// 15 guided capture steps — 9 face + 6 hair/scalp, phase-grouped (Design review Decision #13)
+// 10 guided capture steps — 4 face + 6 hair/scalp, phase-grouped (Design review Decision #13).
+// Face trimmed from 9 to 4 (front/left/right + one combined close-up) — the
+// 5 separate close-ups (forehead/eyes/nose/chin) traded capture friction for
+// per-metric framing precision that isn't worth it pre-launch; a single
+// close-up still covers pore/redness/under-eye detail a wide shot misses.
 export type PhotoType =
-  | "face_front" | "face_left" | "face_right" | "forehead" | "eye_left" | "eye_right"
-  | "nose_cheek" | "smile" | "chin_jaw"
+  | "face_front" | "face_left" | "face_right" | "face_detail"
   | "hairline_front" | "temple_left" | "temple_right" | "scalp_top" | "crown" | "hair_parting";
 
 export interface CaptureStepDef {

@@ -1,49 +1,35 @@
 @import "tailwindcss";
 
-/* ─── Basis Grotesque Pro (Elementis font) ─────────── */
-@font-face {
-  font-family: "BasisGrotesque";
-  src: url("/fonts/BasisGrotesquePro-Light.woff2") format("woff2");
-  font-weight: 300;
-  font-display: swap;
-}
-@font-face {
-  font-family: "BasisGrotesque";
-  src: url("/fonts/BasisGrotesquePro-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: "BasisGrotesque";
-  src: url("/fonts/BasisGrotesquePro-Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-display: swap;
-}
-
-/* ─── Elementis × Glowmetry Design Tokens ─────────── */
+/* ─── Design Tokens — SkyClinics-inspired rebrand (2026-07-26) ───────────
+   Palette and font swapped to match the SkyClinics reference project:
+   warm beige canvas, dark forest-teal text, teal accent, Satoshi font.
+   --rose kept as the variable name (750+ existing var(--rose) references
+   across the app) but the color itself is now teal, not rose. Satoshi is
+   loaded from Fontshare's CDN in app/layout.tsx, not self-hosted (their
+   license requires ITF's written consent to self-host the font file). */
 :root {
-  --font-display: "BasisGrotesque", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-display: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 
-  /* Canvas — warm, not cold */
-  --canvas:        #FAF9F6;
-  --surface:       #F2EEE6;
-  --wash:          #EDE9E1;
+  /* Canvas — warm beige, SkyClinics background */
+  --canvas:        #E8E7E5;
+  --surface:       #EFEEEC;
+  --wash:          #E1DFDB;
 
-  /* Text */
-  --primary:       #2B3530;   /* Elementis forest green */
-  --body:          #3D4D47;
-  --secondary:     #6B7B71;
-  --muted:         #9EAA9E;
+  /* Text — dark forest-teal */
+  --primary:       #003934;
+  --body:          #0F3A35;
+  --secondary:     #4D6560;
+  --muted:         #8C9B97;
 
   /* Borders */
-  --line:          #DDD9D0;
-  --line-strong:   #C4BFB4;
+  --line:          #D6D3CD;
+  --line-strong:   #B9B6AE;
 
-  /* Accent */
-  --accent-muted:  #8FA49A;
-  --sage:          #CED1BF;   /* Elementis nav scroll bg */
-  --on-dark:       #D1CCBF;   /* text on dark sections */
-  --rose:          #C8503A;
+  /* Accent — teal (var name kept as --rose, see note above) */
+  --accent-muted:  #6FA69C;
+  --sage:          #C7D6D2;
+  --on-dark:       #CFE3DE;   /* text on dark sections */
+  --rose:          #1A9E8F;
 
   /* Spacing unit — 1px at the 1920px design size, scales with root font.
      Used as calc(64 * var(--multiplier)) etc. Was previously undefined,

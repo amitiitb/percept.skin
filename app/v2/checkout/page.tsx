@@ -39,7 +39,7 @@ function V2CheckoutInner() {
     const script = document.createElement("script");
     script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
     script.onload = renderButton;
-    script.onerror = () => { setState("failed"); setErrorMsg("Payment service unavailable — try again shortly"); };
+    script.onerror = () => { setState("failed"); setErrorMsg("Payment service unavailable, try again shortly"); };
     document.body.appendChild(script);
   }, []);
 
@@ -54,7 +54,7 @@ function V2CheckoutInner() {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify({ planId }),
         });
-        if (!res.ok) { setState("failed"); setErrorMsg("Payment service unavailable — try again shortly"); throw new Error("create-order failed"); }
+        if (!res.ok) { setState("failed"); setErrorMsg("Payment service unavailable, try again shortly"); throw new Error("create-order failed"); }
         const data = await res.json() as { orderId: string };
         return data.orderId;
       },
@@ -78,12 +78,12 @@ function V2CheckoutInner() {
           }
           setState("success");
         } catch {
-          setErrorMsg("We couldn't verify this payment — contact support if you were charged.");
+          setErrorMsg("We couldn't verify this payment. Contact support if you were charged.");
           setState("failed");
         }
       },
       onCancel: () => setState("cancelled"),
-      onError: () => { setErrorMsg("Payment service unavailable — try again shortly"); setState("failed"); },
+      onError: () => { setErrorMsg("Payment service unavailable, try again shortly"); setState("failed"); },
     }).render(buttonRef.current);
   }
 
@@ -100,14 +100,21 @@ function V2CheckoutInner() {
   }
 
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2.4rem", textAlign: "center" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2.4rem", textAlign: "center", position: "relative" }}>
+      <button
+        onClick={() => router.push("/v2/plans")}
+        style={{ position: "absolute", top: "2.4rem", left: "2.4rem", display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0 }}
+      >
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        Plans
+      </button>
       <p style={{ fontSize: "1.4rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>Billing summary</p>
-      <h1 style={{ fontSize: "2.8rem", color: "var(--primary)", marginBottom: "0.8rem" }}>Glowmetry Premium — {plan.label}</h1>
+      <h1 style={{ fontSize: "2.8rem", color: "var(--primary)", marginBottom: "0.8rem" }}>Glowmetry Premium: {plan.label}</h1>
       <p style={{ fontSize: "1.8rem", color: "var(--secondary)", marginBottom: "0.8rem" }}>${plan.price} billed every {plan.period} (sandbox)</p>
       <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginBottom: "4rem" }}>Cancel anytime · no hidden fees · you&apos;ll see this exact charge on PayPal&apos;s confirmation screen before it completes</p>
 
       {state === "confirming" && <p style={{ fontSize: "1.6rem", color: "var(--secondary)", marginBottom: "2rem" }}>Confirming payment…</p>}
-      {state === "cancelled" && <p style={{ fontSize: "1.6rem", color: "var(--muted)", marginBottom: "2rem" }}>Payment cancelled — no charge was made.</p>}
+      {state === "cancelled" && <p style={{ fontSize: "1.6rem", color: "var(--muted)", marginBottom: "2rem" }}>Payment cancelled. No charge was made.</p>}
       {state === "failed" && <p style={{ fontSize: "1.6rem", color: "var(--rose)", marginBottom: "2rem" }}>{errorMsg}</p>}
 
       <div style={{ width: "100%", maxWidth: "36rem", opacity: state === "confirming" ? 0.4 : 1, pointerEvents: state === "confirming" ? "none" : "auto" }}>

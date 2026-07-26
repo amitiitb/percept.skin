@@ -86,16 +86,20 @@ export default function V2SettingsPage() {
           <Row label="Skin & hair concerns" action={<button onClick={() => router.push("/v2/profile-setup")} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "1.4rem" }}>Update →</button>} />
         </div>
 
-        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "2.4rem" }}>
-          <Row label={`Subscription: ${subStatus === "active" ? `Premium (${subPlan})` : "Free"}`} action={
-            subStatus === "active"
-              ? <span style={{ fontSize: "1.3rem", color: "#4C8C5F" }}>Active</span>
-              : <button onClick={() => router.push("/v2/plans")} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "1.4rem" }}>Upgrade →</button>
-          } />
-          <Row label="Refresh billing status" action={<button onClick={refreshBilling} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "1.4rem" }}>Refresh</button>} />
-        </div>
+        {/* Legacy monthly-subscription row only shown if a subscription actually
+            exists (pre-bundle-model holdover). New scans are unlocked via
+            per-scan bundle purchase (/v2/bundle), not a subscription — so the
+            "Upgrade" link to /v2/plans is hidden by default rather than
+            pointing users at a paywall model the shipped flow no longer uses. */}
+        {subStatus === "active" && (
+          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "2.4rem" }}>
+            <Row label={`Subscription: Premium (${subPlan})`} action={<span style={{ fontSize: "1.3rem", color: "#4C8C5F" }}>Active</span>} />
+            <Row label="Refresh billing status" action={<button onClick={refreshBilling} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "1.4rem" }}>Refresh</button>} />
+          </div>
+        )}
 
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "2.4rem" }}>
+          <Row label="Scan reports" action={<button onClick={() => router.push("/v2/history")} style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "1.4rem" }}>View all →</button>} />
           <Row label="Privacy Policy" action={<a href="/privacy" target="_blank" style={{ color: "var(--primary)", fontSize: "1.4rem" }}>View →</a>} />
           <Row label="Terms of Service" action={<a href="/terms" target="_blank" style={{ color: "var(--primary)", fontSize: "1.4rem" }}>View →</a>} />
           <Row label="Contact support" action={<a href="mailto:support@glowmetry.com" style={{ color: "var(--primary)", fontSize: "1.4rem" }}>Email us →</a>} />

@@ -17,6 +17,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logV2.error("v2_paypal_order_create_failed", { user_id: auth.userId, message });
-    return NextResponse.json({ error: "Payment service unavailable — try again shortly" }, { status: 502 });
+    return NextResponse.json({ error: "Payment service unavailable, try again shortly" }, { status: 502 });
   }
 }

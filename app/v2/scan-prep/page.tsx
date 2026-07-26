@@ -44,7 +44,7 @@ export default function V2ScanPrepPage() {
         </div>
 
         <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginBottom: "2.4rem", lineHeight: 1.5 }}>
-          These checks estimate lighting and framing — not exact, but a good guide.
+          These checks estimate lighting and framing, not exact, but a good guide.
         </p>
 
         <PrimaryButton onClick={() => router.push("/v2/capture/0")}>I&apos;m ready →</PrimaryButton>

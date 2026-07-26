@@ -71,6 +71,7 @@ export default function V2CapturePage() {
   const [issues, setIssues] = useState<QualityIssue[]>([]);
   const [saving, setSaving] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const rearCamera = step?.photoType === "scalp_top" || step?.photoType === "crown";
 
@@ -88,7 +89,7 @@ export default function V2CapturePage() {
       if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
       streamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
-    }).catch(() => setCameraError("Camera permission denied — you can still upload a photo from your gallery."));
+    }).catch(() => setCameraError("Camera permission denied. You can still upload a photo from your gallery."));
 
     return () => {
       cancelled = true;
@@ -245,11 +246,13 @@ export default function V2CapturePage() {
   function retake() {
     setCaptured(null);
     setIssues([]);
+    setSaveError(null);
   }
 
   async function handleContinue() {
     if (!captured) return;
     setSaving(true);
+    setSaveError(null);
     try {
       const sessionId = await ensureSession();
       const { data: { user } } = await supabase.auth.getUser();
@@ -282,6 +285,7 @@ export default function V2CapturePage() {
     } catch (e) {
       logV2.error("v2_photo_save_failed", { message: e instanceof Error ? e.message : String(e) });
       setSaving(false);
+      setSaveError("Upload failed. Check your connection and retry.");
     }
   }
 
@@ -350,10 +354,14 @@ export default function V2CapturePage() {
           </div>
         )}
 
+        {saveError && (
+          <p role="alert" style={{ color: "var(--rose)", fontSize: "1.4rem", marginTop: "1.6rem", textAlign: "center" }}>{saveError}</p>
+        )}
+
         <div style={{ marginTop: "3.2rem", width: "100%", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
           {captured ? (
             <>
-              <PrimaryButton onClick={handleContinue} loading={saving} disabled={checking}>Continue →</PrimaryButton>
+              <PrimaryButton onClick={handleContinue} loading={saving} disabled={checking}>{saveError ? "Retry →" : "Continue →"}</PrimaryButton>
               <PrimaryButton variant="outline" onClick={retake} disabled={saving}>Retake</PrimaryButton>
             </>
           ) : (
