@@ -11,7 +11,13 @@ const ANALYZING_MESSAGES = [
   "Preparing your personalized report…",
 ];
 
-type PayState = "idle" | "confirming" | "failed" | "cancelled";
+type PayState = "idle" | "confirming" | "success" | "failed" | "cancelled";
+
+const CONFETTI = Array.from({ length: 14 }, (_, i) => ({
+  x: (i / 14) * 100 + (i % 2 === 0 ? -3 : 3),
+  delay: (i % 7) * 0.08,
+  color: i % 3 === 0 ? "var(--rose)" : i % 3 === 1 ? "#fff" : "rgba(255,255,255,0.5)",
+}));
 
 declare global {
   interface Window { paypal?: { Buttons: (opts: unknown) => { render: (el: HTMLElement) => void } }; }
@@ -83,6 +89,14 @@ export default function V2BundlePage() {
     return () => clearInterval(t);
   }, []);
 
+  // Celebration screen auto-advances so the payment doesn't feel like a dead
+  // end if the user never taps the button — the tap just gets there sooner.
+  useEffect(() => {
+    if (payState !== "success") return;
+    const t = setTimeout(() => router.push(`/v2/report/${sessionId}`), 3400);
+    return () => clearTimeout(t);
+  }, [payState, sessionId]);
+
   // PayPal SDK — loaded exactly once for the whole page (two separate script
   // tags/instances make the SDK throw "zoid destroyed all components" on the
   // second load), then both the report-purchase and consultation buttons
@@ -144,7 +158,7 @@ export default function V2BundlePage() {
           for (let i = 0; i < 20 && !analysisReadyRef.current; i++) {
             await new Promise((r) => setTimeout(r, 500));
           }
-          router.push(`/v2/report/${sessionId}`);
+          setPayState("success");
         } catch {
           setPayError("We couldn't verify this payment. Contact support if you were charged.");
           setPayState("failed");
@@ -212,6 +226,75 @@ export default function V2BundlePage() {
   if (!authChecked) return <div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />;
 
   return (
+    <>
+      <AnimatePresence>
+        {payState === "success" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 200, background: "var(--primary)",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              padding: "3.2rem", overflow: "hidden",
+            }}
+          >
+            {CONFETTI.map((c, i) => (
+              <motion.span
+                key={i}
+                aria-hidden
+                initial={{ y: "-10vh", x: `${c.x}vw`, opacity: 0, rotate: 0 }}
+                animate={{ y: "110vh", opacity: [0, 1, 1, 0], rotate: 360 }}
+                transition={{ duration: 2.6, delay: c.delay, ease: "easeIn" }}
+                style={{ position: "absolute", top: 0, left: 0, width: "0.8rem", height: "0.8rem", borderRadius: "2px", background: c.color, pointerEvents: "none" }}
+              />
+            ))}
+
+            <motion.div
+              initial={{ scale: 0.4, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
+              style={{
+                width: "8rem", height: "8rem", borderRadius: "50%", background: "var(--rose)",
+                display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "3.2rem",
+              }}
+            >
+              <motion.svg
+                width="40" height="40" viewBox="0 0 24 24" fill="none"
+                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <motion.path d="M4 12l6 6L20 6" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </motion.svg>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }}
+              style={{ fontSize: "clamp(2.6rem, 6vw, 3.6rem)", fontWeight: 400, color: "#fff", textAlign: "center", letterSpacing: "-0.02em", marginBottom: "1.2rem" }}
+            >
+              Payment successful
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.4 }}
+              style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.7)", textAlign: "center", marginBottom: "4rem", maxWidth: "44rem" }}
+            >
+              Your Complete Beauty Report is ready to view.
+            </motion.p>
+
+            <motion.button
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.4 }}
+              onClick={() => router.push(`/v2/report/${sessionId}`)}
+              style={{
+                background: "var(--rose)", color: "#fff", fontSize: "1.6rem", fontWeight: 500,
+                border: "none", borderRadius: "9999px", padding: "1.6rem 3.6rem", cursor: "pointer",
+              }}
+            >
+              View My Report →
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2rem 8rem" }}>
       <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
 
@@ -414,5 +497,6 @@ export default function V2BundlePage() {
         }
       `}</style>
     </div>
+    </>
   );
 }
