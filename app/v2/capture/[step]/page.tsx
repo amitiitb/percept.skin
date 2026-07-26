@@ -73,8 +73,6 @@ export default function V2CapturePage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const rearCamera = step?.photoType === "scalp_top" || step?.photoType === "crown";
-
   useEffect(() => {
     if (!step) { router.replace("/v2/dashboard"); return; }
     setStepIndex(index);
@@ -84,7 +82,7 @@ export default function V2CapturePage() {
     if (showPhaseTransition || captured) return;
     let cancelled = false;
     navigator.mediaDevices.getUserMedia({
-      video: { facingMode: rearCamera ? "environment" : "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
     }).then((stream) => {
       if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
       streamRef.current = stream;
@@ -95,7 +93,7 @@ export default function V2CapturePage() {
       cancelled = true;
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [showPhaseTransition, captured, rearCamera]);
+  }, [showPhaseTransition, captured]);
 
   // Live face-mesh overlay — face steps only, live camera view only.
   useEffect(() => {
@@ -220,11 +218,9 @@ export default function V2CapturePage() {
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    // Mirror for a natural selfie-style capture (front camera only)
-    if (!rearCamera) {
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-    }
+    // Mirror for a natural selfie-style capture
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
     setCaptured(dataUrl);
@@ -332,13 +328,13 @@ export default function V2CapturePage() {
           ) : cameraError ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#fff", padding: "2rem", textAlign: "center", fontSize: "1.4rem" }}>{cameraError}</div>
           ) : (
-            <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: rearCamera ? "none" : "scaleX(-1)" }} />
+            <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }} />
           )}
           {!captured && !cameraError && step.phase === "face" && (
             <canvas
               ref={meshCanvasRef}
               aria-hidden
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none", transform: rearCamera ? "none" : "scaleX(-1)" }}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none", transform: "scaleX(-1)" }}
             />
           )}
           {!captured && !cameraError && (

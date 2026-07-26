@@ -9,7 +9,6 @@ const CHECKLIST = [
   "Hair off your face, no filters",
   "Clean camera lens",
   "Neutral expression unless told otherwise",
-  "Rear camera for scalp shots",
 ];
 
 export default function V2ScanPrepPage() {

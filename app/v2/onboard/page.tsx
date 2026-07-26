@@ -55,7 +55,7 @@ export default function V2OnboardPage() {
 
   return (
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "2.4rem 2.4rem 0", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.6rem 2.4rem 0", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
         <div style={{ display: "flex", gap: "0.6rem" }}>
           {Array.from({ length: total }).map((_, i) => (
             <div key={i} style={{ width: "3.2rem", height: "0.4rem", borderRadius: "9999px", background: i <= step ? "var(--primary)" : "var(--line)" }} />
@@ -68,27 +68,27 @@ export default function V2OnboardPage() {
         )}
       </div>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "2.4rem", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "1.6rem 2.4rem", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.28 }}>
             {step < 3 ? (
               <>
-                <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
+                <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: step === 0 ? "0.8rem" : "1.6rem" }}>
                   {SCREENS[step].eyebrow}
                 </p>
-                <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4.4rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4.4rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: step === 0 ? "1rem" : "2rem" }}>
                   {SCREENS[step].title}
                 </h1>
-                <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "52rem", marginBottom: step === 0 ? "3.2rem" : 0 }}>
+                <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "52rem", marginBottom: step === 0 ? "1.2rem" : 0 }}>
                   {SCREENS[step].body}
                 </p>
                 {step === 0 && (
-                  <div style={{ position: "relative", width: "100%", maxWidth: "32rem", aspectRatio: "4/5", borderRadius: "1.6rem", overflow: "hidden" }}>
+                  <div style={{ position: "relative", height: "min(15vh, 13rem)", aspectRatio: "4/5", borderRadius: "1.6rem", overflow: "hidden", margin: "0 auto" }}>
                     <Image
                       src="/assets/selfie-capture-guide.png"
                       alt="Guided photo capture with an on-screen framing guide"
                       fill
-                      sizes="(max-width: 700px) 100vw, 32rem"
+                      sizes="18rem"
                       style={{ objectFit: "cover" }}
                     />
                   </div>
@@ -109,8 +109,8 @@ export default function V2OnboardPage() {
         </AnimatePresence>
       </div>
 
-      <div style={{ padding: "2.4rem", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
-        <p style={{ fontSize: "1.2rem", color: "var(--muted)", lineHeight: 1.5, marginBottom: "2rem", textAlign: "center" }}>
+      <div style={{ padding: "1.2rem 2.4rem 2rem", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
+        <p style={{ fontSize: "1.2rem", color: "var(--muted)", lineHeight: 1.5, marginBottom: "1.2rem", textAlign: "center" }}>
           Glowmetry offers cosmetic and wellness insights and is not a substitute for professional medical advice.
         </p>
         {/* CTA always gets full width — a long label like "Get Started →" was
