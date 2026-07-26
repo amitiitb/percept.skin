@@ -8,9 +8,7 @@ const FACE_STEPS: Array<[PhotoType, string, string]> = [
 ];
 
 const HAIR_STEPS: Array<[PhotoType, string, string]> = [
-  ["hairline_front", "Front hairline", "Show your front hairline clearly"],
-  ["temple_left", "Left temple", "Show your left temple area"],
-  ["temple_right", "Right temple", "Show your right temple area"],
+  ["hairline_front", "Hairline & temples", "Show your front hairline and both temples clearly"],
   ["scalp_crown", "Top & crown", "Hold your phone above your head and tilt it down to show the top and crown of your scalp"],
   ["hair_parting", "Hair parting close-up", "Show your natural hair parting up close"],
 ];
