@@ -8,7 +8,7 @@ import ColourAnalysisPanel from "@/components/v2/ColourAnalysisPanel";
 import HairstylePanel from "@/components/v2/HairstylePanel";
 import GlassesVirtualTryOn from "@/components/v2/GlassesVirtualTryOn";
 import FrameAIPanel from "@/components/v2/FrameAIPanel";
-import type { AnalysisMetric, MetricCategory, ColourAnalysis } from "@/lib/v2/types";
+import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
 import type { ModuleId } from "@/lib/v2/reportModules";
 
 interface SessionRow {
@@ -17,6 +17,9 @@ interface SessionRow {
   overall_score: number | null;
   skin_age: number | null;
   created_at: string;
+  positive_observations: string[] | null;
+  recommendations: RecommendationSet | null;
+  limitations: string[] | null;
 }
 
 function verdictFor(score: number): string {
@@ -26,30 +29,53 @@ function verdictFor(score: number): string {
   return "Needs attention";
 }
 
-function MetricCard({ m }: { m: AnalysisMetric }) {
+function ScoreBar({ score }: { score: number | null }) {
+  const pct = Math.max(2, Math.min(100, score ?? 0));
   return (
-    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.2rem", padding: "2.4rem" }}>
-      <p style={{ fontSize: "1.3rem", color: "var(--muted)", margin: "0 0 0.8rem" }}>{m.metricName}</p>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "1rem" }}>
-        <strong style={{ fontSize: "3.2rem", fontWeight: 300, color: "var(--primary)" }}>{m.score}</strong>
-        <span style={{ fontSize: "1.3rem", color: "var(--secondary)" }}>{m.label}</span>
-      </div>
-      <p style={{ fontSize: "1.4rem", color: "var(--secondary)", marginTop: "1.2rem", lineHeight: 1.5 }}>{m.explanation}</p>
+    <div style={{ flex: 1, height: "0.6rem", borderRadius: "9999px", background: "var(--line)", overflow: "hidden" }}>
+      <div style={{ height: "100%", width: `${pct}%`, borderRadius: "9999px", background: "var(--rose)" }} />
     </div>
   );
 }
 
-function Section({ title, metrics }: { title: string; metrics: AnalysisMetric[] }) {
+function MetricRow({ m }: { m: AnalysisMetric }) {
+  return (
+    <div style={{ padding: "1.8rem 0", borderBottom: "1px solid var(--line)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "1.6rem", marginBottom: "0.8rem" }}>
+        <span style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, flex: "0 0 auto", minWidth: "15rem" }}>{m.metricName}</span>
+        <ScoreBar score={m.score} />
+        <span style={{ fontSize: "1.5rem", color: "var(--secondary)", fontWeight: 500, width: "3.2rem", textAlign: "right", flexShrink: 0 }}>{m.score ?? "—"}</span>
+      </div>
+      <p style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.6, margin: 0 }}>{m.explanation}</p>
+    </div>
+  );
+}
+
+function Section({ title, intro, metrics }: { title: string; intro?: string; metrics: AnalysisMetric[] }) {
   if (metrics.length === 0) return null;
   return (
-    <div style={{ marginBottom: "3.2rem" }}>
-      <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "1.6rem" }}>{title}</h2>
-      <div className="v2-metric-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.6rem" }}>
-        {metrics.map((m) => <MetricCard key={m.metricName} m={m} />)}
+    <div style={{ marginBottom: "4.8rem" }}>
+      <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: intro ? "0.6rem" : "1.6rem" }}>{title}</h2>
+      {intro && <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2rem", maxWidth: "60rem" }}>{intro}</p>}
+      <div className="v2-metric-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 4.8rem" }}>
+        {metrics.map((m) => <MetricRow key={m.metricName} m={m} />)}
       </div>
     </div>
   );
 }
+
+const SECTION_INTRO: Record<string, string> = {
+  Skin: "Texture, tone, and hydration across your face, read from your guided photos.",
+  Face: "Proportion, symmetry, and structural balance — the framework the rest of your look sits on.",
+  "Hair & Scalp": "Density, hairline pattern, and overall scalp health from your part and crown shots.",
+};
+
+const ROUTINE_META: Array<{ key: keyof RecommendationSet; label: string; icon: string; gate: "skin" | "hair" }> = [
+  { key: "morning", label: "Morning", icon: "☀", gate: "skin" },
+  { key: "evening", label: "Evening", icon: "☾", gate: "skin" },
+  { key: "weekly", label: "Weekly", icon: "✦", gate: "skin" },
+  { key: "hairScalp", label: "Hair & Scalp", icon: "≈", gate: "hair" },
+];
 
 export default function V2ReportPage() {
   const router = useRouter();
@@ -84,7 +110,25 @@ export default function V2ReportPage() {
     // an empty report.
     if (!purchase) { router.replace(`/v2/bundle/${sessionId}`); return; }
 
-    setSession(sess);
+    // Separate, best-effort fetch for the richer report content — kept apart
+    // from the core session query above so a pre-migration environment
+    // (columns not added yet, see supabase/migrations/20260727000000_*.sql)
+    // degrades to "no routine/observations shown" instead of breaking the
+    // entire report page with a 400 on an unknown column.
+    let content: Pick<SessionRow, "positive_observations" | "recommendations" | "limitations"> = {
+      positive_observations: null, recommendations: null, limitations: null,
+    };
+    try {
+      const { data: contentRow, error: contentErr } = await supabase
+        .from("analysis_sessions_v2").select("positive_observations, recommendations, limitations")
+        .eq("id", sessionId).eq("user_id", user.id).maybeSingle();
+      if (contentErr) throw contentErr;
+      if (contentRow) content = contentRow;
+    } catch {
+      // Columns not present yet — content stays empty, rest of the report renders normally.
+    }
+
+    setSession({ ...sess, ...content });
     setPurchased(new Set(purchase.modules as ModuleId[]));
     setMetrics((metricRows ?? []).map((r) => ({
       category: r.category as MetricCategory, metricName: r.metric_name, score: r.score,
@@ -169,43 +213,111 @@ export default function V2ReportPage() {
   const strongest = sorted.slice(0, 3).map((m) => m.metricName);
   const priority = sorted.slice(-3).map((m) => m.metricName);
 
+  // positiveObservations/limitations/recommendations are generated from
+  // whatever photos existed at analysis time, not tagged per module — only
+  // show them if the user actually bought at least one of skin/hairstyle
+  // (same access boundary the metric sections use).
+  const hasContentAccess = hasSkin || hasHairstyle;
+  const positiveObservations = hasContentAccess ? (session.positive_observations ?? []) : [];
+  const limitations = hasContentAccess ? (session.limitations ?? []) : [];
+  const recommendations = hasContentAccess ? session.recommendations : null;
+
   return (
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
 
         <button
           onClick={() => router.push("/v2/dashboard")}
-          style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0, marginBottom: "2.4rem" }}
+          style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0, marginBottom: "3.2rem" }}
         >
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
           Dashboard
         </button>
 
-        {/* Glow Score first — Design review Decision #12 */}
-        <div style={{ textAlign: "center", marginBottom: "4.8rem" }}>
-          <ScoreReveal score={score} />
-          <p style={{ fontSize: "2rem", color: "var(--secondary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Glow Score</p>
-          {session.skin_age !== null && (
-            <p style={{ fontSize: "1.5rem", color: "var(--muted)", marginTop: "1.2rem" }}>Estimated skin age: {session.skin_age}</p>
+        {/* Hero — portrait + Glow Score side by side (Design review Decision #12,
+            extended with the user's own photo so the payoff moment feels like a
+            personal consultation, not a bare number) */}
+        <div className="v2-hero-grid" style={{ display: "grid", gridTemplateColumns: photo ? "30rem 1fr" : "1fr", gap: "4.8rem", alignItems: "center", marginBottom: "3.2rem" }}>
+          {photo && (
+            <div style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2rem", overflow: "hidden", boxShadow: "0 2.4rem 4.8rem -1.2rem rgba(0,57,52,0.28)" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo} alt="Your guided-capture photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
           )}
-          {sorted.length > 0 && (
-          <div style={{ display: "flex", gap: "3.2rem", justifyContent: "center", marginTop: "2.4rem", flexWrap: "wrap" }}>
-            <div>
-              <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Strongest</p>
-              <p style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{strongest.join(" · ")}</p>
+          <div style={{ textAlign: photo ? "left" : "center" }}>
+            <div style={{ margin: photo ? "0" : "0 auto" }}>
+              <ScoreReveal score={score} />
             </div>
-            <div>
-              <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Priority areas</p>
-              <p style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{priority.join(" · ")}</p>
-            </div>
+            <p style={{ fontSize: "2rem", color: "var(--secondary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Glow Score</p>
+            {session.skin_age !== null && (
+              <p style={{ fontSize: "1.5rem", color: "var(--muted)", marginTop: "1.2rem" }}>Estimated skin age: {session.skin_age}</p>
+            )}
+            {sorted.length > 0 && (
+              <div style={{ display: "flex", gap: "3.2rem", justifyContent: photo ? "flex-start" : "center", marginTop: "2.4rem", flexWrap: "wrap" }}>
+                <div>
+                  <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Strongest</p>
+                  <p style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{strongest.join(" · ")}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Priority areas</p>
+                  <p style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{priority.join(" · ")}</p>
+                </div>
+              </div>
+            )}
           </div>
-          )}
         </div>
 
+        {/* What's working well — the AI's positive observations, previously
+            generated on every analysis but never surfaced anywhere. */}
+        {positiveObservations.length > 0 && (
+          <div style={{ background: "var(--primary)", borderRadius: "1.6rem", padding: "3.2rem 3.6rem", marginBottom: "4.8rem" }}>
+            <p style={{ fontSize: "1.2rem", color: "var(--on-dark)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1.8rem", opacity: 0.8 }}>What&apos;s working well</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+              {positiveObservations.map((p, i) => (
+                <div key={i} style={{ display: "flex", gap: "1.2rem", alignItems: "flex-start" }}>
+                  <span style={{ color: "var(--rose)", fontSize: "1.6rem", flexShrink: 0, lineHeight: 1.6 }}>✦</span>
+                  <p style={{ fontSize: "1.6rem", color: "#fff", lineHeight: 1.6, margin: 0 }}>{p}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Only purchased modules render — no locked/empty sections (bundle-first model) */}
-        {hasSkin && <Section title="Skin" metrics={skinMetrics} />}
-        {hasSkin && <Section title="Face" metrics={faceMetrics} />}
-        {hasHairstyle && <Section title="Hair & Scalp" metrics={hairMetrics} />}
+        {hasSkin && <Section title="Skin" intro={SECTION_INTRO.Skin} metrics={skinMetrics} />}
+        {hasSkin && <Section title="Face" intro={SECTION_INTRO.Face} metrics={faceMetrics} />}
+        {hasHairstyle && <Section title="Hair & Scalp" intro={SECTION_INTRO["Hair & Scalp"]} metrics={hairMetrics} />}
+
+        {/* Personalized routine — real morning/evening/weekly/hair-scalp guidance
+            from the same analysis call, previously computed and discarded. */}
+        {recommendations && (
+          <div style={{ marginBottom: "4.8rem" }}>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.6rem" }}>Your Personalized Routine</h2>
+            <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2rem", maxWidth: "60rem" }}>Based on what we saw in your photos and the concerns you shared.</p>
+            <div className="v2-routine-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.6rem" }}>
+              {ROUTINE_META.filter((r) => (r.gate === "skin" ? hasSkin : hasHairstyle)).map(({ key, label, icon }) => {
+                const steps = recommendations?.[key];
+                if (!steps?.length) return null;
+                return (
+                  <div key={key} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.8rem" }}>
+                      <span style={{ fontSize: "1.8rem", color: "var(--rose)" }}>{icon}</span>
+                      <h3 style={{ fontSize: "1.7rem", fontWeight: 500, color: "var(--primary)", margin: 0 }}>{label}</h3>
+                    </div>
+                    <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+                      {steps.map((s, i) => (
+                        <li key={i} style={{ display: "flex", gap: "1rem", fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55 }}>
+                          <span style={{ color: "var(--rose)", fontWeight: 600, flexShrink: 0 }}>{i + 1}.</span>
+                          <span>{s}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {hasColour && <ColourAnalysisPanel sessionId={sessionId} photo={photo} initialAnalysis={colourAnalysis} />}
 
@@ -229,13 +341,31 @@ export default function V2ReportPage() {
           />
         )}
 
+        {limitations.length > 0 && (
+          <div style={{ marginTop: "3.2rem", padding: "2.4rem 2.8rem", background: "var(--wash)", borderRadius: "1.2rem" }}>
+            <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>Good to know</p>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              {limitations.map((l, i) => <li key={i} style={{ fontSize: "1.3rem", color: "var(--secondary)", lineHeight: 1.6 }}>{l}</li>)}
+            </ul>
+          </div>
+        )}
+
         <div style={{ textAlign: "center", marginTop: "4.8rem" }}>
           <PrimaryButton fullWidth={false} variant="outline" onClick={() => router.push(`/v2/report/${sessionId}/print`)}>
             Download report →
           </PrimaryButton>
         </div>
       </div>
-      <style>{`@media (max-width: 900px) { .v2-metric-grid { grid-template-columns: 1fr !important; } }`}</style>
+      <style>{`
+        @media (max-width: 900px) {
+          .v2-metric-cols { grid-template-columns: 1fr !important; }
+          .v2-hero-grid { grid-template-columns: 1fr !important; }
+          .v2-hero-grid > div:first-child { max-width: 24rem; margin: 0 auto; }
+        }
+        @media (max-width: 600px) {
+          .v2-routine-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }

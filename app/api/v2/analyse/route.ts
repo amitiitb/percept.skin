@@ -67,6 +67,19 @@ export async function POST(req: NextRequest) {
     }).eq("id", sessionId);
     if (updateErr) throw updateErr;
 
+    // Separate, best-effort update for the richer report content (real
+    // skincare/haircare recommendations, positive observations, priority
+    // concerns, limitations) — kept apart from the update above so a
+    // pre-migration environment (columns not added yet) still completes the
+    // core analysis instead of failing the whole request over optional content.
+    const { error: contentErr } = await supabase.from("analysis_sessions_v2").update({
+      positive_observations: result.positiveObservations,
+      priority_concerns: result.priorityConcerns,
+      recommendations: result.recommendations,
+      limitations: result.limitations,
+    }).eq("id", sessionId);
+    if (contentErr) logV2.warn("v2_analysis_content_save_failed", { session_id: sessionId, message: contentErr.message });
+
     logV2.info("v2_analysis_completed", { session_id: sessionId, overall_score: result.overallScore });
     return NextResponse.json({ result });
   } catch (err) {
