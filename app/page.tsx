@@ -7,6 +7,7 @@ import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { MODULES, BUNDLE_PRICE, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 
 const GOLD = "#D9A62E";
+const CORAL = "#E8604F";
 
 // Illustrative anchor comparison (typical U.S. session pricing, not verified
 // quotes) — same pattern iMorph uses: separate specialist visits vs. one
@@ -40,6 +41,28 @@ const WHY_ITEMS = [
   {
     title: "Track it over time",
     body: "Every scan is saved. Rescan under similar lighting and watch your Glow Score and individual metrics move.",
+  },
+];
+
+// Real, verifiable trust signals — no invented reviews or people. Each line
+// maps to an actual behavior in the product, not a marketing claim made up
+// for this section.
+const TRUST_ITEMS = [
+  {
+    title: "No fake before-and-afters",
+    body: "Every score comes from your own photos, analyzed fresh by real AI vision each time, not a canned demo result.",
+  },
+  {
+    title: "Transparent pricing, always",
+    body: "The exact price is visible before you pay, every time. No subscription, no silent renewal, no surprise charge.",
+  },
+  {
+    title: "Your photos stay yours",
+    body: "Used only to generate your report. Never used to train AI models without separate, explicit consent you control.",
+  },
+  {
+    title: "Grounded in real research",
+    body: "Our appearance-and-opportunity framing cites a peer-reviewed labor-economics study, not a claim we invented for marketing.",
   },
 ];
 
@@ -222,9 +245,19 @@ export default function LandingPage() {
             <h2 style={{ fontSize: "clamp(2.8rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.15, marginBottom: "2rem" }}>
               AI gives you the read. A dermatologist gives you the plan.
             </h2>
-            <p style={{ fontSize: "1.7rem", color: "var(--secondary)", lineHeight: 1.6, marginBottom: "3.2rem" }}>
+            <p style={{ fontSize: "1.7rem", color: "var(--secondary)", lineHeight: 1.6, marginBottom: "2.8rem" }}>
               Your Glowmetry report is a starting point. When you want a real medical opinion, a certified dermatologist reviews your case and follows up directly. No AI in the loop, a real person, usually within 24 hours.
             </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem", marginBottom: "3.2rem" }}>
+              {["Your report reviewed by a licensed dermatologist", "Written notes on your specific concerns", "Direct follow-up, usually within 24 hours"].map((item) => (
+                <div key={item} style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+                  <span style={{ width: "2.4rem", height: "2.4rem", flexShrink: 0, borderRadius: "50%", background: "var(--rose)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </span>
+                  <span style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{item}</span>
+                </div>
+              ))}
+            </div>
             <a href="/v2/splash"><PrimaryButton fullWidth={false}>Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
           </div>
           <div style={{ position: "relative", borderRadius: "1.6rem", overflow: "hidden", aspectRatio: "4/5" }}>
@@ -246,56 +279,82 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Pricing ── */}
-      <section id="pricing" style={{ padding: "8rem 3.2rem", background: "var(--surface)" }}>
+      {/* ── Trust — real, verifiable signals. No fabricated reviews or people:
+           this product has no real customer base yet, so no review section
+           exists until there's a real one to show. ── */}
+      <section id="trust" style={{ padding: "8rem 3.2rem", background: "var(--surface)" }}>
         <div style={{ maxWidth: "96rem", margin: "0 auto" }}>
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
+            Why trust this
+          </p>
+          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "5.6rem" }}>
+            No fake reviews. Just what&apos;s actually true.
+          </h2>
+          <div className="glowmetry-trust-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.4rem" }}>
+            {TRUST_ITEMS.map((item) => (
+              <div key={item.title} style={{ background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}>
+                <h3 style={{ fontSize: "1.9rem", fontWeight: 500, color: "var(--primary)", marginBottom: "1rem" }}>{item.title}</h3>
+                <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.6 }}>{item.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pricing ── */}
+      <section id="pricing" style={{ padding: "8rem 3.2rem", background: "var(--primary)", position: "relative", overflow: "hidden" }}>
+        <div aria-hidden style={{ position: "absolute", top: "-20%", left: "50%", transform: "translateX(-50%)", width: "80rem", height: "80rem", borderRadius: "50%", background: `radial-gradient(circle, ${GOLD} 0%, transparent 65%)`, opacity: 0.16, filter: "blur(40px)", pointerEvents: "none" }} />
+        <div style={{ maxWidth: "96rem", margin: "0 auto", position: "relative" }}>
+          <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Pricing
           </p>
-          <h2 style={{ fontSize: "clamp(2.6rem, 5.5vw, 4.4rem)", fontWeight: 700, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, letterSpacing: "-0.02em", marginBottom: "0.8rem" }}>
-            What could cost you <span style={{ color: "var(--rose)", textDecoration: "line-through", textDecorationThickness: "0.3rem" }}>${OLD_WAY_TOTAL}+</span> is now
+          <h2 style={{ fontSize: "clamp(2.8rem, 6vw, 4.8rem)", fontWeight: 700, color: "#fff", textAlign: "center", lineHeight: 1.12, letterSpacing: "-0.02em", marginBottom: "0.8rem" }}>
+            What could cost you <span style={{ color: CORAL, textDecoration: "line-through", textDecorationThickness: "0.3rem" }}>${OLD_WAY_TOTAL}+</span> is now
           </h2>
-          <p style={{ fontSize: "clamp(4.8rem, 10vw, 7.2rem)", fontWeight: 800, color: GOLD, textAlign: "center", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: "1.2rem" }}>
+          <p style={{ fontSize: "clamp(5.6rem, 12vw, 8.8rem)", fontWeight: 800, color: GOLD, textAlign: "center", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: "1.2rem", textShadow: `0 0 6rem rgba(217,166,46,0.4)` }}>
             ${BUNDLE_PRICE}
           </p>
-          <p style={{ fontSize: "1.7rem", color: "var(--secondary)", textAlign: "center", marginBottom: "5.6rem" }}>
+          <p style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.75)", textAlign: "center", marginBottom: "5.6rem" }}>
             One payment. Every module covered. No subscription, right now.
           </p>
 
           <div className="glowmetry-pricing-compare" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginBottom: "2rem" }}>
-            {/* Old way */}
-            <div style={{ background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}>
+            {/* Old way — light card floating on the dark section for maximum contrast */}
+            <div style={{ background: "var(--surface)", borderRadius: "1.6rem", padding: "3.2rem" }}>
               <p style={{ display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
-                <span style={{ color: "var(--rose)" }}>✕</span> The old way
+                <span style={{ color: CORAL }}>✕</span> The old way
               </p>
               {OLD_WAY.map((item) => (
                 <div key={item.label} style={{ display: "flex", justifyContent: "space-between", padding: "1.2rem 0", borderBottom: "1px solid var(--line)" }}>
                   <span style={{ fontSize: "1.5rem", color: "var(--secondary)" }}>{item.label}</span>
-                  <span style={{ fontSize: "1.5rem", color: "var(--rose)", textDecoration: "line-through" }}>${item.price}</span>
+                  <span style={{ fontSize: "1.5rem", color: CORAL, textDecoration: "line-through" }}>${item.price}</span>
                 </div>
               ))}
               <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "1.6rem" }}>
                 <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</span>
-                <span style={{ fontSize: "2rem", fontWeight: 700, color: "var(--rose)" }}>${OLD_WAY_TOTAL}+</span>
+                <span style={{ fontSize: "2rem", fontWeight: 700, color: CORAL }}>${OLD_WAY_TOTAL}+</span>
               </div>
             </div>
 
-            {/* Glowmetry bundle */}
-            <div style={{ background: "var(--primary)", borderRadius: "1.6rem", padding: "3.2rem", position: "relative", overflow: "hidden" }}>
-              <div aria-hidden style={{ position: "absolute", top: "-30%", right: "-15%", width: "24rem", height: "24rem", borderRadius: "50%", background: `radial-gradient(circle, ${GOLD} 0%, transparent 70%)`, opacity: 0.25, filter: "blur(30px)" }} />
-              <p style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
+            {/* Glowmetry bundle — inverted to solid gold so it's unmissable against
+                the dark section and the muted "old way" card beside it */}
+            <div style={{ background: GOLD, borderRadius: "1.6rem", padding: "3.2rem", position: "relative", overflow: "hidden", boxShadow: `0 2.4rem 5rem -1rem rgba(217,166,46,0.5)` }}>
+              <div style={{ position: "absolute", top: "1.6rem", right: "-3.2rem", transform: "rotate(45deg)", background: "var(--primary)", color: GOLD, fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.08em", padding: "0.5rem 4rem", textTransform: "uppercase" }}>
+                50% off
+              </div>
+              <p style={{ display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
                 ⭐ Glowmetry bundle
               </p>
               {MODULES.map((m) => (
-                <div key={m.id} style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "1.5rem", color: "#fff" }}>
-                    <span style={{ color: GOLD, fontWeight: 700 }}>✓</span> {m.label}
+                <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(0,57,52,0.15)" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500 }}>
+                    <span style={{ fontWeight: 700 }}>✓</span> {m.label}
                   </span>
                 </div>
               ))}
-              <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingTop: "1.6rem" }}>
-                <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</span>
-                <span style={{ fontSize: "2.8rem", fontWeight: 800, color: GOLD }}>${BUNDLE_PRICE}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingTop: "1.6rem" }}>
+                <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(0,57,52,0.6)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</span>
+                <span style={{ fontSize: "3.2rem", fontWeight: 800, color: "var(--primary)" }}>${BUNDLE_PRICE}</span>
               </div>
             </div>
           </div>
@@ -308,15 +367,24 @@ export default function LandingPage() {
             <a href="/v2/splash" style={{ minWidth: 0, flexShrink: 0 }}><PrimaryButton fullWidth={false} size="lg">Get your report · ${BUNDLE_PRICE} →</PrimaryButton></a>
           </div>
 
-          <div className="glowmetry-cta-banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem", flexWrap: "wrap", background: "var(--canvas)", border: `2px solid ${GOLD}`, borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "1.2rem", minWidth: 0 }}>
+          <div className="glowmetry-cta-banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem", flexWrap: "wrap", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "1.2rem", minWidth: 0 }}>
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>Want a real dermatologist too?</p>
-              <p style={{ fontSize: "1.6rem", color: "var(--primary)" }}>Talk to a certified dermatologist, one time, no subscription</p>
+              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>Want a real dermatologist too?</p>
+              <p style={{ fontSize: "1.6rem", color: "#fff" }}>Talk to a certified dermatologist, one time, no subscription</p>
             </div>
-            <a href="/v2/splash" style={{ minWidth: 0, flexShrink: 0 }}><PrimaryButton variant="outline" fullWidth={false}>Add consultation · ${DOCTOR_CONSULTATION_PRICE} →</PrimaryButton></a>
+            <a
+              href="/v2/splash"
+              style={{
+                flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center",
+                height: "5.8rem", padding: "0 3.2rem", borderRadius: "9999px", border: `1px solid ${GOLD}`,
+                color: GOLD, fontSize: "1.7rem", fontWeight: 500, whiteSpace: "nowrap", textDecoration: "none",
+              }}
+            >
+              Add consultation · ${DOCTOR_CONSULTATION_PRICE} →
+            </a>
           </div>
 
-          <p style={{ fontSize: "1.2rem", color: "var(--muted)", textAlign: "center" }}>
+          <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.5)", textAlign: "center" }}>
             *Old-way total is a typical U.S. cost estimate for separate sessions, not a quote. Individual modules also available from ${MODULES[0].price} each.
           </p>
         </div>
@@ -354,6 +422,7 @@ export default function LandingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
                 <a href="#why" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Why Glowmetry</a>
                 <a href="#experts" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Experts</a>
+                <a href="#trust" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Why trust this</a>
                 <a href="#pricing" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Pricing</a>
                 <a href="#faq" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>FAQ</a>
                 <a href="/v2/splash" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Start your scan</a>
@@ -389,12 +458,13 @@ export default function LandingPage() {
       </footer>
 
       <style>{`
-        #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
+        #why, #experts, #trust, #pricing, #faq { scroll-margin-top: 8rem; }
         @media (min-width: 640px) { .site-header-cta { display: inline-block !important; } }
         @media (max-width: 900px) {
           .glowmetry-hero-grid { grid-template-columns: 1fr !important; }
           .glowmetry-why-grid { grid-template-columns: 1fr !important; }
           .glowmetry-experts-grid { grid-template-columns: 1fr !important; }
+          .glowmetry-trust-grid { grid-template-columns: 1fr !important; }
           .glowmetry-footer-grid { grid-template-columns: 1fr 1fr !important; row-gap: 3.2rem !important; }
           .glowmetry-footer-brand { grid-column: 1 / -1 !important; }
         }
