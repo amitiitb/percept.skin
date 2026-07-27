@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -8,6 +8,40 @@ import { MODULES, BUNDLE_PRICE, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, DOCTOR_CONSULT
 
 const GOLD = "#D9A62E";
 const CORAL = "#E8604F";
+const ACCENTS = [GOLD, CORAL, "var(--rose)"];
+
+// Curved section boundary instead of a hard straight edge where two
+// contrasting section backgrounds meet. Three different curve shapes so
+// consecutive dividers don't look like the same asset repeated.
+const WAVE_PATHS = [
+  "M0,32 C240,80 480,0 720,24 C960,48 1200,8 1440,40 L1440,80 L0,80 Z",
+  "M0,50 C360,0 1080,90 1440,20 L1440,80 L0,80 Z",
+  "M0,20 C480,90 960,0 1440,50 L1440,80 L0,80 Z",
+];
+
+function WaveDivider({ fill, variant = 0, flip = false }: { fill: string; variant?: number; flip?: boolean }) {
+  return (
+    <div aria-hidden style={{ position: "absolute", left: 0, right: 0, bottom: -1, lineHeight: 0, transform: flip ? "scaleX(-1)" : undefined, pointerEvents: "none" }}>
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none" style={{ width: "100%", height: "6rem", display: "block" }}>
+        <path d={WAVE_PATHS[variant % WAVE_PATHS.length]} fill={fill} />
+      </svg>
+    </div>
+  );
+}
+
+// Horizontal scroll-snap carousel — side-by-side cards instead of a tall
+// stacked grid, cheap way to save vertical space on mobile without losing
+// any content. Native scroll (not a JS slider) so it works everywhere.
+function Carousel({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="glowmetry-carousel"
+      style={{ display: "flex", gap: "1.6rem", overflowX: "auto", scrollSnapType: "x mandatory", paddingBottom: "0.8rem", WebkitOverflowScrolling: "touch" }}
+    >
+      {children}
+    </div>
+  );
+}
 
 // Illustrative anchor comparison (typical U.S. session pricing, not verified
 // quotes) — same pattern iMorph uses: separate specialist visits vs. one
@@ -200,7 +234,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Why Glowmetry ── */}
-      <section id="why" style={{ padding: "8rem 3.2rem", background: "var(--surface)" }}>
+      <section id="why" style={{ padding: "8rem 3.2rem", background: "var(--surface)", position: "relative" }}>
         <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Why Glowmetry
@@ -208,7 +242,7 @@ export default function LandingPage() {
           <h2 className="glowmetry-why-heading" style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "6rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
             Specific insight, not a guess
           </h2>
-          <div className="glowmetry-why-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.6rem" }}>
+          <Carousel>
             {WHY_ITEMS.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -216,20 +250,23 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                whileHover={{ y: -3 }}
-                style={{ display: "flex", alignItems: "center", gap: "1.6rem", background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.4rem", padding: "1.8rem 2rem" }}
+                whileHover={{ y: -4 }}
+                style={{
+                  flex: "0 0 24rem", scrollSnapAlign: "start", background: "var(--canvas)",
+                  borderTop: `0.4rem solid ${ACCENTS[i % ACCENTS.length]}`, borderRadius: "1.4rem", padding: "2.4rem",
+                  boxShadow: "0 1.2rem 2.4rem -1.2rem rgba(0,57,52,0.18)",
+                }}
               >
-                <span style={{ flexShrink: 0, width: "4.4rem", height: "4.4rem", borderRadius: "50%", background: "var(--sage)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="var(--primary)" strokeWidth="1.6">{item.icon}</svg>
+                <span style={{ width: "5.2rem", height: "5.2rem", borderRadius: "50%", background: ACCENTS[i % ACCENTS.length], display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.8rem" }}>
+                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="1.6">{item.icon}</svg>
                 </span>
-                <div>
-                  <h3 style={{ fontSize: "1.6rem", fontWeight: 500, color: "var(--primary)", margin: "0 0 0.3rem" }}>{item.title}</h3>
-                  <p style={{ fontSize: "1.3rem", color: "var(--secondary)", lineHeight: 1.4, margin: 0 }}>{item.body}</p>
-                </div>
+                <h3 style={{ fontSize: "1.8rem", fontWeight: 500, color: "var(--primary)", margin: "0 0 0.6rem" }}>{item.title}</h3>
+                <p style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.5, margin: 0 }}>{item.body}</p>
               </motion.div>
             ))}
-          </div>
+          </Carousel>
         </div>
+        <WaveDivider fill="var(--primary)" variant={0} />
       </section>
 
       {/* ── Why it matters (research) ── */}
@@ -270,10 +307,11 @@ export default function LandingPage() {
             Source: Hamermesh and Biddle, Beauty and the Labor Market, American Economic Review, NBER Working Paper No. 4518.
           </p>
         </div>
+        <WaveDivider fill="var(--canvas)" variant={1} flip />
       </section>
 
       {/* ── Experts ── */}
-      <section id="experts" style={{ padding: "8rem 3.2rem" }}>
+      <section id="experts" style={{ padding: "8rem 3.2rem", position: "relative" }}>
         <div style={{ maxWidth: "88rem", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "4.8rem", alignItems: "center" }} className="glowmetry-experts-grid">
           <div>
             <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
@@ -319,7 +357,7 @@ export default function LandingPage() {
       {/* ── Trust — real, verifiable signals. No fabricated reviews or people:
            this product has no real customer base yet, so no review section
            exists until there's a real one to show. ── */}
-      <section id="trust" style={{ padding: "8rem 3.2rem", background: "var(--surface)" }}>
+      <section id="trust" style={{ padding: "8rem 3.2rem", background: "var(--surface)", position: "relative" }}>
         <div style={{ maxWidth: "96rem", margin: "0 auto" }}>
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Why trust this
@@ -327,7 +365,7 @@ export default function LandingPage() {
           <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "5.6rem" }}>
             No fake reviews. Just what&apos;s actually true.
           </h2>
-          <div className="glowmetry-trust-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.4rem" }}>
+          <Carousel>
             {TRUST_ITEMS.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -335,14 +373,20 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                style={{ background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}
+                whileHover={{ y: -4 }}
+                style={{
+                  flex: "0 0 27rem", scrollSnapAlign: "start", background: "var(--canvas)",
+                  borderTop: `0.4rem solid ${ACCENTS[(i + 1) % ACCENTS.length]}`, borderRadius: "1.6rem", padding: "3.2rem",
+                  boxShadow: "0 1.2rem 2.4rem -1.2rem rgba(0,57,52,0.18)",
+                }}
               >
                 <h3 style={{ fontSize: "1.9rem", fontWeight: 500, color: "var(--primary)", marginBottom: "1rem" }}>{item.title}</h3>
                 <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.6 }}>{item.body}</p>
               </motion.div>
             ))}
-          </div>
+          </Carousel>
         </div>
+        <WaveDivider fill="var(--primary)" variant={2} />
       </section>
 
       {/* ── Pricing ── */}
@@ -450,10 +494,11 @@ export default function LandingPage() {
             *Old-way total is a typical U.S. cost estimate for separate sessions, not a quote. Individual modules also available from ${MODULES[0].price} each.
           </p>
         </motion.div>
+        <WaveDivider fill="var(--canvas)" variant={0} flip />
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" style={{ padding: "8rem 3.2rem" }}>
+      <section id="faq" style={{ padding: "8rem 3.2rem", position: "relative" }}>
         <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             FAQ
@@ -465,6 +510,7 @@ export default function LandingPage() {
             {FAQS.map((f) => <FaqRow key={f.q} q={f.q} a={f.a} />)}
           </div>
         </div>
+        <WaveDivider fill="var(--primary)" variant={1} />
       </section>
 
       <footer style={{ background: "var(--primary)", padding: "6.4rem 3.2rem 2.4rem" }}>
@@ -522,11 +568,11 @@ export default function LandingPage() {
       <style>{`
         #why, #experts, #trust, #pricing, #faq { scroll-margin-top: 8rem; }
         @media (min-width: 640px) { .site-header-cta { display: inline-block !important; } }
+        .glowmetry-carousel { scrollbar-width: none; -ms-overflow-style: none; }
+        .glowmetry-carousel::-webkit-scrollbar { display: none; }
         @media (max-width: 900px) {
           .glowmetry-hero-grid { grid-template-columns: 1fr !important; }
-          .glowmetry-why-grid { grid-template-columns: 1fr !important; }
           .glowmetry-experts-grid { grid-template-columns: 1fr !important; }
-          .glowmetry-trust-grid { grid-template-columns: 1fr !important; }
           .glowmetry-footer-grid { grid-template-columns: 1fr 1fr !important; row-gap: 3.2rem !important; }
           .glowmetry-footer-brand { grid-column: 1 / -1 !important; }
         }
