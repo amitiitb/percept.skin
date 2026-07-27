@@ -4,8 +4,9 @@
 //
 // TODO before production:
 // - Swap PAYPAL_API_BASE to the live endpoint and use production credentials
-// - Verify webhook signatures (see app/api/v2/paypal/webhook/route.ts)
-// - Handle subscription renewal, cancellation, and refund webhooks
+// - Register a webhook subscription in the PayPal dashboard against the
+//   live domain and set PAYPAL_WEBHOOK_ID (verifyWebhookSignature below is
+//   ready; nothing is registered yet, so nothing calls this endpoint today)
 // - Confirm PayPal supports recurring billing for Glowmetry's actual business
 //   entity/country (flagged in the eng review — the existing /plan page implies
 //   an India-based entity, and PayPal restricts India-domestic recurring billing)
@@ -159,4 +160,42 @@ export async function captureOrderRaw(orderId: string): Promise<{ status: string
   if (!res.ok) throw new Error(`PayPal capture failed: ${res.status}`);
   const data = await res.json() as { status: string; purchase_units?: Array<{ custom_id?: string }> };
   return { status: data.status, customId: data.purchase_units?.[0]?.custom_id ?? "" };
+}
+
+// ── Webhook signature verification ──
+// Without this, any POST to /api/v2/paypal/webhook claiming to be a
+// "payment succeeded" event would be trusted at face value — a spoofing
+// vector flagged in docs/V2_PLAN.md's threat model. Verifies via PayPal's
+// own /v1/notifications/verify-webhook-signature endpoint rather than
+// re-implementing signature crypto locally (PayPal's cert rotation makes a
+// local implementation a maintenance trap).
+export interface WebhookHeaders {
+  transmissionId: string;
+  transmissionTime: string;
+  certUrl: string;
+  authAlgo: string;
+  transmissionSig: string;
+}
+
+export async function verifyWebhookSignature(headers: WebhookHeaders, webhookEvent: unknown): Promise<boolean> {
+  const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+  if (!webhookId) return false; // Fail closed — no webhook is registered against this app yet.
+
+  const token = await getAccessToken();
+  const res = await fetch(`${PAYPAL_API_BASE}/v1/notifications/verify-webhook-signature`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      transmission_id: headers.transmissionId,
+      transmission_time: headers.transmissionTime,
+      cert_url: headers.certUrl,
+      auth_algo: headers.authAlgo,
+      transmission_sig: headers.transmissionSig,
+      webhook_id: webhookId,
+      webhook_event: webhookEvent,
+    }),
+  });
+  if (!res.ok) return false;
+  const data = await res.json() as { verification_status: string };
+  return data.verification_status === "SUCCESS";
 }
