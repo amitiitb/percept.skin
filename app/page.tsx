@@ -32,15 +32,18 @@ const BAR_DATA = [
 const WHY_ITEMS = [
   {
     title: "Guided photos, real analysis",
-    body: "A short guided photo session covers skin, face, hair, and scalp. No lab visit, no appointment, no waiting.",
+    body: "No lab visit, no appointment.",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2h6l2 2h3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8z M12 17a4 4 0 100-8 4 4 0 000 8z" />,
   },
   {
-    title: "Specific, not generic",
-    body: "Ten skin metrics, five face metrics, five hair metrics, each scored and explained in plain language, not a single vague grade.",
+    title: "20 metrics, not one grade",
+    body: "Skin, face, and hair scored individually.",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v18M15 3v18M3 9h18M3 15h18" />,
   },
   {
     title: "Track it over time",
-    body: "Every scan is saved. Rescan under similar lighting and watch your Glow Score and individual metrics move.",
+    body: "Every scan saved, compare side by side.",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 2M21 12a9 9 0 11-9-9 9 9 0 019 9z" />,
   },
 ];
 
@@ -202,22 +205,27 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Why Glowmetry
           </p>
-          <h2 style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "6rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
+          <h2 className="glowmetry-why-heading" style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "6rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
             Specific insight, not a guess
           </h2>
-          <div className="glowmetry-why-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "3.2rem" }}>
+          <div className="glowmetry-why-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.6rem" }}>
             {WHY_ITEMS.map((item, i) => (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                whileHover={{ y: -4 }}
-                style={{ background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}
+                whileHover={{ y: -3 }}
+                style={{ display: "flex", alignItems: "center", gap: "1.6rem", background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.4rem", padding: "1.8rem 2rem" }}
               >
-                <h3 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "1.2rem" }}>{item.title}</h3>
-                <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.6 }}>{item.body}</p>
+                <span style={{ flexShrink: 0, width: "4.4rem", height: "4.4rem", borderRadius: "50%", background: "var(--sage)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="var(--primary)" strokeWidth="1.6">{item.icon}</svg>
+                </span>
+                <div>
+                  <h3 style={{ fontSize: "1.6rem", fontWeight: 500, color: "var(--primary)", margin: "0 0 0.3rem" }}>{item.title}</h3>
+                  <p style={{ fontSize: "1.3rem", color: "var(--secondary)", lineHeight: 1.4, margin: 0 }}>{item.body}</p>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -521,6 +529,10 @@ export default function LandingPage() {
           .glowmetry-trust-grid { grid-template-columns: 1fr !important; }
           .glowmetry-footer-grid { grid-template-columns: 1fr 1fr !important; row-gap: 3.2rem !important; }
           .glowmetry-footer-brand { grid-column: 1 / -1 !important; }
+        }
+        @media (max-width: 700px) {
+          #why { padding-top: 5.6rem !important; padding-bottom: 5.6rem !important; }
+          .glowmetry-why-heading { margin-bottom: 3.2rem !important; }
         }
         @media (max-width: 520px) {
           .glowmetry-footer-legalsupport { flex-direction: column !important; gap: 2.4rem !important; }
