@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { generateHairstylePreview, GeminiGenerationError, GeminiEmptyResponseError, GeminiQuotaError } from "@/lib/v2/gemini";
+import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
 import { logV2 } from "@/lib/v2/log";
 
 function scopedClient(token: string) {
@@ -25,6 +26,10 @@ export async function POST(req: NextRequest) {
 
   const token = req.headers.get("authorization")!.slice(7);
   const supabase = scopedClient(token);
+
+  if (!(await hasPurchasedModule(supabase, auth.userId, sessionId, "hairstyle"))) {
+    return NextResponse.json({ error: "Purchase the Hairstyle Recommendations module to generate style previews" }, { status: 403 });
+  }
 
   try {
     const { mimeType, base64 } = await generateHairstylePreview(photoDataUrl, stylePrompt);

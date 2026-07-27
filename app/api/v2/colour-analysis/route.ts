@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
+import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
 import { logV2 } from "@/lib/v2/log";
 import type { ColourAnalysis } from "@/lib/v2/types";
 
@@ -64,6 +65,13 @@ export async function POST(req: NextRequest) {
     const { sessionId, photoDataUrl } = await req.json() as { sessionId?: string; photoDataUrl?: string };
     if (!sessionId || !photoDataUrl) return NextResponse.json({ error: "sessionId and photoDataUrl are required" }, { status: 400 });
 
+    const token = req.headers.get("authorization")!.slice(7);
+    const supabase = scopedClient(token);
+
+    if (!(await hasPurchasedModule(supabase, auth.userId, sessionId, "colour"))) {
+      return NextResponse.json({ error: "Purchase the Color Analysis module to generate this report" }, { status: 403 });
+    }
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) return NextResponse.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 500 });
 
@@ -96,8 +104,6 @@ export async function POST(req: NextRequest) {
     const cleaned = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
     const analysis = JSON.parse(cleaned) as ColourAnalysis;
 
-    const token = req.headers.get("authorization")!.slice(7);
-    const supabase = scopedClient(token);
     const { error } = await supabase.from("colour_analysis_v2").upsert({
       session_id: sessionId, user_id: auth.userId, data: analysis,
     }, { onConflict: "session_id" });
