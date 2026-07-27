@@ -65,42 +65,61 @@ export default function V2ReportPage() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [colourAnalysis, setColourAnalysis] = useState<ColourAnalysis | null>(null);
 
+  async function load(): Promise<string | undefined> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.replace(`/auth/login?next=/v2/report/${sessionId}`); return; }
+
+    const [{ data: sess }, { data: purchase }, { data: metricRows }, { data: photoRow }, { data: colourRow }] = await Promise.all([
+      supabase.from("analysis_sessions_v2").select("id, status, overall_score, skin_age, created_at").eq("id", sessionId).eq("user_id", user.id).maybeSingle(),
+      supabase.from("report_purchases_v2").select("modules").eq("session_id", sessionId).eq("user_id", user.id).maybeSingle(),
+      supabase.from("analysis_metrics_v2").select("category, metric_name, score, label, confidence, explanation, recommendation, is_premium").eq("session_id", sessionId).eq("user_id", user.id),
+      supabase.from("analysis_photos_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id).eq("photo_type", "face_front").maybeSingle(),
+      supabase.from("colour_analysis_v2").select("data").eq("session_id", sessionId).eq("user_id", user.id).maybeSingle(),
+    ]);
+
+    if (!sess) { setNotFound(true); setLoading(false); return; }
+
+    // Bundle-first model: no purchase record means nothing was ever bought
+    // for this scan — send back to the purchase screen rather than showing
+    // an empty report.
+    if (!purchase) { router.replace(`/v2/bundle/${sessionId}`); return; }
+
+    setSession(sess);
+    setPurchased(new Set(purchase.modules as ModuleId[]));
+    setMetrics((metricRows ?? []).map((r) => ({
+      category: r.category as MetricCategory, metricName: r.metric_name, score: r.score,
+      label: r.label as AnalysisMetric["label"], confidence: r.confidence, explanation: r.explanation,
+      recommendation: r.recommendation, isPremium: r.is_premium,
+    })));
+    setColourAnalysis((colourRow?.data as ColourAnalysis) ?? null);
+
+    if (photoRow?.storage_path) {
+      const { data: signed } = await supabase.storage.from("photos_v2").createSignedUrl(photoRow.storage_path, 60 * 60 * 24 * 7);
+      setPhoto(signed?.signedUrl ?? null);
+    }
+
+    setLoading(false);
+    return sess.status;
+  }
+
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) { router.replace(`/auth/login?next=/v2/report/${sessionId}`); return; }
-
-      const [{ data: sess }, { data: purchase }, { data: metricRows }, { data: photoRow }, { data: colourRow }] = await Promise.all([
-        supabase.from("analysis_sessions_v2").select("id, status, overall_score, skin_age, created_at").eq("id", sessionId).eq("user_id", user.id).maybeSingle(),
-        supabase.from("report_purchases_v2").select("modules").eq("session_id", sessionId).eq("user_id", user.id).maybeSingle(),
-        supabase.from("analysis_metrics_v2").select("category, metric_name, score, label, confidence, explanation, recommendation, is_premium").eq("session_id", sessionId).eq("user_id", user.id),
-        supabase.from("analysis_photos_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id).eq("photo_type", "face_front").maybeSingle(),
-        supabase.from("colour_analysis_v2").select("data").eq("session_id", sessionId).eq("user_id", user.id).maybeSingle(),
-      ]);
-
-      if (!sess) { setNotFound(true); setLoading(false); return; }
-
-      // Bundle-first model: no purchase record means nothing was ever bought
-      // for this scan — send back to the purchase screen rather than showing
-      // an empty report.
-      if (!purchase) { router.replace(`/v2/bundle/${sessionId}`); return; }
-
-      setSession(sess);
-      setPurchased(new Set(purchase.modules as ModuleId[]));
-      setMetrics((metricRows ?? []).map((r) => ({
-        category: r.category as MetricCategory, metricName: r.metric_name, score: r.score,
-        label: r.label as AnalysisMetric["label"], confidence: r.confidence, explanation: r.explanation,
-        recommendation: r.recommendation, isPremium: r.is_premium,
-      })));
-      setColourAnalysis((colourRow?.data as ColourAnalysis) ?? null);
-
-      if (photoRow?.storage_path) {
-        const { data: signed } = await supabase.storage.from("photos_v2").createSignedUrl(photoRow.storage_path, 60 * 60 * 24 * 7);
-        setPhoto(signed?.signedUrl ?? null);
-      }
-
-      setLoading(false);
-    });
+    load();
   }, [sessionId]);
+
+  // Real analysis (Claude vision over 7 photos) takes ~60-100s. A user can
+  // reach this page before it finishes — e.g. background-kicked analysis on
+  // the bundle page hasn't caught up with a fast checkout. Poll instead of
+  // dead-ending on "still processing" with no way to know it'll resolve.
+  useEffect(() => {
+    if (!session || session.status === "complete") return;
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts += 1;
+      const status = await load();
+      if (status === "complete" || attempts >= 20) clearInterval(interval);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [session?.status, sessionId]);
 
   if (loading || !purchased) return <div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />;
   if (notFound) {
@@ -114,8 +133,10 @@ export default function V2ReportPage() {
   if (session?.status !== "complete") {
     return (
       <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "2rem" }}>
-        <p style={{ fontSize: "1.8rem", color: "var(--secondary)" }}>This scan is still processing.</p>
+        <div style={{ width: "3.2rem", height: "3.2rem", borderRadius: "50%", border: "3px solid var(--line)", borderTopColor: "var(--primary)", animation: "v2-spin 1s linear infinite" }} />
+        <p style={{ fontSize: "1.8rem", color: "var(--secondary)", textAlign: "center", maxWidth: "36rem" }}>Your analysis is still finishing up. This page will update automatically, usually within a minute or two.</p>
         <PrimaryButton fullWidth={false} onClick={() => router.push("/v2/dashboard")}>Back to dashboard</PrimaryButton>
+        <style>{`@keyframes v2-spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
