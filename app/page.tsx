@@ -168,7 +168,7 @@ export default function LandingPage() {
             <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
               Personal beauty analysis
             </p>
-            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(3.4rem, 5.5vw, 5.8rem)", fontWeight: 500, color: "var(--primary)", lineHeight: 1.05, letterSpacing: "-0.01em", marginBottom: "2.4rem" }}>
+            <h1 style={{ fontSize: "clamp(3.4rem, 5.5vw, 5.6rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.05, letterSpacing: "-0.02em", marginBottom: "2.4rem" }}>
               See your skin, face, and hair more clearly
             </h1>
             <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "48rem", marginBottom: "4rem" }}>
@@ -202,7 +202,7 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Why Glowmetry
           </p>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.8rem, 5vw, 4.2rem)", fontWeight: 500, color: "var(--primary)", textAlign: "center", marginBottom: "6rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
+          <h2 style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "6rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
             Specific insight, not a guess
           </h2>
           <div className="glowmetry-why-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "3.2rem" }}>
@@ -238,7 +238,7 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             The research
           </p>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.6rem, 5vw, 4rem)", fontWeight: 500, color: "#fff", textAlign: "center", lineHeight: 1.2, maxWidth: "60rem", margin: "0 auto 5.6rem" }}>
+          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "#fff", textAlign: "center", lineHeight: 1.2, maxWidth: "60rem", margin: "0 auto 5.6rem" }}>
             Presentation is a measurable business asset
           </h2>
 
@@ -271,7 +271,7 @@ export default function LandingPage() {
             <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
               Experts
             </p>
-            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 500, color: "var(--primary)", lineHeight: 1.15, marginBottom: "2rem" }}>
+            <h2 style={{ fontSize: "clamp(2.8rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.15, marginBottom: "2rem" }}>
               AI gives you the read. A dermatologist gives you the plan.
             </h2>
             <p style={{ fontSize: "1.7rem", color: "var(--secondary)", lineHeight: 1.6, marginBottom: "2.8rem" }}>
@@ -316,7 +316,7 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Why trust this
           </p>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.6rem, 5vw, 4rem)", fontWeight: 500, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "5.6rem" }}>
+          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "5.6rem" }}>
             No fake reviews. Just what&apos;s actually true.
           </h2>
           <div className="glowmetry-trust-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.4rem" }}>
@@ -350,10 +350,10 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Pricing
           </p>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.8rem, 6vw, 4.8rem)", fontWeight: 500, color: "#fff", textAlign: "center", lineHeight: 1.12, letterSpacing: "-0.01em", marginBottom: "0.8rem" }}>
+          <h2 style={{ fontSize: "clamp(2.8rem, 6vw, 4.8rem)", fontWeight: 700, color: "#fff", textAlign: "center", lineHeight: 1.12, letterSpacing: "-0.02em", marginBottom: "0.8rem" }}>
             What could cost you <span style={{ color: CORAL, textDecoration: "line-through", textDecorationThickness: "0.3rem" }}>${OLD_WAY_TOTAL}+</span> is now
           </h2>
-          <p style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(5.6rem, 12vw, 8.8rem)", fontWeight: 600, color: GOLD, textAlign: "center", lineHeight: 1, letterSpacing: "-0.02em", marginBottom: "1.2rem", textShadow: `0 0 6rem rgba(217,166,46,0.4)` }}>
+          <p style={{ fontSize: "clamp(5.6rem, 12vw, 8.8rem)", fontWeight: 800, color: GOLD, textAlign: "center", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: "1.2rem", textShadow: `0 0 6rem rgba(217,166,46,0.4)` }}>
             $<AnimatedPrice value={BUNDLE_PRICE} />
           </p>
           <p style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.75)", textAlign: "center", marginBottom: "5.6rem" }}>
@@ -450,7 +450,7 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             FAQ
           </p>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.8rem, 5vw, 4.2rem)", fontWeight: 500, color: "var(--primary)", textAlign: "center", marginBottom: "5.6rem" }}>
+          <h2 style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "5.6rem" }}>
             Frequently asked questions
           </h2>
           <div>
