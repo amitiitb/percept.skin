@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, animate } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { MODULES, BUNDLE_PRICE, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
@@ -85,6 +85,27 @@ const FAQS = [
   },
 ];
 
+// Counts up to the real bundle price once the pricing section scrolls into
+// view — the payoff moment of the pricing section, same reveal pattern as
+// the report page's Glow Score ring. Jumps straight to the value for
+// prefers-reduced-motion instead of animating.
+function AnimatedPrice({ value }: { value: number }) {
+  const [display, setDisplay] = useState(0);
+  const motionVal = useMotionValue(0);
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) { setDisplay(value); return; }
+    const controls = animate(motionVal, value, {
+      duration: 1.2, ease: [0.24, 0.43, 0.15, 0.97],
+      onUpdate: (v) => setDisplay(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [value]);
+
+  return <>{display}</>;
+}
+
 function FaqRow({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
@@ -147,7 +168,7 @@ export default function LandingPage() {
             <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
               Personal beauty analysis
             </p>
-            <h1 style={{ fontSize: "clamp(3.4rem, 5.5vw, 5.6rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.05, letterSpacing: "-0.02em", marginBottom: "2.4rem" }}>
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(3.4rem, 5.5vw, 5.8rem)", fontWeight: 500, color: "var(--primary)", lineHeight: 1.05, letterSpacing: "-0.01em", marginBottom: "2.4rem" }}>
               See your skin, face, and hair more clearly
             </h1>
             <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "48rem", marginBottom: "4rem" }}>
@@ -181,15 +202,23 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Why Glowmetry
           </p>
-          <h2 style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "6rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.8rem, 5vw, 4.2rem)", fontWeight: 500, color: "var(--primary)", textAlign: "center", marginBottom: "6rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
             Specific insight, not a guess
           </h2>
           <div className="glowmetry-why-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "3.2rem" }}>
-            {WHY_ITEMS.map((item) => (
-              <div key={item.title} style={{ background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}>
+            {WHY_ITEMS.map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                whileHover={{ y: -4 }}
+                style={{ background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}
+              >
                 <h3 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "1.2rem" }}>{item.title}</h3>
                 <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.6 }}>{item.body}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -209,7 +238,7 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             The research
           </p>
-          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "#fff", textAlign: "center", lineHeight: 1.2, maxWidth: "60rem", margin: "0 auto 5.6rem" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.6rem, 5vw, 4rem)", fontWeight: 500, color: "#fff", textAlign: "center", lineHeight: 1.2, maxWidth: "60rem", margin: "0 auto 5.6rem" }}>
             Presentation is a measurable business asset
           </h2>
 
@@ -242,7 +271,7 @@ export default function LandingPage() {
             <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
               Experts
             </p>
-            <h2 style={{ fontSize: "clamp(2.8rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.15, marginBottom: "2rem" }}>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 500, color: "var(--primary)", lineHeight: 1.15, marginBottom: "2rem" }}>
               AI gives you the read. A dermatologist gives you the plan.
             </h2>
             <p style={{ fontSize: "1.7rem", color: "var(--secondary)", lineHeight: 1.6, marginBottom: "2.8rem" }}>
@@ -287,15 +316,22 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Why trust this
           </p>
-          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "5.6rem" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.6rem, 5vw, 4rem)", fontWeight: 500, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "5.6rem" }}>
             No fake reviews. Just what&apos;s actually true.
           </h2>
           <div className="glowmetry-trust-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.4rem" }}>
-            {TRUST_ITEMS.map((item) => (
-              <div key={item.title} style={{ background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}>
+            {TRUST_ITEMS.map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                style={{ background: "var(--canvas)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}
+              >
                 <h3 style={{ fontSize: "1.9rem", fontWeight: 500, color: "var(--primary)", marginBottom: "1rem" }}>{item.title}</h3>
                 <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.6 }}>{item.body}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -304,15 +340,21 @@ export default function LandingPage() {
       {/* ── Pricing ── */}
       <section id="pricing" style={{ padding: "8rem 3.2rem", background: "var(--primary)", position: "relative", overflow: "hidden" }}>
         <div aria-hidden style={{ position: "absolute", top: "-20%", left: "50%", transform: "translateX(-50%)", width: "80rem", height: "80rem", borderRadius: "50%", background: `radial-gradient(circle, ${GOLD} 0%, transparent 65%)`, opacity: 0.16, filter: "blur(40px)", pointerEvents: "none" }} />
-        <div style={{ maxWidth: "96rem", margin: "0 auto", position: "relative" }}>
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, ease: [0.24, 0.43, 0.15, 0.97] }}
+          style={{ maxWidth: "96rem", margin: "0 auto", position: "relative" }}
+        >
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Pricing
           </p>
-          <h2 style={{ fontSize: "clamp(2.8rem, 6vw, 4.8rem)", fontWeight: 700, color: "#fff", textAlign: "center", lineHeight: 1.12, letterSpacing: "-0.02em", marginBottom: "0.8rem" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.8rem, 6vw, 4.8rem)", fontWeight: 500, color: "#fff", textAlign: "center", lineHeight: 1.12, letterSpacing: "-0.01em", marginBottom: "0.8rem" }}>
             What could cost you <span style={{ color: CORAL, textDecoration: "line-through", textDecorationThickness: "0.3rem" }}>${OLD_WAY_TOTAL}+</span> is now
           </h2>
-          <p style={{ fontSize: "clamp(5.6rem, 12vw, 8.8rem)", fontWeight: 800, color: GOLD, textAlign: "center", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: "1.2rem", textShadow: `0 0 6rem rgba(217,166,46,0.4)` }}>
-            ${BUNDLE_PRICE}
+          <p style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(5.6rem, 12vw, 8.8rem)", fontWeight: 600, color: GOLD, textAlign: "center", lineHeight: 1, letterSpacing: "-0.02em", marginBottom: "1.2rem", textShadow: `0 0 6rem rgba(217,166,46,0.4)` }}>
+            $<AnimatedPrice value={BUNDLE_PRICE} />
           </p>
           <p style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.75)", textAlign: "center", marginBottom: "5.6rem" }}>
             One payment. Every module covered. No subscription, right now.
@@ -338,25 +380,37 @@ export default function LandingPage() {
 
             {/* Glowmetry bundle — inverted to solid gold so it's unmissable against
                 the dark section and the muted "old way" card beside it */}
-            <div style={{ background: GOLD, borderRadius: "1.6rem", padding: "3.2rem", position: "relative", overflow: "hidden", boxShadow: `0 2.4rem 5rem -1rem rgba(217,166,46,0.5)` }}>
+            <motion.div
+              whileHover={{ y: -6 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              style={{ background: GOLD, borderRadius: "1.6rem", padding: "3.2rem", position: "relative", overflow: "hidden", boxShadow: `0 2.4rem 5rem -1rem rgba(217,166,46,0.5)` }}
+            >
+              {/* Shimmer sweep — same technique as the report-page bundle card,
+                  used sparingly so it reads as premium polish, not a loading spinner */}
+              <motion.div
+                aria-hidden
+                animate={{ x: ["-120%", "220%"] }}
+                transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 2.2, ease: "easeInOut" }}
+                style={{ position: "absolute", top: 0, bottom: 0, width: "30%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)", pointerEvents: "none" }}
+              />
               <div style={{ position: "absolute", top: "1.6rem", right: "-3.2rem", transform: "rotate(45deg)", background: "var(--primary)", color: GOLD, fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.08em", padding: "0.5rem 4rem", textTransform: "uppercase" }}>
                 50% off
               </div>
-              <p style={{ display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
+              <p style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
                 ⭐ Glowmetry bundle
               </p>
               {MODULES.map((m) => (
-                <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(0,57,52,0.15)" }}>
+                <div key={m.id} style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(0,57,52,0.15)" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500 }}>
                     <span style={{ fontWeight: 700 }}>✓</span> {m.label}
                   </span>
                 </div>
               ))}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingTop: "1.6rem" }}>
+              <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingTop: "1.6rem" }}>
                 <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(0,57,52,0.6)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</span>
                 <span style={{ fontSize: "3.2rem", fontWeight: 800, color: "var(--primary)" }}>${BUNDLE_PRICE}</span>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           <div className="glowmetry-cta-banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem", flexWrap: "wrap", background: GOLD, borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "1.2rem", minWidth: 0 }}>
@@ -387,7 +441,7 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.5)", textAlign: "center" }}>
             *Old-way total is a typical U.S. cost estimate for separate sessions, not a quote. Individual modules also available from ${MODULES[0].price} each.
           </p>
-        </div>
+        </motion.div>
       </section>
 
       {/* ── FAQ ── */}
@@ -396,7 +450,7 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             FAQ
           </p>
-          <h2 style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "5.6rem" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.8rem, 5vw, 4.2rem)", fontWeight: 500, color: "var(--primary)", textAlign: "center", marginBottom: "5.6rem" }}>
             Frequently asked questions
           </h2>
           <div>

@@ -9,6 +9,10 @@
    license requires ITF's written consent to self-host the font file). */
 :root {
   --font-display: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  /* Fraunces (Google Fonts, OFL) — display serif for marketing headlines only,
+     paired with Satoshi body. Not used app-wide, just the landing page's
+     editorial moments (hero, section headlines, the giant price number). */
+  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
 
   /* Canvas — warm beige, SkyClinics background */
   --canvas:        #E8E7E5;
