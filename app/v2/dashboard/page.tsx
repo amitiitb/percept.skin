@@ -4,8 +4,6 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useFunnelV2Store } from "@/store/funnelV2";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { LockedCard } from "@/components/v2/LockedCard";
-import { PLANS } from "@/lib/v2/paypal";
 
 interface LatestSession {
   id: string;
@@ -22,7 +20,6 @@ export default function V2DashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
-  const [isPremium, setIsPremium] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
   const [latest, setLatest] = useState<LatestSession | null>(null);
 
@@ -30,14 +27,12 @@ export default function V2DashboardPage() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.replace("/auth/login?next=/v2/dashboard"); return; }
 
-      const [{ data: profile }, { data: sub }, { data: sessions, count }] = await Promise.all([
+      const [{ data: profile }, { data: sessions, count }] = await Promise.all([
         supabase.from("user_profiles_v2").select("name").eq("user_id", user.id).maybeSingle(),
-        supabase.from("subscriptions_v2").select("status").eq("user_id", user.id).eq("status", "active").maybeSingle(),
         supabase.from("analysis_sessions_v2").select("id, overall_score, skin_age, status, created_at", { count: "exact" }).eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
       ]);
 
       setName(profile?.name ?? "");
-      setIsPremium(!!sub);
       setSessionCount(count ?? 0);
       setLatest((sessions?.[0] as LatestSession) ?? null);
       setLoading(false);
@@ -61,9 +56,6 @@ export default function V2DashboardPage() {
             <h1 style={{ fontSize: "3.6rem", fontWeight: 400, color: "var(--primary)", margin: "0 0 0.8rem" }}>
               Hey{name ? `, ${name.split(" ")[0]}` : ""}
             </h1>
-            <p style={{ fontSize: "1.6rem", color: "var(--secondary)", margin: 0 }}>
-              {isPremium ? "Glowmetry Premium" : "Free plan"}
-            </p>
           </div>
           <button
             onClick={() => router.push("/v2/settings")}
@@ -113,12 +105,6 @@ export default function V2DashboardPage() {
                 <PrimaryButton variant="outline" fullWidth={false} onClick={() => router.push("/v2/history")}>View all →</PrimaryButton>
               </div>
             </div>
-
-            {!isPremium && (
-              <div style={{ gridColumn: "1 / -1" }}>
-                <LockedCard title="Progress tracking" description={`See how your Glow Score, skin age, and individual metrics change scan over scan. Premium from $${PLANS.monthly.price}/mo · cancel anytime.`} onUnlock={() => router.push("/v2/plans")} />
-              </div>
-            )}
           </div>
         )}
       </div>
