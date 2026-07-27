@@ -292,7 +292,7 @@ export default function V2CapturePage() {
       <div style={{ minHeight: "100dvh", background: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem", textAlign: "center" }}>
         <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1.6rem" }}>Face done!</p>
         <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4rem)", fontWeight: 400, color: "#fff", marginBottom: "1.6rem" }}>Now hair &amp; scalp</h1>
-        <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.7)", marginBottom: "4rem" }}>About 2 more minutes.</p>
+        <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.7)", marginBottom: "4rem" }}>About a minute more.</p>
         <div style={{ maxWidth: "32rem", width: "100%" }}>
           <PrimaryButton onClick={() => setShowPhaseTransition(false)}>Continue →</PrimaryButton>
         </div>

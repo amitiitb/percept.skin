@@ -25,7 +25,7 @@ export default function V2ScanPrepPage() {
           positioning trick. */}
       <div style={{ width: "100%", maxWidth: "64rem" }}>
         <p style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1rem" }}>
-          3-5 minutes
+          2-4 minutes
         </p>
         <h1 style={{ fontSize: "clamp(2.6rem, 5vw, 3.6rem)", fontWeight: 400, color: "var(--primary)", marginBottom: "2.4rem" }}>
           Before we start
