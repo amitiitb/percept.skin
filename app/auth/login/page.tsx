@@ -26,7 +26,7 @@ function LoginForm() {
     setLoading(true);
 
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     });
@@ -39,7 +39,15 @@ function LoginForm() {
       return;
     }
 
-    router.replace(params.get("next") || "/v2/dashboard");
+    // See app/auth/signup/page.tsx — next=/v2/profile-setup would otherwise
+    // send an existing user through profile creation again on every scan.
+    const next = params.get("next") || "/v2/dashboard";
+    if (next === "/v2/profile-setup" && signInData.user) {
+      const { data: profile } = await supabase.from("user_profiles_v2").select("name").eq("user_id", signInData.user.id).maybeSingle();
+      router.replace(profile ? "/v2/scan-prep" : next);
+      return;
+    }
+    router.replace(next);
   }
 
   return (

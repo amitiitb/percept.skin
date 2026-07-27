@@ -28,12 +28,24 @@ function SignupForm() {
 
   // Already a real logged-in user → skip signup, go wherever this link was
   // pointed (v2 callers pass ?next=/v2/... — defaulting to /v2/dashboard,
-  // never /results which doesn't exist in this project).
+  // never /results which doesn't exist in this project). If that next hop is
+  // profile-setup and this user already has a saved profile, honoring next
+  // as-is would send an existing user through the whole "create profile"
+  // journey again on every single scan (real report: users landing here from
+  // the marketing site's "Start your scan" link, which always appends
+  // ?next=/v2/profile-setup regardless of login state) — skip straight to a
+  // new scan instead.
   useEffect(() => {
-    createClient().auth.getSession().then(({ data: { session } }) => {
-      if (session?.user && !session.user.is_anonymous) {
-        router.replace(params.get("next") || "/v2/dashboard");
+    const supabase = createClient();
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user || session.user.is_anonymous) return;
+      const next = params.get("next") || "/v2/dashboard";
+      if (next === "/v2/profile-setup") {
+        const { data: profile } = await supabase.from("user_profiles_v2").select("name").eq("user_id", session.user.id).maybeSingle();
+        router.replace(profile ? "/v2/scan-prep" : next);
+        return;
       }
+      router.replace(next);
     });
   }, [router, params]);
 
