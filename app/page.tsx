@@ -473,22 +473,55 @@ export default function LandingPage() {
             <a href="/v2/splash" style={{ minWidth: 0, flexShrink: 0 }}><PrimaryButton fullWidth={false} size="lg">Get your report · ${BUNDLE_PRICE} →</PrimaryButton></a>
           </div>
 
-          <div className="glowmetry-cta-banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem", flexWrap: "wrap", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "1.2rem", minWidth: 0 }}>
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>Want a real dermatologist too?</p>
-              <p style={{ fontSize: "1.6rem", color: "#fff" }}>Talk to a certified dermatologist, one time, no subscription</p>
+          {/* Complete Package upsell — same visual weight as the bundle card
+              above (solid color, checklist, big price), not a footnote.
+              Still two separate real purchases today (report bundle, then
+              consultation add-on) -- no combined single-order checkout exists
+              yet -- so this sells the combination honestly rather than
+              implying one unified SKU that doesn't exist in the backend. */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+            style={{ background: CORAL, borderRadius: "1.6rem", padding: "3.2rem", marginBottom: "1.2rem", position: "relative", overflow: "hidden" }}
+          >
+            <div aria-hidden style={{ position: "absolute", top: "-40%", left: "-10%", width: "32rem", height: "32rem", borderRadius: "50%", background: "rgba(255,255,255,0.18)", filter: "blur(40px)" }} />
+            <div className="glowmetry-complete-package" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2.8rem", flexWrap: "wrap" }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", opacity: 0.85 }}>
+                  Go all the way — complete package
+                </p>
+                <p style={{ fontSize: "2.2rem", fontWeight: 700, color: "#fff", lineHeight: 1.25, marginBottom: "1.8rem", maxWidth: "40rem" }}>
+                  Your AI report, plus a real dermatologist&apos;s plan
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  {["Reviewed by a licensed dermatologist", "Written notes on your specific concerns", "Direct follow-up, usually within 24 hours"].map((line) => (
+                    <div key={line} style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                      <span style={{ width: "2rem", height: "2rem", flexShrink: 0, borderRadius: "50%", background: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </span>
+                      <span style={{ fontSize: "1.5rem", color: "rgba(255,255,255,0.92)" }}>{line}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ flexShrink: 0, textAlign: "center" }}>
+                <p style={{ fontSize: "1.3rem", color: "rgba(255,255,255,0.75)", marginBottom: "0.4rem" }}>Report ${BUNDLE_PRICE} + consultation</p>
+                <p style={{ fontSize: "4rem", fontWeight: 800, color: "#fff", lineHeight: 1, marginBottom: "1.8rem" }}>+${DOCTOR_CONSULTATION_PRICE}</p>
+                <a
+                  href="/v2/splash"
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap",
+                    height: "5.8rem", padding: "0 3.2rem", borderRadius: "9999px", background: "#fff",
+                    color: CORAL, fontSize: "1.7rem", fontWeight: 700, textDecoration: "none",
+                  }}
+                >
+                  Add consultation →
+                </a>
+              </div>
             </div>
-            <a
-              href="/v2/splash"
-              style={{
-                flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center",
-                height: "5.8rem", padding: "0 3.2rem", borderRadius: "9999px", border: `1px solid ${GOLD}`,
-                color: GOLD, fontSize: "1.7rem", fontWeight: 500, whiteSpace: "nowrap", textDecoration: "none",
-              }}
-            >
-              Add consultation · ${DOCTOR_CONSULTATION_PRICE} →
-            </a>
-          </div>
+          </motion.div>
 
           <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.5)", textAlign: "center" }}>
             *Old-way total is a typical U.S. cost estimate for separate sessions, not a quote. Individual modules also available from ${MODULES[0].price} each.
@@ -590,6 +623,9 @@ export default function LandingPage() {
           .glowmetry-cta-banner { flex-direction: column !important; align-items: stretch !important; }
           .glowmetry-cta-banner > a { width: 100% !important; flex-shrink: 1 !important; }
           .glowmetry-cta-banner button { width: 100% !important; white-space: normal !important; }
+          .glowmetry-complete-package { flex-direction: column !important; align-items: stretch !important; }
+          .glowmetry-complete-package > div:last-child { text-align: left !important; }
+          .glowmetry-complete-package a { width: 100% !important; }
         }
       `}</style>
     </div>
