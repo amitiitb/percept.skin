@@ -5,11 +5,32 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { MODULES, BUNDLE_PRICE, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, BUNDLE_DISCOUNT_PCT, DOCTOR_CONSULTATION_PRICE, priceFor, type ModuleId } from "@/lib/v2/reportModules";
 
-const ANALYZING_MESSAGES = [
-  "Analyzing your facial features…",
-  "Mapping skin texture and tone…",
-  "Preparing your personalized report…",
-];
+// Real backend stages written by app/api/v2/analyse/route.ts — not decoration.
+// Order matters: it's also the step-counter denominator (index + 1 of 4).
+const STAGES = ["fetching_photos", "analyzing", "scoring", "personalizing"] as const;
+type Stage = typeof STAGES[number] | "complete" | "failed";
+
+const STAGE_COPY: Record<typeof STAGES[number], { skin: string; hair: string; bundle: string }> = {
+  fetching_photos: { skin: "Loading your photos…", hair: "Loading your photos…", bundle: "Loading your photos…" },
+  analyzing: {
+    skin: "Reading your skin's texture and tone…",
+    hair: "Reading your scalp and hairline…",
+    bundle: "Analyzing your face, scalp, and hair…",
+  },
+  scoring: {
+    skin: "Scoring against your baseline…",
+    hair: "Scoring your hair and scalp health…",
+    bundle: "Scoring your results…",
+  },
+  personalizing: {
+    skin: "Building your skincare routine…",
+    hair: "Building your haircare routine…",
+    bundle: "Building your personalized routine…",
+  },
+};
+
+const POLL_INTERVAL_MS = 4000;
+const POLL_MAX_WAIT_MS = 3 * 60 * 1000;
 
 type PayState = "idle" | "confirming" | "success" | "failed" | "cancelled";
 
@@ -31,8 +52,8 @@ export default function V2BundlePage() {
 
   const [authChecked, setAuthChecked] = useState(false);
   const [selected, setSelected] = useState<Set<ModuleId>>(new Set(MODULES.map((m) => m.id)));
-  const [analyzing, setAnalyzing] = useState(true);
-  const [msgIndex, setMsgIndex] = useState(0);
+  const [stage, setStage] = useState<Stage | null>(null);
+  const [failReason, setFailReason] = useState<string | null>(null);
   const [payState, setPayState] = useState<PayState>("idle");
   const [payError, setPayError] = useState("");
 
@@ -61,33 +82,65 @@ export default function V2BundlePage() {
     });
   }, [sessionId]);
 
+  async function kickOffAnalysis() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const res = await fetch("/api/v2/analyse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ sessionId }),
+      });
+      analysisReadyRef.current = res.ok;
+      if (!res.ok) {
+        // Don't wait on the DB poll to notice this — the fetch response
+        // itself is definitive proof the request failed. Setting `stage`
+        // straight from here is what actually closes the silent-failure
+        // bug; relying solely on a server-side DB write to flip it (which
+        // can itself fail, e.g. pre-migration) would just reintroduce the
+        // same bug one layer down.
+        const body = await res.json().catch(() => ({} as { error?: string }));
+        setFailReason(body.error ?? "Something went wrong — try again");
+        setStage("failed");
+      }
+    } catch {
+      analysisReadyRef.current = false;
+      setFailReason("Something went wrong — try again");
+      setStage("failed");
+    }
+  }
+
   // Kick off analysis in the background the moment we land here — the user
   // browses the purchase screen while this runs, never blocking on it.
   useEffect(() => {
     if (!authChecked || analysisKickedRef.current) return;
     analysisKickedRef.current = true;
-    (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) return;
-        const res = await fetch("/api/v2/analyse", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-          body: JSON.stringify({ sessionId }),
-        });
-        analysisReadyRef.current = res.ok;
-      } catch {
-        analysisReadyRef.current = false;
-      } finally {
-        setAnalyzing(false);
-      }
-    })();
+    kickOffAnalysis();
   }, [authChecked, sessionId]);
 
+  function retryAnalysis() {
+    setFailReason(null);
+    setStage(null);
+    kickOffAnalysis();
+  }
+
+  // Poll the real stage the backend is writing (app/api/v2/analyse/route.ts)
+  // instead of cycling decorative placeholder text — this is what makes the
+  // progress indicator true, not decoration. Read-only; the fetch above is
+  // still what actually drives the work.
   useEffect(() => {
-    const t = setInterval(() => setMsgIndex((i) => (i + 1) % ANALYZING_MESSAGES.length), 2600);
+    if (stage === "complete" || stage === "failed") return;
+    const startedAt = Date.now();
+    const poll = async () => {
+      if (Date.now() - startedAt > POLL_MAX_WAIT_MS) return;
+      const { data } = await supabase.from("analysis_sessions_v2").select("stage, fail_reason").eq("id", sessionId).maybeSingle();
+      if (data?.stage) setStage(data.stage as Stage);
+      if (data?.fail_reason) setFailReason(data.fail_reason);
+    };
+    poll();
+    const t = setInterval(poll, POLL_INTERVAL_MS);
     return () => clearInterval(t);
-  }, []);
+  }, [sessionId, stage]);
 
   // Celebration screen auto-advances so the payment doesn't feel like a dead
   // end if the user never taps the button — the tap just gets there sooner.
@@ -223,6 +276,16 @@ export default function V2BundlePage() {
     setSelected(new Set(MODULES.map((m) => m.id)));
   }
 
+  // /api/v2/analyse only ever produces skin/face/hair metrics (colour and
+  // frame previews are separate endpoints entirely) — so "personalize by
+  // module" for this specific progress indicator means: did the user buy
+  // Skin, Hairstyle, both, or neither of those two.
+  const hasSkin = selected.has("skin");
+  const hasHair = selected.has("hairstyle");
+  const moduleKey: "skin" | "hair" | "bundle" = hasSkin && !hasHair ? "skin" : hasHair && !hasSkin ? "hair" : "bundle";
+  const stageIndex = stage && stage !== "complete" && stage !== "failed" ? STAGES.indexOf(stage) : -1;
+  const stageCopy = stageIndex >= 0 ? STAGE_COPY[STAGES[stageIndex]][moduleKey] : "Getting started…";
+
   if (!authChecked) return <div style={{ minHeight: "100dvh", background: "var(--canvas)" }} />;
 
   return (
@@ -298,21 +361,37 @@ export default function V2BundlePage() {
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2rem 8rem" }}>
       <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
 
-        {/* Subtle, non-blocking analysis indicator */}
+        {/* Real analysis progress — reads the actual stage app/api/v2/analyse/route.ts
+            is writing, not a decorative timed loop. */}
         <div style={{ display: "flex", justifyContent: "center", marginBottom: "3.2rem" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "1rem", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "9999px", padding: "1rem 2rem" }}>
-            {analyzing ? (
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }} style={{ width: "1.6rem", height: "1.6rem", borderRadius: "50%", border: "2px solid var(--line)", borderTopColor: "var(--primary)", flexShrink: 0 }} />
-            ) : (
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "1rem", borderRadius: "9999px", padding: "1rem 2rem",
+            background: stage === "failed" ? "#FBEAE7" : "var(--surface)",
+            border: `1px solid ${stage === "failed" ? "#E8B4AA" : "var(--line)"}`,
+          }}>
+            {stage === "complete" ? (
               <span style={{ width: "1.6rem", height: "1.6rem", borderRadius: "50%", background: "#4C8C5F", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </span>
+            ) : stage === "failed" ? (
+              <span style={{ width: "1.6rem", height: "1.6rem", borderRadius: "50%", background: "#C8503A", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "1.1rem", fontWeight: 700 }}>!</span>
+            ) : (
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }} style={{ width: "1.6rem", height: "1.6rem", borderRadius: "50%", border: "2px solid var(--line)", borderTopColor: "var(--primary)", flexShrink: 0 }} />
             )}
             <AnimatePresence mode="wait">
-              <motion.span key={analyzing ? msgIndex : "done"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ fontSize: "1.4rem", color: "var(--secondary)" }}>
-                {analyzing ? ANALYZING_MESSAGES[msgIndex] : "Your report is ready"}
+              <motion.span key={stage ?? "start"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ fontSize: "1.4rem", color: stage === "failed" ? "#A83E2E" : "var(--secondary)" }}>
+                {stage === "complete"
+                  ? "Your report is ready"
+                  : stage === "failed"
+                  ? (failReason ?? "Something went wrong — try again")
+                  : `${stageCopy}${stageIndex >= 0 ? ` (Step ${stageIndex + 1} of ${STAGES.length})` : ""}`}
               </motion.span>
             </AnimatePresence>
+            {stage === "failed" && (
+              <button onClick={retryAnalysis} style={{ fontSize: "1.3rem", fontWeight: 600, color: "#A83E2E", textDecoration: "underline", cursor: "pointer", flexShrink: 0 }}>
+                Retry
+              </button>
+            )}
           </div>
         </div>
 
