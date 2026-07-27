@@ -72,7 +72,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
         </div>
       </div>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100dvh", minWidth: 0 }}>
         <div className="v2-mobile-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.6rem 2rem", borderBottom: "1px solid var(--line)" }}>
           {showBack ? (
             <button onClick={handleBack} aria-label="Go back" style={{ width: "4.4rem", height: "4.4rem", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "1px solid var(--line)", color: "var(--secondary)", background: "transparent", cursor: "pointer" }}>
@@ -93,7 +93,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
           </div>
         )}
 
-        <motion.div key={headline} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "2.8rem 2rem 4rem", width: "100%" }} className="v2-content">
+        <motion.div key={headline} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} style={{ flex: 1, minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column", padding: "2.8rem 2rem 4rem", width: "100%" }} className="v2-content">
           {children}
         </motion.div>
       </div>

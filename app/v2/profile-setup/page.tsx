@@ -30,7 +30,7 @@ function Chip({ selected, onClick, children }: { selected: boolean; onClick: () 
       border: `1px solid ${selected ? "var(--primary)" : "var(--line)"}`,
       background: selected ? "var(--primary)" : "var(--canvas)",
       color: selected ? "#fff" : "var(--secondary)",
-      cursor: "pointer", transition: "all 0.15s",
+      cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
     }}>
       {children}
     </button>
@@ -50,8 +50,13 @@ export default function V2ProfileSetupPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) router.replace("/auth/login?next=/v2/profile-setup");
-      else setAuthLoading(false);
+      if (!user) { router.replace("/auth/login?next=/v2/profile-setup"); return; }
+      // Signup already asked for the name (auth/signup's "Full name" field,
+      // saved to user_metadata) — don't make them type it again here if we
+      // already have it and they haven't started filling this form yet.
+      const metaName = typeof user.user_metadata?.name === "string" ? user.user_metadata.name : "";
+      if (metaName) setForm((f) => (f.name ? f : { ...f, name: metaName }));
+      setAuthLoading(false);
     });
   }, []);
 
@@ -95,7 +100,7 @@ export default function V2ProfileSetupPage() {
 
   return (
     <V2Layout headline="A few quick details" sub="This helps personalise your report. Nothing here is shared or sold." progress={20} showBack={false}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "3.2rem", maxWidth: "64rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "3.2rem", maxWidth: "64rem", width: "100%", minWidth: 0 }}>
         <div>
           <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Name</label>
           <input
@@ -134,11 +139,20 @@ export default function V2ProfileSetupPage() {
           </div>
         </div>
 
-        <div>
-          <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Primary concerns</label>
-          <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+            <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Primary concerns</label>
+            <span style={{ fontSize: "1.1rem", color: "var(--muted)" }}>Swipe for more →</span>
+          </div>
+          <div className="glowmetry-concerns-scroll" style={{
+            display: "grid", gridAutoFlow: "column", gridTemplateRows: "repeat(2, auto)",
+            columnGap: "1rem", rowGap: "1rem", marginTop: "1rem", overflowX: "auto", width: "100%",
+            scrollSnapType: "x proximity", paddingBottom: "0.4rem", paddingRight: "2rem",
+          }}>
             {CONCERNS.map((c) => (
-              <Chip key={c.value} selected={form.skinConcerns.includes(c.value)} onClick={() => toggleConcern(c.value)}>{c.label}</Chip>
+              <div key={c.value} style={{ scrollSnapAlign: "start" }}>
+                <Chip selected={form.skinConcerns.includes(c.value)} onClick={() => toggleConcern(c.value)}>{c.label}</Chip>
+              </div>
             ))}
           </div>
         </div>
@@ -164,6 +178,10 @@ export default function V2ProfileSetupPage() {
           Continue →
         </PrimaryButton>
       </div>
+      <style jsx global>{`
+        .glowmetry-concerns-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+        .glowmetry-concerns-scroll::-webkit-scrollbar { display: none; }
+      `}</style>
     </V2Layout>
   );
 }
