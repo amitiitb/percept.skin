@@ -18,7 +18,10 @@ export function ScoreReveal({ score }: { score: number }) {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduceMotion) {
       progress.set(score);
-      setDisplay(score);
+      // Deferred a tick so this isn't a synchronous setState-in-effect
+      // (which forces a same-commit cascading re-render) — still lands
+      // before the next paint, imperceptible to the user.
+      queueMicrotask(() => setDisplay(score));
       return;
     }
     const controls = animate(progress, score, {

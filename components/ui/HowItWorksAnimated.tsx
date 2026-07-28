@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
 /* ── Capture step: phone + oval + scan line ── */
@@ -63,15 +63,22 @@ function CaptureVisual() {
 /* ── Analyse step: AI landmark dots ── */
 function AnalyseVisual() {
   const [active, setActive] = useState<number[]>([]);
-  const DOTS = Array.from({ length: 32 }, (_, i) => ({
+  // Fixed once per mount via a useState lazy initializer — the one place
+  // React's purity rules allow a one-time impure call (useMemo's callback
+  // is still expected to be pure and can legitimately re-run under the
+  // compiler, so it doesn't qualify). Without this, DOTS/LINES were
+  // recomputed with fresh Math.random() on every render, reshuffling the
+  // layout on each `active`/`paramIdx` tick and mismatching between the
+  // server and client hydration passes.
+  const [DOTS] = useState(() => Array.from({ length: 32 }, () => ({
     x: 10 + Math.random() * 80,
     y: 8 + Math.random() * 84,
     r: 0.8 + Math.random() * 1.4,
-  }));
-  const LINES = Array.from({ length: 20 }, () => ({
+  })));
+  const [LINES] = useState(() => Array.from({ length: 20 }, () => ({
     i: Math.floor(Math.random() * DOTS.length),
     j: Math.floor(Math.random() * DOTS.length),
-  }));
+  })));
   const PARAMS = ["Texture","Tone","Pores","Wrinkles","Hydration","Inflammation","Pigmentation","Dark circles","Acne","Oil balance"];
 
   useEffect(() => {
