@@ -73,12 +73,26 @@ function LockedMetricRow({ m }: { m: AnalysisMetric }) {
   );
 }
 
+// One accent per section, keyed by title (not index) so it stays fixed
+// regardless of which sections a given purchase actually renders.
+const SECTION_ACCENT: Record<string, string> = {
+  Skin: "var(--rose)",
+  Face: "#D9A62E",
+  "Hair & Scalp": "#E8604F",
+};
+
 function Section({ title, intro, metrics, locked }: { title: string; intro?: string; metrics: AnalysisMetric[]; locked?: boolean }) {
   if (metrics.length === 0) return null;
+  const accent = SECTION_ACCENT[title] ?? "var(--rose)";
   return (
-    <div style={{ marginBottom: "4.8rem" }}>
-      <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: intro ? "0.6rem" : "1.6rem" }}>{title}</h2>
-      {intro && <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2rem", maxWidth: "60rem" }}>{intro}</p>}
+    <div style={{
+      marginBottom: "3.2rem", background: "var(--surface)", borderRadius: "1.6rem",
+      borderTop: `0.4rem solid ${accent}`, padding: "3.2rem 3.2rem 2.4rem",
+    }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "1.2rem", flexWrap: "wrap", marginBottom: intro ? "0.6rem" : "2rem" }}>
+        <h2 style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", margin: 0 }}>{title}</h2>
+      </div>
+      {intro && <p style={{ fontSize: "1.4rem", color: "var(--secondary)", marginBottom: "2.4rem", maxWidth: "60rem" }}>{intro}</p>}
       <div className="v2-metric-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 4.8rem" }}>
         {metrics.map((m) => locked ? <LockedMetricRow key={m.metricName} m={m} /> : <MetricRow key={m.metricName} m={m} />)}
       </div>
@@ -96,9 +110,9 @@ const PHOTO_LABELS: Record<string, string> = {
 };
 
 const SECTION_INTRO: Record<string, string> = {
-  Skin: "Texture, tone, and hydration across your face, read from your guided photos.",
-  Face: "Proportion, symmetry, and structural balance: the framework the rest of your look sits on.",
-  "Hair & Scalp": "Density, hairline pattern, and overall scalp health from your part and crown shots.",
+  Skin: "Texture, tone, and hydration.",
+  Face: "Proportion and symmetry.",
+  "Hair & Scalp": "Density, hairline, and scalp health.",
 };
 
 const ROUTINE_META: Array<{ key: keyof RecommendationSet; label: string; icon: string; gate: "skin" | "hair" }> = [
@@ -253,7 +267,7 @@ export default function V2ReportPage() {
               </div>
             )}
             <ScoreReveal score={score} />
-            <p style={{ fontSize: "1.8rem", color: "var(--secondary)", marginTop: "1.2rem" }}>{verdictFor(score)} · Glow Score</p>
+            <p style={{ fontSize: "2.2rem", fontWeight: 700, color: "var(--primary)", marginTop: "1.2rem" }}>{verdictFor(score)} · Glow Score</p>
             <p style={{ fontSize: "1.4rem", color: "var(--muted)", marginTop: "0.8rem" }}>This is real, from your own photos. The rest is still locked.</p>
           </div>
 
@@ -337,9 +351,12 @@ export default function V2ReportPage() {
             <div style={{ margin: photo ? "0" : "0 auto" }}>
               <ScoreReveal score={score} />
             </div>
-            <p style={{ fontSize: "2rem", color: "var(--secondary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Glow Score</p>
+            <p style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Glow Score</p>
             {session.skin_age !== null && (
-              <p style={{ fontSize: "1.5rem", color: "var(--muted)", marginTop: "1.2rem" }}>Estimated skin age: {session.skin_age}</p>
+              <div style={{ display: "inline-flex", alignItems: "baseline", gap: "0.8rem", marginTop: "1.4rem", background: "var(--wash)", borderRadius: "9999px", padding: "0.8rem 1.8rem" }}>
+                <span style={{ fontSize: "1.3rem", color: "var(--secondary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Skin age</span>
+                <span style={{ fontSize: "2.2rem", fontWeight: 800, color: "var(--primary)" }}>{session.skin_age}</span>
+              </div>
             )}
             {sorted.length > 0 && (
               <div style={{ display: "flex", gap: "3.2rem", justifyContent: photo ? "flex-start" : "center", marginTop: "2.4rem", flexWrap: "wrap" }}>

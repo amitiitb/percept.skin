@@ -16,6 +16,21 @@ export interface AnalysisProvider {
   analyse(input: AnalysisInput): Promise<AnalysisResultV2>;
 }
 
+// Defensive net regardless of the system prompt instruction — models don't
+// always follow style instructions perfectly, and this text renders directly
+// on the report page (standing site-wide rule: no em dash anywhere in
+// user-facing content). Deep-walks any object/array of strings.
+function stripEmDash<T>(value: T): T {
+  if (typeof value === "string") return (value as string).replace(/\s*—\s*/g, ", ") as unknown as T;
+  if (Array.isArray(value)) return value.map(stripEmDash) as unknown as T;
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = stripEmDash(v);
+    return out as T;
+  }
+  return value;
+}
+
 function labelFor(score: number): AnalysisMetric["label"] {
   if (score >= 80) return "Excellent";
   if (score >= 60) return "Good";
@@ -225,7 +240,7 @@ Every key listed above under skinMetrics/faceMetrics/hairMetrics must be present
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
           max_tokens: 4096,
-          system: "You are a cosmetic and wellness photo analysis assistant. You never provide medical or dermatological diagnoses — only general cosmetic/wellness observations framed as estimates, not facts. Return only valid JSON with no extra text.",
+          system: "You are a cosmetic and wellness photo analysis assistant. You never provide medical or dermatological diagnoses, only general cosmetic/wellness observations framed as estimates, not facts. Return only valid JSON with no extra text. Never use the em dash character (—) anywhere in your output; use a comma, colon, period, or hyphen instead.",
           messages: [{
             role: "user",
             content: [
@@ -265,7 +280,7 @@ Every key listed above under skinMetrics/faceMetrics/hairMetrics must be present
     }
     const r = validated.data;
 
-    return {
+    return stripEmDash({
       overallScore: Math.round(r.overallScore),
       skinAgeEstimate: Math.round(r.skinAgeEstimate),
       imageQuality: r.imageQuality,
@@ -280,7 +295,7 @@ Every key listed above under skinMetrics/faceMetrics/hairMetrics must be present
         : r.limitations,
       professionalConsultationNote:
         "This is a cosmetic and wellness estimate, not a medical diagnosis. Consult a qualified dermatologist for any visible change that concerns you.",
-    };
+    });
   },
 };
 
