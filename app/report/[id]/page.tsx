@@ -9,6 +9,7 @@ import ColourAnalysisPanel from "@/components/v2/ColourAnalysisPanel";
 import HairstylePanel from "@/components/v2/HairstylePanel";
 import GlassesVirtualTryOn from "@/components/v2/GlassesVirtualTryOn";
 import FrameAIPanel from "@/components/v2/FrameAIPanel";
+import { guideFor } from "@/lib/v2/metricGuide";
 import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
 import type { ModuleId } from "@/lib/v2/reportModules";
 
@@ -30,24 +31,118 @@ function verdictFor(score: number): string {
   return "Needs attention";
 }
 
-function ScoreBar({ score }: { score: number | null }) {
+// Score bands drive the colour of both the bar and the status chip, so a
+// glance down the column reads as a status list rather than 20 identical bars.
+function bandFor(score: number | null): { label: string; color: string; tint: string } {
+  if (score === null) return { label: "No read", color: "var(--muted)", tint: "var(--wash)" };
+  if (score >= 80) return { label: "Excellent", color: "#2E7D5B", tint: "rgba(46,125,91,0.1)" };
+  if (score >= 60) return { label: "Good", color: "#1A9E8F", tint: "rgba(26,158,143,0.1)" };
+  if (score >= 40) return { label: "Moderate", color: "#C08420", tint: "rgba(192,132,32,0.12)" };
+  return { label: "Focus area", color: "#C8503A", tint: "rgba(200,80,58,0.1)" };
+}
+
+function ScoreBar({ score, color }: { score: number | null; color?: string }) {
   const pct = Math.max(2, Math.min(100, score ?? 0));
   return (
-    <div style={{ flex: 1, height: "0.6rem", borderRadius: "9999px", background: "var(--line)", overflow: "hidden" }}>
-      <div style={{ height: "100%", width: `${pct}%`, borderRadius: "9999px", background: "var(--rose)" }} />
+    <div style={{ flex: 1, height: "0.5rem", borderRadius: "9999px", background: "var(--line)", overflow: "hidden", minWidth: "4rem" }}>
+      <div style={{ height: "100%", width: `${pct}%`, borderRadius: "9999px", background: color ?? "var(--rose)" }} />
     </div>
   );
 }
 
+// Collapsed by default: name, status, bar, score. That row alone is the
+// scannable layer. Everything else, the model's finding for this specific
+// scan plus the standing reference material, opens on click, so depth is
+// available without the page reading as a wall of paragraphs.
 function MetricRow({ m }: { m: AnalysisMetric }) {
+  const [open, setOpen] = useState(false);
+  const band = bandFor(m.score);
+  const guide = guideFor(m.metricName);
+
   return (
-    <div style={{ padding: "1.8rem 0", borderBottom: "1px solid var(--line)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "1.6rem", marginBottom: "0.8rem" }}>
-        <span style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, flex: "0 0 auto", minWidth: "15rem" }}>{m.metricName}</span>
-        <ScoreBar score={m.score} />
-        <span style={{ fontSize: "1.5rem", color: "var(--secondary)", fontWeight: 500, width: "3.2rem", textAlign: "right", flexShrink: 0 }}>{m.score ?? "-"}</span>
-      </div>
-      <p style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.6, margin: 0 }}>{m.explanation}</p>
+    <div style={{ borderBottom: "1px solid var(--line)" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        style={{
+          display: "flex", alignItems: "center", gap: "1.4rem", width: "100%", padding: "1.5rem 0",
+          background: "none", border: "none", cursor: "pointer", textAlign: "left",
+        }}
+      >
+        <span style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, flex: "1 1 auto", minWidth: 0 }}>{m.metricName}</span>
+        <span style={{
+          fontSize: "1.1rem", fontWeight: 700, color: band.color, background: band.tint, borderRadius: "9999px",
+          padding: "0.4rem 1rem", whiteSpace: "nowrap", flexShrink: 0, letterSpacing: "0.02em",
+        }}>
+          {band.label}
+        </span>
+        <div className="v2-metric-bar" style={{ display: "flex", alignItems: "center", gap: "1rem", flex: "0 0 12rem" }}>
+          <ScoreBar score={m.score} color={band.color} />
+          <span style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 700, width: "2.8rem", textAlign: "right", flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{m.score ?? "-"}</span>
+        </div>
+        <span aria-hidden style={{ fontSize: "1.2rem", color: "var(--muted)", flexShrink: 0, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none" }}>▾</span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22 }}
+            style={{ overflow: "hidden" }}
+          >
+            <div style={{ paddingBottom: "2.4rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem", borderLeft: `2px solid ${band.color}`, paddingLeft: "1.8rem" }}>
+                <div>
+                  <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.5rem" }}>In your scan</p>
+                  <p style={{ fontSize: "1.5rem", color: "var(--primary)", lineHeight: 1.6, margin: 0 }}>{m.explanation}</p>
+                </div>
+                {m.recommendation && (
+                  <div>
+                    <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.5rem" }}>Suggested next step</p>
+                    <p style={{ fontSize: "1.5rem", color: "var(--primary)", lineHeight: 1.6, margin: 0 }}>{m.recommendation}</p>
+                  </div>
+                )}
+                {m.confidence && (
+                  <p style={{ fontSize: "1.2rem", color: "var(--muted)", margin: 0 }}>Confidence: {m.confidence}</p>
+                )}
+              </div>
+
+              {guide && (
+                <div style={{ background: "var(--canvas)", borderRadius: "1.2rem", padding: "2.2rem 2.4rem" }}>
+                  <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 1.2rem" }}>
+                    Understanding {m.metricName.toLowerCase()}
+                  </p>
+                  <p style={{ fontSize: "1.45rem", color: "var(--primary)", lineHeight: 1.65, margin: "0 0 0.8rem" }}>{guide.what}</p>
+                  <p style={{ fontSize: "1.45rem", color: "var(--secondary)", lineHeight: 1.65, margin: "0 0 1.8rem" }}>{guide.matters}</p>
+                  <div className="v2-guide-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.8rem 3.2rem" }}>
+                    <GuideList title="What drives it" items={guide.drivers} bullet="•" color="var(--secondary)" />
+                    <GuideList title="What helps" items={guide.helps} bullet="✓" color="var(--rose)" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function GuideList({ title, items, bullet, color }: { title: string; items: string[]; bullet: string; color: string }) {
+  return (
+    <div>
+      <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--primary)", margin: "0 0 0.9rem" }}>{title}</p>
+      <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.7rem" }}>
+        {items.map((it, i) => (
+          <li key={i} style={{ display: "flex", gap: "0.8rem", fontSize: "1.35rem", color: "var(--secondary)", lineHeight: 1.55 }}>
+            <span style={{ color, flexShrink: 0, fontWeight: 700 }}>{bullet}</span>
+            <span>{it}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -82,64 +177,81 @@ const SECTION_ACCENT: Record<string, string> = {
   "Hair & Scalp": "#E8604F",
 };
 
-// How many metrics show before a section needs a "show more" toggle at all
-// — the actual complaint this fixes: a section with 7-8 full explanations
-// stacked made the whole report read as one long scroll. 3 up front is
-// enough to give a real read on that section without opening anything.
-const COLLAPSED_COUNT = 3;
+// Rows are one line each now (detail opens per row), so this is about
+// prioritising rather than hiding bulk: the four that most need attention
+// sit above the fold, the rest are one tap away.
+const COLLAPSED_COUNT = 4;
 
-function Section({ title, intro, metrics, locked }: { title: string; intro?: string; metrics: AnalysisMetric[]; locked?: boolean }) {
+function Section({ index, id, title, intro, metrics, locked }: {
+  index: number; id: string; title: string; intro?: string; metrics: AnalysisMetric[]; locked?: boolean;
+}) {
   const [expanded, setExpanded] = useState(false);
   if (metrics.length === 0) return null;
   const accent = SECTION_ACCENT[title] ?? "var(--rose)";
-  const hiddenCount = locked ? 0 : Math.max(0, metrics.length - COLLAPSED_COUNT);
-  // Always just the first COLLAPSED_COUNT here — the rest render in the
-  // AnimatePresence block below only, never both at once.
-  const visible = hiddenCount > 0 ? metrics.slice(0, COLLAPSED_COUNT) : metrics;
+
+  // Lowest scores first: the actionable end of the list is what belongs at
+  // the top of a section, not whatever order the model happened to return.
+  const ordered = locked ? metrics : [...metrics].sort((a, b) => (a.score ?? 101) - (b.score ?? 101));
+  const scored = ordered.filter((m) => m.score !== null);
+  const avg = scored.length ? Math.round(scored.reduce((s, m) => s + (m.score ?? 0), 0) / scored.length) : null;
+  const band = bandFor(avg);
+  const hiddenCount = locked ? 0 : Math.max(0, ordered.length - COLLAPSED_COUNT);
+  const visible = hiddenCount > 0 ? ordered.slice(0, COLLAPSED_COUNT) : ordered;
+
   return (
-    <div style={{
-      marginBottom: "3.2rem", background: "var(--surface)", borderRadius: "1.6rem",
-      borderTop: `0.4rem solid ${accent}`, padding: "3.2rem 3.2rem 2.4rem",
+    <section id={id} style={{
+      marginBottom: "2.4rem", background: "var(--surface)", borderRadius: "1.6rem",
+      border: "1px solid var(--line)", overflow: "hidden", scrollMarginTop: "2.4rem",
     }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.2rem", flexWrap: "wrap", marginBottom: intro ? "0.6rem" : "2rem" }}>
-        <h2 style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", margin: 0 }}>{title}</h2>
-        <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-          {metrics.length} metric{metrics.length > 1 ? "s" : ""}
-        </span>
-      </div>
-      {intro && <p style={{ fontSize: "1.4rem", color: "var(--secondary)", marginBottom: "2.4rem", maxWidth: "60rem" }}>{intro}</p>}
-      <div className="v2-metric-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 4.8rem" }}>
-        {visible.map((m) => locked ? <LockedMetricRow key={m.metricName} m={m} /> : <MetricRow key={m.metricName} m={m} />)}
-      </div>
-      <AnimatePresence initial={false}>
-        {hiddenCount > 0 && expanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            style={{ overflow: "hidden" }}
-          >
-            <div className="v2-metric-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 4.8rem" }}>
-              {metrics.slice(COLLAPSED_COUNT).map((m) => <MetricRow key={m.metricName} m={m} />)}
+      <header style={{ borderTop: `0.4rem solid ${accent}`, padding: "2.8rem 3.2rem 2.4rem", borderBottom: "1px solid var(--line)" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "2rem", flexWrap: "wrap" }}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: "1.1rem", fontWeight: 700, color: accent, letterSpacing: "0.12em", margin: "0 0 0.6rem" }}>
+              PART {String(index).padStart(2, "0")}
+            </p>
+            <h2 style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", margin: 0, letterSpacing: "-0.01em" }}>{title}</h2>
+            {intro && <p style={{ fontSize: "1.4rem", color: "var(--secondary)", margin: "0.6rem 0 0", maxWidth: "52rem" }}>{intro}</p>}
+          </div>
+          {avg !== null && !locked && (
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.3rem" }}>Section average</p>
+              <p style={{ fontSize: "2.8rem", fontWeight: 800, color: band.color, margin: 0, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{avg}</p>
+              <p style={{ fontSize: "1.2rem", color: "var(--muted)", margin: "0.4rem 0 0" }}>{metrics.length} metrics assessed</p>
             </div>
-          </motion.div>
+          )}
+        </div>
+      </header>
+
+      <div style={{ padding: "0 3.2rem 2.4rem" }}>
+        {visible.map((m) => locked ? <LockedMetricRow key={m.metricName} m={m} /> : <MetricRow key={m.metricName} m={m} />)}
+        <AnimatePresence initial={false}>
+          {hiddenCount > 0 && expanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25 }}
+              style={{ overflow: "hidden" }}
+            >
+              {ordered.slice(COLLAPSED_COUNT).map((m) => <MetricRow key={m.metricName} m={m} />)}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {hiddenCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.6rem", marginTop: "1.8rem", background: "none",
+              border: "none", padding: 0, cursor: "pointer", fontSize: "1.4rem", fontWeight: 600, color: accent,
+            }}
+          >
+            {expanded ? "Show fewer metrics" : `Show ${hiddenCount} more metric${hiddenCount > 1 ? "s" : ""}`}
+            <span style={{ display: "inline-block", transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "none" }}>▾</span>
+          </button>
         )}
-      </AnimatePresence>
-      {hiddenCount > 0 && (
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          style={{
-            display: "flex", alignItems: "center", gap: "0.6rem", marginTop: "1.6rem", background: "none",
-            border: "none", padding: 0, cursor: "pointer", fontSize: "1.4rem", fontWeight: 600, color: accent,
-          }}
-        >
-          {expanded ? "Show less" : `Show ${hiddenCount} more`}
-          <span style={{ display: "inline-block", transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "none" }}>▾</span>
-        </button>
-      )}
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -314,9 +426,9 @@ export default function V2ReportPage() {
             <p style={{ fontSize: "1.4rem", color: "var(--muted)", marginTop: "0.8rem" }}>This is real, from your own photos. The rest is still locked.</p>
           </div>
 
-          <Section title="Skin" intro={SECTION_INTRO.Skin} metrics={skinMetrics} locked />
-          <Section title="Face" intro={SECTION_INTRO.Face} metrics={faceMetrics} locked />
-          <Section title="Hair & Scalp" intro={SECTION_INTRO["Hair & Scalp"]} metrics={hairMetrics} locked />
+          <Section index={1} id="skin" title="Skin" intro={SECTION_INTRO.Skin} metrics={skinMetrics} locked />
+          <Section index={2} id="face" title="Face" intro={SECTION_INTRO.Face} metrics={faceMetrics} locked />
+          <Section index={3} id="hair" title="Hair & Scalp" intro={SECTION_INTRO["Hair & Scalp"]} metrics={hairMetrics} locked />
 
           <div style={{ background: "var(--primary)", borderRadius: "1.6rem", padding: "3.6rem", textAlign: "center", marginTop: "2.4rem" }}>
             <p style={{ fontSize: "2rem", fontWeight: 500, color: "#fff", marginBottom: "0.8rem" }}>Every score above is real and already computed</p>
@@ -367,6 +479,15 @@ export default function V2ReportPage() {
   const positiveObservations = hasContentAccess ? (session.positive_observations ?? []) : [];
   const limitations = hasContentAccess ? (session.limitations ?? []) : [];
   const recommendations = hasContentAccess ? session.recommendations : null;
+
+  // Part numbers come from the sections that actually render, so a
+  // skin-only purchase reads "Part 01 Skin, Part 02 Face" rather than
+  // skipping numbers for modules that were never bought.
+  const parts = [
+    hasSkin && { id: "skin", title: "Skin", metrics: skinMetrics },
+    hasSkin && { id: "face", title: "Face", metrics: faceMetrics },
+    hasHairstyle && { id: "hair", title: "Hair & Scalp", metrics: hairMetrics },
+  ].filter((p): p is { id: string; title: string; metrics: AnalysisMetric[] } => Boolean(p) && (p as { metrics: AnalysisMetric[] }).metrics.length > 0);
 
   return (
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
@@ -452,10 +573,37 @@ export default function V2ReportPage() {
           </div>
         )}
 
+        {/* Contents — turns a long scroll into a navigable document, and sets
+            the expectation of structure before the first section appears. */}
+        {parts.length > 0 && (
+          <div style={{ border: "1px solid var(--line)", borderRadius: "1.2rem", padding: "2rem 2.4rem", marginBottom: "2.4rem" }}>
+            <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 1.4rem" }}>Detailed findings</p>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              {parts.map((p, i) => (
+                <a
+                  key={p.id}
+                  href={`#${p.id}`}
+                  style={{
+                    display: "inline-flex", alignItems: "baseline", gap: "0.8rem", padding: "0.9rem 1.6rem",
+                    borderRadius: "9999px", border: "1px solid var(--line)", textDecoration: "none",
+                    background: "var(--surface)",
+                  }}
+                >
+                  <span style={{ fontSize: "1.1rem", fontWeight: 700, color: SECTION_ACCENT[p.title] ?? "var(--rose)", letterSpacing: "0.06em" }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "var(--primary)" }}>{p.title}</span>
+                  <span style={{ fontSize: "1.2rem", color: "var(--muted)" }}>{p.metrics.length}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Only purchased modules render — no locked/empty sections (bundle-first model) */}
-        {hasSkin && <Section title="Skin" intro={SECTION_INTRO.Skin} metrics={skinMetrics} />}
-        {hasSkin && <Section title="Face" intro={SECTION_INTRO.Face} metrics={faceMetrics} />}
-        {hasHairstyle && <Section title="Hair & Scalp" intro={SECTION_INTRO["Hair & Scalp"]} metrics={hairMetrics} />}
+        {parts.map((p, i) => (
+          <Section key={p.id} index={i + 1} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} />
+        ))}
 
         {/* Personalized routine — real morning/evening/weekly/hair-scalp guidance
             from the same analysis call, previously computed and discarded. */}
@@ -531,8 +679,15 @@ export default function V2ReportPage() {
           .v2-hero-grid { grid-template-columns: 1fr !important; }
           .v2-hero-grid > div:first-child { max-width: 24rem; margin: 0 auto; }
         }
+        @media (max-width: 700px) {
+          .v2-guide-cols { grid-template-columns: 1fr !important; }
+        }
         @media (max-width: 600px) {
           .v2-routine-grid { grid-template-columns: 1fr !important; }
+          /* Bar + number would squeeze the metric name to a few characters at
+             this width, so the row keeps name, status chip, and score only. */
+          .v2-metric-bar > div:first-child { display: none !important; }
+          .v2-metric-bar { flex: 0 0 auto !important; }
         }
       `}</style>
     </div>
