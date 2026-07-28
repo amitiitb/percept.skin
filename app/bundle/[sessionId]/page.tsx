@@ -383,10 +383,6 @@ export default function V2BundlePage() {
     });
   }
 
-  function selectBundle() {
-    setSelected(new Set(MODULES.map((m) => m.id)));
-  }
-
   // /api/analyse only ever produces skin/face/hair metrics (colour and
   // frame previews are separate endpoints entirely) — so "personalize by
   // module" for this specific progress indicator means: did the user buy
@@ -535,9 +531,10 @@ export default function V2BundlePage() {
           {([
             { key: "report" as const, label: "Report", price: BUNDLE_PRICE },
             { key: "consultation" as const, label: "Consultation", price: DOCTOR_CONSULTATION_PRICE },
-            { key: "combo" as const, label: "Both", price: BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE, badge: true },
           ]).map((tile) => {
-            const active = purchasePath === tile.key;
+            // A tile click always lands on that single clean view — the "+"
+            // button below either card is what combines them, not these tabs.
+            const active = purchasePath === tile.key || (purchasePath === "combo" && tile.key === "report");
             return (
               <button
                 key={tile.key}
@@ -555,14 +552,6 @@ export default function V2BundlePage() {
                     style={{ position: "absolute", inset: "0.2rem", background: "var(--primary)", borderRadius: "1.2rem", zIndex: -1 }}
                   />
                 )}
-                {tile.badge && (
-                  <span style={{
-                    fontSize: "1rem", fontWeight: 700, letterSpacing: "0.04em", whiteSpace: "nowrap",
-                    color: active ? "#D9A62E" : "var(--rose)", transition: "color 0.2s",
-                  }}>
-                    ★ BEST VALUE
-                  </span>
-                )}
                 <span style={{ fontSize: "1.3rem", fontWeight: 600, color: active ? "#fff" : "var(--secondary)", lineHeight: 1.2, transition: "color 0.2s" }}>{tile.label}</span>
                 <span style={{ fontSize: "1.9rem", fontWeight: 800, color: active ? "#fff" : "var(--primary)", transition: "color 0.2s" }}>${tile.price}</span>
               </button>
@@ -570,27 +559,22 @@ export default function V2BundlePage() {
           })}
         </div>
 
-        {purchasePath === "combo" && (
-          <p style={{ fontSize: "1.3rem", color: "var(--muted)", textAlign: "center", marginTop: "-2rem", marginBottom: "3.2rem" }}>
-            One payment covers both, the report and the consultation.
-          </p>
-        )}
-
         <div style={{ display: purchasePath === "report" || purchasePath === "combo" ? "block" : "none" }}>
         {purchasePath === "combo" && (
           <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Report modules</p>
         )}
-        {/* ── Premium bundle card ── */}
-        <motion.button
-          onClick={selectBundle}
+        {/* ── Report modules card — each row is its own toggle (tap to add/
+            remove that module), the bundle discount just falls out of having
+            all 4 selected. Replaces the old separate "choose individual
+            modules" list below, which only duplicated these same 4 items. ── */}
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           style={{
-            position: "relative", width: "100%", textAlign: "left", cursor: "pointer",
-            background: "var(--primary)", borderRadius: "2rem", padding: "3.2rem",
+            position: "relative", background: "var(--primary)", borderRadius: "2rem", padding: "3.2rem",
             border: isBundle ? "2px solid var(--rose)" : "2px solid transparent",
-            overflow: "hidden", marginBottom: "2.4rem",
+            overflow: "hidden", marginBottom: "1.2rem",
           }}
         >
           {/* animated glow */}
@@ -600,125 +584,91 @@ export default function V2BundlePage() {
             transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
             style={{ position: "absolute", top: "-30%", right: "-10%", width: "40rem", height: "40rem", borderRadius: "50%", background: "radial-gradient(circle, var(--rose) 0%, transparent 70%)", filter: "blur(30px)", pointerEvents: "none" }}
           />
-          {/* shimmer sweep */}
-          <motion.div
-            aria-hidden
-            animate={{ x: ["-120%", "220%"] }}
-            transition={{ duration: 3, repeat: Infinity, repeatDelay: 1.5, ease: "easeInOut" }}
-            style={{ position: "absolute", top: 0, bottom: 0, width: "30%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)", pointerEvents: "none" }}
-          />
 
           <div style={{ position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1.2rem", marginBottom: "2rem" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "0.8rem", fontSize: "1.8rem", fontWeight: 500, color: "#fff" }}>
                 <span style={{ fontSize: "2rem" }}>⭐</span> Complete Beauty Report
               </span>
-              <motion.span
-                animate={{ opacity: [1, 0.55, 1], y: [0, -3, 0] }}
-                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                style={{ background: "var(--rose)", color: "#fff", fontSize: "1.3rem", fontWeight: 700, borderRadius: "9999px", padding: "0.6rem 1.6rem", whiteSpace: "nowrap" }}
-              >
-                {BUNDLE_DISCOUNT_PCT}% OFF · Save ${BUNDLE_SAVINGS}
-              </motion.span>
+              {isBundle && (
+                <motion.span
+                  animate={{ opacity: [1, 0.55, 1], y: [0, -3, 0] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ background: "var(--rose)", color: "#fff", fontSize: "1.3rem", fontWeight: 700, borderRadius: "9999px", padding: "0.6rem 1.6rem", whiteSpace: "nowrap" }}
+                >
+                  {BUNDLE_DISCOUNT_PCT}% OFF · Save ${BUNDLE_SAVINGS}
+                </motion.span>
+              )}
             </div>
 
-            <div className="v2-bundle-modules-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem 2rem", marginBottom: "2.4rem", minWidth: 0 }}>
-              {MODULES.map((m) => (
-                <div key={m.id} style={{ display: "flex", alignItems: "center", gap: "1rem", minWidth: 0 }}>
-                  <span style={{ width: "2rem", height: "2rem", borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </span>
-                  <span style={{ fontSize: "1.5rem", color: "rgba(255,255,255,0.92)", overflowWrap: "break-word" }}>{m.label}</span>
-                </div>
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "2.4rem" }}>
+              {MODULES.map((m) => {
+                const checked = selected.has(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => toggleModule(m.id)}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", width: "100%",
+                      background: "none", border: "none", padding: "0.8rem 0", cursor: "pointer", textAlign: "left",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "1.2rem", minWidth: 0 }}>
+                      <span style={{
+                        width: "2.2rem", height: "2.2rem", borderRadius: "0.5rem", flexShrink: 0,
+                        border: `2px solid ${checked ? "var(--rose)" : "rgba(255,255,255,0.3)"}`,
+                        background: checked ? "var(--rose)" : "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.15s, border-color 0.15s",
+                      }}>
+                        {checked && <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                      </span>
+                      <span style={{ fontSize: "1.5rem", color: checked ? "#fff" : "rgba(255,255,255,0.5)", overflowWrap: "break-word", transition: "color 0.15s" }}>{m.label}</span>
+                    </div>
+                    <span style={{ fontSize: "1.4rem", color: checked ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.4)", flexShrink: 0, transition: "color 0.15s" }}>${m.price}</span>
+                  </button>
+                );
+              })}
             </div>
 
             <div style={{ display: "flex", alignItems: "baseline", gap: "1.2rem" }}>
-              <span style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.4)", textDecoration: "line-through" }}>${INDIVIDUAL_TOTAL}</span>
-              <span style={{ fontSize: "3.6rem", fontWeight: 300, color: "#fff" }}>${BUNDLE_PRICE}</span>
-              {isBundle && <span style={{ fontSize: "1.3rem", color: "var(--rose)", fontWeight: 600 }}>✓ Selected</span>}
+              {isBundle && <span style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.4)", textDecoration: "line-through" }}>${INDIVIDUAL_TOTAL}</span>}
+              <span style={{ fontSize: "3.6rem", fontWeight: 300, color: "#fff" }}>${price}</span>
+              {isBundle && <span style={{ fontSize: "1.3rem", color: "var(--rose)", fontWeight: 600 }}>✓ Bundle applied</span>}
             </div>
           </div>
-        </motion.button>
-
-        {/* ── Consultation add-on toggle — same effect as the "Both" pill up
-            top, kept here too so adding it doesn't mean scrolling back up. ── */}
-        <button
-          type="button"
-          onClick={() => setPurchasePath(purchasePath === "combo" ? "report" : "combo")}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", width: "100%",
-            background: purchasePath === "combo" ? "var(--wash)" : "var(--surface)",
-            border: `1px solid ${purchasePath === "combo" ? "var(--primary)" : "var(--line)"}`,
-            borderRadius: "1.2rem", padding: "1.6rem 2rem", cursor: "pointer", textAlign: "left", marginBottom: "2.4rem",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "1.4rem", minWidth: 0 }}>
-            <span style={{
-              width: "2.8rem", height: "2.8rem", borderRadius: "50%", flexShrink: 0,
-              background: purchasePath === "combo" ? "var(--primary)" : "var(--wash)",
-              color: purchasePath === "combo" ? "#fff" : "var(--primary)",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem", fontWeight: 700,
-              transition: "background 0.15s, color 0.15s",
-            }}>
-              {purchasePath === "combo" ? "✓" : "+"}
-            </span>
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: "1.5rem", fontWeight: 600, color: "var(--primary)", margin: 0 }}>
-                {purchasePath === "combo" ? "Dermatologist consultation added" : "Add a dermatologist consultation"}
-              </p>
-              <p style={{ fontSize: "1.3rem", color: "var(--secondary)", margin: "0.2rem 0 0" }}>A real person reviews your case, follows up within 24 hours</p>
-            </div>
-          </div>
-          <span style={{ fontSize: "1.6rem", fontWeight: 700, color: "var(--primary)", flexShrink: 0 }}>
-            {purchasePath === "combo" ? `$${DOCTOR_CONSULTATION_PRICE}` : `+$${DOCTOR_CONSULTATION_PRICE}`}
-          </span>
-        </button>
-
-        {/* ── Individual module selection ── */}
-        <p style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>
-          Or choose individual modules
-        </p>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem", marginBottom: "3.2rem" }}>
-          {MODULES.map((m) => {
-            const checked = selected.has(m.id);
-            return (
-              <button
-                key={m.id}
-                className="v2-module-tile"
-                onClick={() => toggleModule(m.id)}
-                style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem",
-                  background: "var(--surface)", border: `1px solid ${checked ? "var(--primary)" : "var(--line)"}`,
-                  borderRadius: "1.2rem", padding: "1.8rem 2rem", cursor: "pointer", textAlign: "left",
-                  transition: "border-color 0.15s",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "1.6rem", minWidth: 0 }}>
-                  <span style={{
-                    width: "2.4rem", height: "2.4rem", borderRadius: "0.6rem", flexShrink: 0,
-                    border: `2px solid ${checked ? "var(--primary)" : "var(--line-strong)"}`,
-                    background: checked ? "var(--primary)" : "transparent",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    {checked && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
-                  </span>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: "1.6rem", color: "var(--primary)", margin: 0, fontWeight: 500 }}>{m.label}</p>
-                    <p className="v2-module-tile-desc" style={{ fontSize: "1.3rem", color: "var(--secondary)", margin: "0.3rem 0 0" }}>{m.description}</p>
-                  </div>
-                </div>
-                <span style={{ fontSize: "1.6rem", color: "var(--primary)", fontWeight: 500, flexShrink: 0 }}>${m.price}</span>
-              </button>
-            );
-          })}
-        </div>
+        </motion.div>
 
         {!isBundle && (
-          <p style={{ fontSize: "1.3rem", color: "#C8503A", marginBottom: "2.4rem" }}>
+          <p style={{ fontSize: "1.3rem", color: "var(--rose)", marginBottom: "2.4rem" }}>
             Select all 4 to save ${BUNDLE_SAVINGS} with the bundle
           </p>
         )}
+
+        {/* ── Add-consultation toggle — big, centered, minimal. Same effect
+            as picking the Consultation tab too, just without leaving the
+            report view. ── */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.8rem", marginBottom: "3.2rem" }}>
+          <motion.button
+            type="button"
+            onClick={() => setPurchasePath(purchasePath === "combo" ? "report" : "combo")}
+            whileTap={{ scale: 0.94 }}
+            style={{
+              width: "6.4rem", height: "6.4rem", borderRadius: "50%", flexShrink: 0, cursor: "pointer",
+              border: `2px solid ${purchasePath === "combo" ? "var(--primary)" : "var(--line-strong)"}`,
+              background: purchasePath === "combo" ? "var(--primary)" : "var(--surface)",
+              color: purchasePath === "combo" ? "#fff" : "var(--primary)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "3.2rem", fontWeight: 300, lineHeight: 1, transition: "background 0.15s, color 0.15s, border-color 0.15s",
+            }}
+          >
+            {purchasePath === "combo" ? "✓" : "+"}
+          </motion.button>
+          <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "var(--primary)" }}>
+            {purchasePath === "combo" ? "Consultation added" : `Add Consultation · $${DOCTOR_CONSULTATION_PRICE}`}
+          </span>
+        </div>
+
 
         {purchasePath === "report" && (
           <>
@@ -819,15 +769,6 @@ export default function V2BundlePage() {
           </div>
         )}
       </div>
-      <style>{`
-        @media (max-width: 480px) {
-          .v2-bundle-modules-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 520px) {
-          .v2-module-tile { padding: 1.2rem 1.4rem !important; }
-          .v2-module-tile-desc { display: none !important; }
-        }
-      `}</style>
     </div>
     </>
   );
