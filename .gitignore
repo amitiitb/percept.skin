@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 *.bak
 .env.local
+
+# design reference material — kept locally for design work, not shipped/tracked
+/report copy
+/design-reference-screenshots
