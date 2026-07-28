@@ -65,18 +65,15 @@ const BAR_DATA = [
 
 const WHY_ITEMS = [
   {
-    title: "Guided photos, real analysis",
-    body: "No lab visit, no appointment.",
+    line: "Guided photos, read by real AI — no lab visit, no appointment.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2h6l2 2h3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8z M12 17a4 4 0 100-8 4 4 0 000 8z" />,
   },
   {
-    title: "20 metrics, not one grade",
-    body: "Skin, face, and hair scored individually.",
+    line: "20 metrics scored individually — not one vague grade.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v18M15 3v18M3 9h18M3 15h18" />,
   },
   {
-    title: "Track it over time",
-    body: "Every scan saved, compare side by side.",
+    line: "Every scan saved, so you can watch it actually change.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 2M21 12a9 9 0 11-9-9 9 9 0 019 9z" />,
   },
 ];
@@ -277,32 +274,29 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Why Glowmetry
           </p>
-          <h2 className="glowmetry-why-heading" style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "6rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
+          <h2 className="glowmetry-why-heading" style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "4.8rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
             Specific insight, not a guess
           </h2>
-          <Carousel>
+          <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
             {WHY_ITEMS.map((item, i) => (
               <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
+                key={item.line}
+                initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                whileHover={{ y: -4 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
                 style={{
-                  flex: "0 0 24rem", scrollSnapAlign: "start", background: "var(--canvas)",
-                  borderTop: `0.4rem solid ${ACCENTS[i % ACCENTS.length]}`, borderRadius: "1.4rem", padding: "2.4rem",
-                  boxShadow: "0 1.2rem 2.4rem -1.2rem rgba(0,57,52,0.18)",
+                  display: "flex", alignItems: "center", gap: "1.6rem", padding: "1.8rem 0",
+                  borderBottom: i < WHY_ITEMS.length - 1 ? "1px solid var(--line)" : "none",
                 }}
               >
-                <span style={{ width: "5.2rem", height: "5.2rem", borderRadius: "50%", background: ACCENTS[i % ACCENTS.length], display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.8rem" }}>
-                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="1.6">{item.icon}</svg>
+                <span style={{ width: "3.2rem", height: "3.2rem", flexShrink: 0, borderRadius: "50%", background: ACCENTS[i % ACCENTS.length], display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2">{item.icon}</svg>
                 </span>
-                <h3 style={{ fontSize: "1.8rem", fontWeight: 500, color: "var(--primary)", margin: "0 0 0.6rem" }}>{item.title}</h3>
-                <p style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.5, margin: 0 }}>{item.body}</p>
+                <p style={{ fontSize: "1.7rem", color: "var(--primary)", lineHeight: 1.4, margin: 0 }}>{item.line}</p>
               </motion.div>
             ))}
-          </Carousel>
+          </div>
         </div>
         <WaveDivider fill="var(--primary)" variant={0} />
       </section>
