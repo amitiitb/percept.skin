@@ -19,7 +19,7 @@ Status: reflects the shipped codebase as of 2026-07-28. See `TECH_STACK.md` for 
 ┌───────────────────────────────────────────────────────────────────────────┐
 │  Next.js app (App Router, auto-deployed on push to main)                    │
 │  ┌─────────────────┐   ┌────────────────────┐   ┌─────────────────────┐  │
-│  │ app/v2/* pages    │   │ app/api/v2/*        │   │ lib/v2/*             │  │
+│  │ app/* pages        │   │ app/api/*           │   │ lib/v2/*             │  │
 │  │ (splash, onboard, │──▶│ route handlers      │──▶│ aiProvider, paypal,  │  │
 │  │  capture, bundle,  │   │ (serverless)        │   │ gemini, rateLimit,   │  │
 │  │  report, dashboard)│   │                     │   │ log, reportModules   │  │
@@ -43,9 +43,11 @@ Status: reflects the shipped codebase as of 2026-07-28. See `TECH_STACK.md` for 
 
 ### Route map
 
-**Pages** (`app/v2/*`): `/splash → /onboard → /profile-setup → /scan-prep → /capture/[step] → /bundle/[sessionId] → /report/[id] (+ /print) → /dashboard, /history, /settings, /checkout, /plans`
+**Pages** (`app/*`): `/splash → /onboard → /profile-setup → /scan-prep → /capture/[step] → /bundle/[sessionId] → /report/[id] (+ /print) → /dashboard, /history, /settings, /checkout, /plans`
 
-**API** (`app/api/v2/*`): `auth/signup`, `analyse`, `account/delete`, `colour-analysis`, `hairstyle/generate`, `frame-tryon/generate`, `paypal/{create-order,capture,webhook}`, `report-purchase/{create-order,capture}`, `consultation/{create-order,capture}`
+**API** (`app/api/*`): `auth/signup`, `analyse`, `account/delete`, `colour-analysis`, `hairstyle/generate`, `frame-tryon/generate`, `paypal/{create-order,capture,webhook}`, `report-purchase/{create-order,capture}`, `consultation/{create-order,capture}`
+
+Route paths are clean (no `/v2` prefix) — that segment only ever existed to keep this build isolated from the pre-rewrite app while both existed side by side; the old app is gone now (see below), so the prefix was dropped from every page and API path on 2026-07-28. `lib/v2/*`, `components/v2/*`, and the `_v2`-suffixed database tables keep their internal naming (implementation detail, not user-facing).
 
 ### The one deliberate architectural decision that shapes everything else
 
@@ -117,14 +119,14 @@ Every `user_id`/`session_id` column is a real foreign key (`references ... on de
 
 ### Capture flow
 
-7 steps defined in `lib/v2/captureSteps.ts`, phase-grouped and rendered by a single dynamic route (`app/v2/capture/[step]/page.tsx`):
+7 steps defined in `lib/v2/captureSteps.ts`, phase-grouped and rendered by a single dynamic route (`app/capture/[step]/page.tsx`):
 
 - **Face** (4 steps): front, left, right, one combined close-up. During these steps, MediaPipe's `FaceLandmarker` runs live in the browser — draws the real face-mesh tesselation, a corner-bracket reticle that changes color when a face is locked on, a scanning-line sweep, and cycles a small callout label across real landmark positions (forehead/cheeks/jawline — deliberately not ears, since MediaPipe has no ear landmarks).
 - **Hair & Scalp** (3 steps): hairline & temples, top & crown, parting close-up. No face-mesh (not applicable); instead static framing guides (dashed band/circle/line) since MediaPipe can't detect scalp/hair landmarks.
 - Before a photo is accepted, `lib/v2/qualityChecks.ts` runs a client-side gate (`runQualityChecks`, face-detection only on face-phase steps): rejects on no face / multiple faces / too dark / too blurry, falls back to "skip check" (not "block capture") if the MediaPipe model itself fails to load.
 - Capture state persists to `localStorage` via the `funnelV2` Zustand store, so closing the tab mid-flow resumes where the user left off.
 
-### Analysis flow (`POST /api/v2/analyse`)
+### Analysis flow (`POST /api/analyse`)
 
 1. Verify JWT, rate-limit check (15 requests / 10 min per user — this endpoint triggers a real, paid Claude call every time).
 2. **Idempotency claim**: a single conditional `UPDATE ... WHERE stage IS NULL OR stage = 'failed' OR stage_updated_at < (now - 5min)`. This is one atomic statement, not a read-then-write — two concurrent requests for the same session (double tab, double click) can't both kick off a paid Claude call. Zero rows updated means another request already owns it; the client just polls `stage` rather than treating that as an error.
@@ -135,11 +137,11 @@ Every `user_id`/`session_id` column is a real foreign key (`references ... on de
 
 ### Purchase flow (bundle-first — the actual paywall)
 
-`app/v2/bundle/[sessionId]/page.tsx` kicks off analysis in the background on mount while showing the module-selection UI (a single sliding-pill segmented control, not separate bordered tiles). Pricing (`lib/v2/reportModules.ts`): $5 per module, flat $10 once all 4 are selected (linear otherwise — no partial discount).
+`app/bundle/[sessionId]/page.tsx` kicks off analysis in the background on mount while showing the module-selection UI (a single sliding-pill segmented control, not separate bordered tiles). Pricing (`lib/v2/reportModules.ts`): $5 per module, flat $10 once all 4 are selected (linear otherwise — no partial discount).
 
 Purchase capture (`report-purchase/capture`, `consultation/capture`, `paypal/capture` — same pattern in all three): rate-limited (30/10min), calls PayPal's real capture endpoint (`captureOrderRaw`/`captureOrder`) with `Prefer: return=representation` (without this header PayPal's minimal response omits `custom_id`, which once caused a real captured payment to leave zero DB row), verifies the returned `custom_id` matches the authenticated caller (defense against capturing someone else's order), then writes the purchase row via the service-role client. A "your report is ready" email fires (Resend, fire-and-forget) after a successful report purchase.
 
-The report page (`app/v2/report/[id]/page.tsx`) requires a `report_purchases_v2` row to exist for the session — no row means a redirect back to the bundle page — and only renders sections for modules actually purchased.
+The report page (`app/report/[id]/page.tsx`) requires a `report_purchases_v2` row to exist for the session — no row means a redirect back to the bundle page — and only renders sections for modules actually purchased.
 
 ### Paid-generation gating
 

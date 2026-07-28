@@ -15,12 +15,12 @@ Someone curious about their skin/hair health who wants a fast, private, guided r
 ## 3. Core user journey
 
 ```
-/v2/splash → /v2/onboard → sign up / log in → /v2/profile-setup (concerns, skin/hair
-  type, consent) → /v2/scan-prep → /v2/capture (7 guided steps: 4 face + 3 hair/scalp)
-  → /v2/bundle/[sessionId] (pick modules, pay via PayPal — analysis runs in the
-  background while they choose) → /v2/report/[id] (Glow Score, sectioned report) →
-  optional: doctor consultation upsell → /v2/dashboard (returning-user home) →
-  /v2/history, /v2/settings
+/splash → /onboard → sign up / log in → /profile-setup (concerns, skin/hair
+  type, consent) → /scan-prep → /capture (7 guided steps: 4 face + 3 hair/scalp)
+  → /bundle/[sessionId] (pick modules, pay via PayPal — analysis runs in the
+  background while they choose) → /report/[id] (Glow Score, sectioned report) →
+  optional: doctor consultation upsell → /dashboard (returning-user home) →
+  /history, /settings
 ```
 
 Purchase happens **before** results are shown for a given scan (bundle-first, not the freemium-teaser model an earlier draft of this product used) — every report page requires a `report_purchases_v2` row before it renders anything beyond a teaser.

@@ -49,7 +49,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
           style={{ objectFit: "cover", objectPosition: "center" }}
         />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(43,53,48,0.94) 0%, rgba(43,53,48,0.55) 55%, rgba(43,53,48,0.25) 100%)" }} />
-        <a href="/v2/splash" style={{
+        <a href="/splash" style={{
           position: "relative", zIndex: 1,
           fontSize: "2.2rem", fontWeight: 600, color: "#fff", letterSpacing: "-0.02em",
           textDecoration: "none",

@@ -39,12 +39,12 @@ function LoginForm() {
       return;
     }
 
-    // See app/auth/signup/page.tsx — next=/v2/profile-setup would otherwise
+    // See app/auth/signup/page.tsx — next=/profile-setup would otherwise
     // send an existing user through profile creation again on every scan.
-    const next = params.get("next") || "/v2/dashboard";
-    if (next === "/v2/profile-setup" && signInData.user) {
+    const next = params.get("next") || "/dashboard";
+    if (next === "/profile-setup" && signInData.user) {
       const { data: profile } = await supabase.from("user_profiles_v2").select("name").eq("user_id", signInData.user.id).maybeSingle();
-      router.replace(profile ? "/v2/scan-prep" : next);
+      router.replace(profile ? "/scan-prep" : next);
       return;
     }
     router.replace(next);
@@ -60,7 +60,7 @@ function LoginForm() {
       justifyContent: "center",
       padding: "3.2rem 2.4rem",
     }}>
-      <a href="/v2/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
+      <a href="/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
         Glow<span style={{ color: "var(--rose)" }}>metry</span>
       </a>
 

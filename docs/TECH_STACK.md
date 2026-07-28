@@ -22,7 +22,7 @@ Status: reflects `package.json` and actual usage in the codebase as of 2026-07-2
 
 | Piece | Choice | Notes |
 |---|---|---|
-| API | Next.js Route Handlers (`app/api/v2/**/route.ts`) | Serverless, one file per endpoint |
+| API | Next.js Route Handlers (`app/api/**/route.ts`) | Serverless, one file per endpoint |
 | Database | Supabase Postgres | 12 tables, all suffixed `_v2`, all with row-level security |
 | Auth | Supabase Auth | Shared `auth.users` table; JWT verified per-request via `verifySupabaseUser` |
 | File storage | Supabase Storage, `photos_v2` bucket | Path convention `{user_id}/{session_id}/{photo_type}.jpg`, RLS enforced on the storage objects themselves (not just the DB) |

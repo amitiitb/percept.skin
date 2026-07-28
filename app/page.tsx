@@ -369,7 +369,7 @@ export default function LandingPage() {
             Glow<span style={{ color: "var(--rose)" }}>metry</span>
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-            <a href="/v2/splash" style={{ display: "none" }} className="site-header-cta">
+            <a href="/splash" style={{ display: "none" }} className="site-header-cta">
               <PrimaryButton size="sm" fullWidth={false}>Start your scan</PrimaryButton>
             </a>
             <button
@@ -398,7 +398,7 @@ export default function LandingPage() {
               A guided photo scan, understood by AI. No lab visit, no appointment, just a clear, specific report you can act on and track over time.
             </p>
             <div style={{ display: "flex", gap: "1.2rem", flexWrap: "nowrap" }}>
-              <a href="/v2/splash"><PrimaryButton size="sm" fullWidth={false}>Start scan →</PrimaryButton></a>
+              <a href="/splash"><PrimaryButton size="sm" fullWidth={false}>Start scan →</PrimaryButton></a>
               <a href="#why"><PrimaryButton size="sm" variant="outline" fullWidth={false}>Why Glow</PrimaryButton></a>
             </div>
           </motion.div>
@@ -454,7 +454,7 @@ export default function LandingPage() {
             <p style={{ fontSize: "1.7rem", color: "var(--secondary)", lineHeight: 1.6, marginBottom: "2.8rem" }}>
               An overall score plus every metric broken out individually, texture, tone, pores, hydration, clarity, firmness, so you know exactly what&apos;s driving the number, not just the number itself.
             </p>
-            <a href="/v2/splash"><PrimaryButton fullWidth={false}>Start your scan →</PrimaryButton></a>
+            <a href="/splash"><PrimaryButton fullWidth={false}>Start your scan →</PrimaryButton></a>
           </motion.div>
         </div>
       </section>
@@ -527,7 +527,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <a href="/v2/splash"><PrimaryButton fullWidth={false}>Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
+            <a href="/splash"><PrimaryButton fullWidth={false}>Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
           </div>
           <div style={{ position: "relative", borderRadius: "1.6rem", overflow: "hidden", aspectRatio: "4/5" }}>
             <Image
@@ -657,7 +657,7 @@ export default function LandingPage() {
               <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>You save</p>
               <p style={{ fontSize: "3.2rem", fontWeight: 800, color: "var(--primary)", lineHeight: 1 }}>${OLD_WAY_TOTAL - BUNDLE_PRICE}+</p>
             </div>
-            <a href="/v2/splash" style={{ minWidth: 0, flexShrink: 0 }}><PrimaryButton fullWidth={false} size="lg">Get your report · ${BUNDLE_PRICE} →</PrimaryButton></a>
+            <a href="/splash" style={{ minWidth: 0, flexShrink: 0 }}><PrimaryButton fullWidth={false} size="lg">Get your report · ${BUNDLE_PRICE} →</PrimaryButton></a>
           </div>
 
           {/* Complete Package upsell — same visual weight as the bundle card
@@ -697,7 +697,7 @@ export default function LandingPage() {
                 <p style={{ fontSize: "1.3rem", color: "rgba(255,255,255,0.75)", marginBottom: "0.4rem" }}>Report ${BUNDLE_PRICE} + consultation</p>
                 <p style={{ fontSize: "4rem", fontWeight: 800, color: "#fff", lineHeight: 1, marginBottom: "1.8rem" }}>+${DOCTOR_CONSULTATION_PRICE}</p>
                 <a
-                  href="/v2/splash"
+                  href="/splash"
                   style={{
                     display: "inline-flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap",
                     height: "5.8rem", padding: "0 3.2rem", borderRadius: "9999px", background: "#fff",
@@ -753,7 +753,7 @@ export default function LandingPage() {
                 <a href="#trust" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Why trust this</a>
                 <a href="#pricing" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Pricing</a>
                 <a href="#faq" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>FAQ</a>
-                <a href="/v2/splash" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Start your scan</a>
+                <a href="/splash" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Start your scan</a>
               </div>
             </div>
 

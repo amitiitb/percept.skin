@@ -29,7 +29,7 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    router.replace("/v2/dashboard");
+    router.replace("/dashboard");
   }
 
   const inputStyle = (focused: boolean) => ({
@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
       alignItems: "center", justifyContent: "center",
       padding: "3.2rem 2.4rem",
     }}>
-      <a href="/v2/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
+      <a href="/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
         Glow<span style={{ color: "var(--rose)" }}>metry</span>
       </a>
 

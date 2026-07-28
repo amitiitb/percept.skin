@@ -22,7 +22,7 @@ export default function CallbackPage() {
         if (access_token && refresh_token) {
           const { error } = await supabase.auth.setSession({ access_token, refresh_token });
           if (error) { router.replace("/auth/signup?error=invalid"); return; }
-          router.replace("/v2/dashboard");
+          router.replace("/dashboard");
           return;
         }
       }
@@ -36,7 +36,7 @@ export default function CallbackPage() {
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) { router.replace("/auth/signup?error=invalid"); return; }
-          router.replace("/v2/dashboard");
+          router.replace("/dashboard");
           return;
         }
 
@@ -46,7 +46,7 @@ export default function CallbackPage() {
             type: type as "signup" | "recovery" | "email",
           });
           if (error) { router.replace("/auth/signup?error=invalid"); return; }
-          router.replace("/v2/dashboard");
+          router.replace("/dashboard");
           return;
         }
       }
@@ -67,7 +67,7 @@ export default function CallbackPage() {
       justifyContent: "center",
       gap: "2rem",
     }}>
-      <a href="/v2/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em" }}>
+      <a href="/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em" }}>
         Glow<span style={{ color: "var(--rose)" }}>metry</span>
       </a>
       <motion.div

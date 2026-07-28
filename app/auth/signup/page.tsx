@@ -27,22 +27,22 @@ function SignupForm() {
   }, [params]);
 
   // Already a real logged-in user → skip signup, go wherever this link was
-  // pointed (v2 callers pass ?next=/v2/... — defaulting to /v2/dashboard,
+  // pointed (v2 callers pass ?next=/... — defaulting to /dashboard,
   // never /results which doesn't exist in this project). If that next hop is
   // profile-setup and this user already has a saved profile, honoring next
   // as-is would send an existing user through the whole "create profile"
   // journey again on every single scan (real report: users landing here from
   // the marketing site's "Start your scan" link, which always appends
-  // ?next=/v2/profile-setup regardless of login state) — skip straight to a
+  // ?next=/profile-setup regardless of login state) — skip straight to a
   // new scan instead.
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user || session.user.is_anonymous) return;
-      const next = params.get("next") || "/v2/dashboard";
-      if (next === "/v2/profile-setup") {
+      const next = params.get("next") || "/dashboard";
+      if (next === "/profile-setup") {
         const { data: profile } = await supabase.from("user_profiles_v2").select("name").eq("user_id", session.user.id).maybeSingle();
-        router.replace(profile ? "/v2/scan-prep" : next);
+        router.replace(profile ? "/scan-prep" : next);
         return;
       }
       router.replace(next);
@@ -58,7 +58,7 @@ function SignupForm() {
     const supabase = createClient();
     const cleanEmail = email.trim().toLowerCase();
 
-    const res = await fetch("/api/v2/auth/signup", {
+    const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: name.trim(), email: cleanEmail, password }),
@@ -79,7 +79,7 @@ function SignupForm() {
       return;
     }
 
-    router.replace(params.get("next") || "/v2/dashboard");
+    router.replace(params.get("next") || "/dashboard");
   }
 
   return (
@@ -93,7 +93,7 @@ function SignupForm() {
       padding: "3.2rem 2.4rem",
     }}>
       {/* Logo */}
-      <a href="/v2/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
+      <a href="/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
         Glow<span style={{ color: "var(--rose)" }}>metry</span>
       </a>
 

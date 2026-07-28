@@ -42,7 +42,7 @@ export default function FrameAIPanel({ sessionId, photo, isPremium, onRequirePre
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Please log in again.");
-      const res = await fetch("/api/v2/frame-tryon/generate", {
+      const res = await fetch("/api/frame-tryon/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ sessionId, frameName, framePrompt, photoDataUrl: photo }),

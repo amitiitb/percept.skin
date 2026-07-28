@@ -38,7 +38,7 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Please log in again.");
-      const res = await fetch("/api/v2/hairstyle/generate", {
+      const res = await fetch("/api/hairstyle/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ sessionId, styleName, stylePrompt, photoDataUrl: photo }),

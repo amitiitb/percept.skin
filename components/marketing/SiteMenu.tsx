@@ -89,7 +89,7 @@ export function SiteMenu({ open, onClose }: Props) {
             <div style={{ height: "1px", background: "var(--line)", margin: "3.2rem 0" }} />
 
             <a
-              href="/v2/splash"
+              href="/splash"
               style={{ display: "inline-flex", alignItems: "center", gap: "1rem", width: "fit-content", fontSize: "clamp(2.2rem, 4vw, 2.8rem)", fontWeight: 500, color: "var(--rose)" }}
             >
               Start your scan
