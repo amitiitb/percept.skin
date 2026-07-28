@@ -28,7 +28,7 @@ function WaitingRing() {
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
         <span style={{ fontSize: "1.1rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Glow Score</span>
-        <span style={{ fontSize: "1.4rem", color: "var(--secondary)", marginTop: "0.3rem" }}>—</span>
+        <span style={{ fontSize: "1.4rem", color: "var(--secondary)", marginTop: "0.3rem" }}>...</span>
       </div>
     </div>
   );

@@ -8,10 +8,10 @@ import type { AnalysisMetric, SkinConcern, SkinType } from "@/lib/v2/types";
 const STALE_STAGE_MS = 5 * 60 * 1000;
 
 function messageForError(err: unknown): string {
-  if (err instanceof ClaudeTimeoutError) return "Taking longer than usual — try again";
-  if (err instanceof ClaudeRateLimitError) return "High demand right now — try again in a minute";
-  if (err instanceof SchemaParseError || err instanceof SchemaValidationError) return "Something went wrong reading your results — try again";
-  return "Something went wrong — try again";
+  if (err instanceof ClaudeTimeoutError) return "Taking longer than usual, try again";
+  if (err instanceof ClaudeRateLimitError) return "High demand right now, try again in a minute";
+  if (err instanceof SchemaParseError || err instanceof SchemaValidationError) return "Something went wrong reading your results, try again";
+  return "Something went wrong, try again";
 }
 
 async function markFailed(supabase: SupabaseClient, sessionId: string, message: string) {

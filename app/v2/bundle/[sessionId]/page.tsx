@@ -101,12 +101,12 @@ export default function V2BundlePage() {
         // can itself fail, e.g. pre-migration) would just reintroduce the
         // same bug one layer down.
         const body = await res.json().catch(() => ({} as { error?: string }));
-        setFailReason(body.error ?? "Something went wrong — try again");
+        setFailReason(body.error ?? "Something went wrong, try again");
         setStage("failed");
       }
     } catch {
       analysisReadyRef.current = false;
-      setFailReason("Something went wrong — try again");
+      setFailReason("Something went wrong, try again");
       setStage("failed");
     }
   }
@@ -384,7 +384,7 @@ export default function V2BundlePage() {
                 {stage === "complete"
                   ? "Your report is ready"
                   : stage === "failed"
-                  ? (failReason ?? "Something went wrong — try again")
+                  ? (failReason ?? "Something went wrong, try again")
                   : `${stageCopy}${stageIndex >= 0 ? ` (Step ${stageIndex + 1} of ${STAGES.length})` : ""}`}
               </motion.span>
             </AnimatePresence>
@@ -447,7 +447,7 @@ export default function V2BundlePage() {
 
         {purchasePath === "combo" && (
           <p style={{ fontSize: "1.3rem", color: "var(--muted)", textAlign: "center", marginTop: "-2rem", marginBottom: "3.2rem" }}>
-            Two separate charges below — the report, then the consultation.
+            Two separate charges below: the report, then the consultation.
           </p>
         )}
 

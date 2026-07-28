@@ -65,11 +65,11 @@ const BAR_DATA = [
 
 const WHY_ITEMS = [
   {
-    line: "Guided photos, read by real AI — no lab visit, no appointment.",
+    line: "Guided photos, read by real AI: no lab visit, no appointment.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2h6l2 2h3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8z M12 17a4 4 0 100-8 4 4 0 000 8z" />,
   },
   {
-    line: "20 metrics scored individually — not one vague grade.",
+    line: "20 metrics scored individually, not one vague grade.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v18M15 3v18M3 9h18M3 15h18" />,
   },
   {
@@ -208,9 +208,9 @@ export default function LandingPage() {
             <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "48rem", marginBottom: "4rem" }}>
               A guided photo scan, understood by AI. No lab visit, no appointment, just a clear, specific report you can act on and track over time.
             </p>
-            <div style={{ display: "flex", gap: "1.6rem", flexWrap: "wrap" }}>
-              <a href="/v2/splash"><PrimaryButton size="lg" fullWidth={false}>Start your scan →</PrimaryButton></a>
-              <a href="#why"><PrimaryButton size="lg" variant="outline" fullWidth={false}>Why Glowmetry</PrimaryButton></a>
+            <div style={{ display: "flex", gap: "1.2rem", flexWrap: "nowrap" }}>
+              <a href="/v2/splash"><PrimaryButton size="sm" fullWidth={false}>Start scan →</PrimaryButton></a>
+              <a href="#why"><PrimaryButton size="sm" variant="outline" fullWidth={false}>Why Glow</PrimaryButton></a>
             </div>
           </motion.div>
 
@@ -522,7 +522,7 @@ export default function LandingPage() {
             <div className="glowmetry-complete-package" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2.8rem", flexWrap: "wrap" }}>
               <div style={{ minWidth: 0 }}>
                 <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", opacity: 0.85 }}>
-                  Go all the way — complete package
+                  Go all the way: complete package
                 </p>
                 <p style={{ fontSize: "2.2rem", fontWeight: 700, color: "#fff", lineHeight: 1.25, marginBottom: "1.8rem", maxWidth: "40rem" }}>
                   Your AI report, plus a real dermatologist&apos;s plan

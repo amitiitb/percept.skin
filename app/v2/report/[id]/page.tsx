@@ -44,7 +44,7 @@ function MetricRow({ m }: { m: AnalysisMetric }) {
       <div style={{ display: "flex", alignItems: "center", gap: "1.6rem", marginBottom: "0.8rem" }}>
         <span style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, flex: "0 0 auto", minWidth: "15rem" }}>{m.metricName}</span>
         <ScoreBar score={m.score} />
-        <span style={{ fontSize: "1.5rem", color: "var(--secondary)", fontWeight: 500, width: "3.2rem", textAlign: "right", flexShrink: 0 }}>{m.score ?? "—"}</span>
+        <span style={{ fontSize: "1.5rem", color: "var(--secondary)", fontWeight: 500, width: "3.2rem", textAlign: "right", flexShrink: 0 }}>{m.score ?? "-"}</span>
       </div>
       <p style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.6, margin: 0 }}>{m.explanation}</p>
     </div>
@@ -64,7 +64,7 @@ function LockedMetricRow({ m }: { m: AnalysisMetric }) {
         <div style={{ position: "relative", flex: 1, display: "flex", alignItems: "center", gap: "1.6rem" }}>
           <div style={{ filter: "blur(5px)", display: "flex", alignItems: "center", gap: "1.6rem", flex: 1, userSelect: "none" }} aria-hidden>
             <ScoreBar score={m.score} />
-            <span style={{ fontSize: "1.5rem", color: "var(--secondary)", fontWeight: 500, width: "3.2rem", textAlign: "right", flexShrink: 0 }}>{m.score ?? "—"}</span>
+            <span style={{ fontSize: "1.5rem", color: "var(--secondary)", fontWeight: 500, width: "3.2rem", textAlign: "right", flexShrink: 0 }}>{m.score ?? "-"}</span>
           </div>
           <span style={{ position: "absolute", right: "3.2rem", fontSize: "1.3rem" }} aria-label="Locked">🔒</span>
         </div>
@@ -97,7 +97,7 @@ const PHOTO_LABELS: Record<string, string> = {
 
 const SECTION_INTRO: Record<string, string> = {
   Skin: "Texture, tone, and hydration across your face, read from your guided photos.",
-  Face: "Proportion, symmetry, and structural balance — the framework the rest of your look sits on.",
+  Face: "Proportion, symmetry, and structural balance: the framework the rest of your look sits on.",
   "Hair & Scalp": "Density, hairline pattern, and overall scalp health from your part and crown shots.",
 };
 
