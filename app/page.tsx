@@ -3,6 +3,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import ScrollStack, { ScrollStackItem } from "@/components/ui/ScrollStack";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { MODULES, BUNDLE_PRICE, BUNDLE_DISCOUNT_PCT, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 
@@ -267,19 +268,23 @@ const WHY_ITEMS = [
 // for this section.
 const TRUST_ITEMS = [
   {
-    line: "Every score comes from your own fresh photos, not a canned demo.",
+    title: "No fake before-and-afters",
+    body: "Every score comes from your own photos, analyzed fresh by real AI vision each time, not a canned demo result.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2h6l2 2h3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8z M12 17a4 4 0 100-8 4 4 0 000 8z" />,
   },
   {
-    line: "The exact price shows before you pay, no subscription, no surprise charge.",
+    title: "Transparent pricing, always",
+    body: "The exact price is visible before you pay, every time. No subscription, no silent renewal, no surprise charge.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l2.4 4.8 5.3.8-3.85 3.75.9 5.3L12 14.2l-4.75 2.45.9-5.3L4.3 7.6l5.3-.8z" />,
   },
   {
-    line: "Your photos are used only for your report, never for AI training without consent.",
+    title: "Your photos stay yours",
+    body: "Used only to generate your report. Never used to train AI models without separate, explicit consent you control.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M6 10V7a6 6 0 1112 0v3M5 10h14a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9a1 1 0 011-1z" />,
   },
   {
-    line: "Grounded in real, peer-reviewed research, not a marketing-invented claim.",
+    title: "Grounded in real research",
+    body: "Our appearance-and-opportunity framing cites a peer-reviewed labor-economics study, not a claim we invented for marketing.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20 M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" />,
   },
 ];
@@ -554,25 +559,18 @@ export default function LandingPage() {
           <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "3.6rem" }}>
             No fake reviews. Just what&apos;s actually true.
           </h2>
-          <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
-            {TRUST_ITEMS.map((item, i) => (
-              <motion.div
-                key={item.line}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                style={{
-                  display: "flex", alignItems: "center", gap: "1.6rem", padding: "1.8rem 0",
-                  borderBottom: i < TRUST_ITEMS.length - 1 ? "1px solid var(--line)" : "none",
-                }}
-              >
-                <span style={{ width: "3.2rem", height: "3.2rem", flexShrink: 0, borderRadius: "50%", background: ACCENTS[(i + 1) % ACCENTS.length], display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2">{item.icon}</svg>
-                </span>
-                <p style={{ fontSize: "1.7rem", color: "var(--primary)", lineHeight: 1.4, margin: 0 }}>{item.line}</p>
-              </motion.div>
-            ))}
+          <div style={{ maxWidth: "56rem", margin: "0 auto" }}>
+            <ScrollStack height="66rem" itemDistance={80} baseScale={0.86}>
+              {TRUST_ITEMS.map((item, i) => (
+                <ScrollStackItem key={item.title} style={{ background: "var(--canvas)", borderTop: `0.4rem solid ${ACCENTS[(i + 1) % ACCENTS.length]}` }}>
+                  <span style={{ width: "4.4rem", height: "4.4rem", flexShrink: 0, borderRadius: "50%", background: ACCENTS[(i + 1) % ACCENTS.length], display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "2rem" }}>
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2">{item.icon}</svg>
+                  </span>
+                  <h3 style={{ fontSize: "2rem", fontWeight: 600, color: "var(--primary)", margin: "0 0 1rem" }}>{item.title}</h3>
+                  <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.6, margin: 0 }}>{item.body}</p>
+                </ScrollStackItem>
+              ))}
+            </ScrollStack>
           </div>
         </div>
         <WaveDivider fill="var(--primary)" variant={2} />
