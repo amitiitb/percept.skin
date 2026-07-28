@@ -3,7 +3,6 @@ import { useState, useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import ScrollStack, { ScrollStackItem } from "@/components/ui/ScrollStack";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { MODULES, BUNDLE_PRICE, BUNDLE_DISCOUNT_PCT, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 
@@ -260,32 +259,6 @@ const WHY_ITEMS = [
   {
     line: "Every scan saved, so you can watch it actually change.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 2M21 12a9 9 0 11-9-9 9 9 0 019 9z" />,
-  },
-];
-
-// Real, verifiable trust signals — no invented reviews or people. Each line
-// maps to an actual behavior in the product, not a marketing claim made up
-// for this section.
-const TRUST_ITEMS = [
-  {
-    title: "No fake before-and-afters",
-    body: "Every score comes from your own photos, analyzed fresh by real AI vision each time, not a canned demo result.",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2h6l2 2h3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8z M12 17a4 4 0 100-8 4 4 0 000 8z" />,
-  },
-  {
-    title: "Transparent pricing, always",
-    body: "The exact price is visible before you pay, every time. No subscription, no silent renewal, no surprise charge.",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l2.4 4.8 5.3.8-3.85 3.75.9 5.3L12 14.2l-4.75 2.45.9-5.3L4.3 7.6l5.3-.8z" />,
-  },
-  {
-    title: "Your photos stay yours",
-    body: "Used only to generate your report. Never used to train AI models without separate, explicit consent you control.",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M6 10V7a6 6 0 1112 0v3M5 10h14a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9a1 1 0 011-1z" />,
-  },
-  {
-    title: "Grounded in real research",
-    body: "Our appearance-and-opportunity framing cites a peer-reviewed labor-economics study, not a claim we invented for marketing.",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20 M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" />,
   },
 ];
 
@@ -546,33 +519,6 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* ── Trust — real, verifiable signals. No fabricated reviews or people:
-           this product has no real customer base yet, so no review section
-           exists until there's a real one to show. ── */}
-      <section id="trust" style={{ padding: "8rem 3.2rem", background: "var(--surface)", position: "relative" }}>
-        <div style={{ maxWidth: "96rem", margin: "0 auto" }}>
-          <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
-            Why trust this
-          </p>
-          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "3.6rem" }}>
-            No fake reviews. Just what&apos;s actually true.
-          </h2>
-          <div style={{ maxWidth: "56rem", margin: "0 auto" }}>
-            <ScrollStack height="66rem" itemDistance={80} baseScale={0.86}>
-              {TRUST_ITEMS.map((item, i) => (
-                <ScrollStackItem key={item.title} style={{ background: "var(--canvas)", borderTop: `0.4rem solid ${ACCENTS[(i + 1) % ACCENTS.length]}` }}>
-                  <span style={{ width: "4.4rem", height: "4.4rem", flexShrink: 0, borderRadius: "50%", background: ACCENTS[(i + 1) % ACCENTS.length], display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "2rem" }}>
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2">{item.icon}</svg>
-                  </span>
-                  <h3 style={{ fontSize: "2rem", fontWeight: 600, color: "var(--primary)", margin: "0 0 1rem" }}>{item.title}</h3>
-                  <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.6, margin: 0 }}>{item.body}</p>
-                </ScrollStackItem>
-              ))}
-            </ScrollStack>
-          </div>
-        </div>
         <WaveDivider fill="var(--primary)" variant={2} />
       </section>
 
@@ -750,7 +696,6 @@ export default function LandingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
                 <a href="#why" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Why Glowmetry</a>
                 <a href="#experts" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Experts</a>
-                <a href="#trust" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Why trust this</a>
                 <a href="#pricing" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Pricing</a>
                 <a href="#faq" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>FAQ</a>
                 <a href="/splash" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Start your scan</a>
@@ -786,7 +731,7 @@ export default function LandingPage() {
       </footer>
 
       <style>{`
-        #why, #experts, #trust, #pricing, #faq { scroll-margin-top: 8rem; }
+        #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
         @media (min-width: 640px) { .site-header-cta { display: inline-block !important; } }
         .glowmetry-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .glowmetry-carousel::-webkit-scrollbar { display: none; }
@@ -810,7 +755,13 @@ export default function LandingPage() {
           .glowmetry-research-tags { gap: 0.6rem !important; }
         }
         .glowmetry-marquee-track { animation: glowmetry-marquee-scroll 32s linear infinite; }
-        .glowmetry-marquee:hover .glowmetry-marquee-track { animation-play-state: paused; }
+        /* Real-mouse-hover only — on touch devices ":hover" can stick after a
+           tap (no true hover state), which permanently paused the marquee on
+           mobile. Gating on (hover: hover) keeps the pause-on-hover a
+           desktop-only nicety. */
+        @media (hover: hover) and (pointer: fine) {
+          .glowmetry-marquee:hover .glowmetry-marquee-track { animation-play-state: paused; }
+        }
         @keyframes glowmetry-marquee-scroll {
           from { transform: translateX(0); }
           to { transform: translateX(-50%); }

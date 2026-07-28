@@ -48,9 +48,9 @@ html {
   /* Fluid, with a readability floor — was pure 0.520833vw, which meant
      1rem = 7.5px on a 1440px laptop and text rendered ~25% too small. */
   font-size: clamp(10px, 0.520833vw, 12px);
-  /* Scrollbar hidden everywhere (main page + any nested scroll container,
-     e.g. ScrollStack) — scrollbar-width is inherited, so this alone covers
-     Firefox/nested scrollers without repeating it per element. */
+  /* Scrollbar hidden everywhere (main page + any nested scroll container)
+     — scrollbar-width is inherited, so this alone covers Firefox/nested
+     scrollers without repeating it per element. */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
