@@ -61,9 +61,9 @@ function MarqueeGroup({ duplicate }: { duplicate?: boolean }) {
   return (
     <div className={duplicate ? "glowmetry-marquee-dup" : undefined} style={{ display: "flex", flexShrink: 0 }}>
       {MARQUEE_ITEMS.map((item, i) => (
-        <span key={i} style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", fontSize: "1.4rem", fontWeight: 600, color: "var(--primary)", padding: "0 2.4rem" }}>
+        <span key={i} style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", fontSize: "1.4rem", fontWeight: 600, color: "#fff", padding: "0 2.4rem" }}>
           {item}
-          <span style={{ marginLeft: "2.4rem", color: "var(--rose)" }}>●</span>
+          <span style={{ marginLeft: "2.4rem", color: GOLD }}>●</span>
         </span>
       ))}
     </div>
@@ -72,7 +72,7 @@ function MarqueeGroup({ duplicate }: { duplicate?: boolean }) {
 
 function MarqueeStrip() {
   return (
-    <div className="glowmetry-marquee" aria-hidden style={{ overflow: "hidden", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)" }}>
+    <div className="glowmetry-marquee" aria-hidden style={{ overflow: "hidden", background: "var(--primary)" }}>
       <div className="glowmetry-marquee-track" style={{ display: "flex", width: "max-content", padding: "1.4rem 0" }}>
         <MarqueeGroup />
         {/* Duplicated once so the CSS animation can loop seamlessly at -50%
@@ -267,19 +267,19 @@ const WHY_ITEMS = [
 // for this section.
 const TRUST_ITEMS = [
   {
-    title: "No fake before-and-afters",
+    line: "Every score comes from your own fresh photos, not a canned demo.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2h6l2 2h3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8z M12 17a4 4 0 100-8 4 4 0 000 8z" />,
   },
   {
-    title: "Transparent pricing, always",
+    line: "The exact price shows before you pay, no subscription, no surprise charge.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l2.4 4.8 5.3.8-3.85 3.75.9 5.3L12 14.2l-4.75 2.45.9-5.3L4.3 7.6l5.3-.8z" />,
   },
   {
-    title: "Your photos stay yours",
+    line: "Your photos are used only for your report, never for AI training without consent.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M6 10V7a6 6 0 1112 0v3M5 10h14a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9a1 1 0 011-1z" />,
   },
   {
-    title: "Grounded in real research",
+    line: "Grounded in real, peer-reviewed research, not a marketing-invented claim.",
     icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20 M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" />,
   },
 ];
@@ -554,23 +554,23 @@ export default function LandingPage() {
           <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "3.6rem" }}>
             No fake reviews. Just what&apos;s actually true.
           </h2>
-          <div className="glowmetry-trust-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
+          <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
             {TRUST_ITEMS.map((item, i) => (
               <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 16 }}
+                key={item.line}
+                initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.4, delay: i * 0.06 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
                 style={{
-                  display: "flex", alignItems: "center", gap: "1.2rem", background: "var(--canvas)",
-                  borderLeft: `0.3rem solid ${ACCENTS[(i + 1) % ACCENTS.length]}`, borderRadius: "1rem", padding: "1.4rem 1.6rem",
+                  display: "flex", alignItems: "center", gap: "1.6rem", padding: "1.8rem 0",
+                  borderBottom: i < TRUST_ITEMS.length - 1 ? "1px solid var(--line)" : "none",
                 }}
               >
-                <span style={{ flexShrink: 0, width: "3.2rem", height: "3.2rem", borderRadius: "50%", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENTS[(i + 1) % ACCENTS.length]} strokeWidth="1.8">{item.icon}</svg>
+                <span style={{ width: "3.2rem", height: "3.2rem", flexShrink: 0, borderRadius: "50%", background: ACCENTS[(i + 1) % ACCENTS.length], display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2">{item.icon}</svg>
                 </span>
-                <h3 style={{ fontSize: "1.35rem", fontWeight: 600, color: "var(--primary)", lineHeight: 1.25, margin: 0 }}>{item.title}</h3>
+                <p style={{ fontSize: "1.7rem", color: "var(--primary)", lineHeight: 1.4, margin: 0 }}>{item.line}</p>
               </motion.div>
             ))}
           </div>
@@ -810,9 +810,6 @@ export default function LandingPage() {
         }
         @media (max-width: 640px) {
           .glowmetry-research-tags { gap: 0.6rem !important; }
-        }
-        @media (max-width: 400px) {
-          .glowmetry-trust-grid h3 { font-size: 1.2rem !important; }
         }
         .glowmetry-marquee-track { animation: glowmetry-marquee-scroll 32s linear infinite; }
         .glowmetry-marquee:hover .glowmetry-marquee-track { animation-play-state: paused; }
