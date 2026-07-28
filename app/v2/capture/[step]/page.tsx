@@ -412,9 +412,9 @@ export default function V2CapturePage() {
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none", transform: "scaleX(-1)" }}
             />
           )}
-          {!captured && !cameraError && step.phase === "face" && (
-            <div aria-hidden style={{ position: "absolute", inset: "8% 15%", border: "2px solid rgba(255,255,255,0.7)", borderRadius: "50%" }} />
-          )}
+          {/* No static oval guide for face steps — the live mesh already
+              draws a real FACE_OVAL contour from actual landmarks, which
+              made the plain white placeholder oval redundant. */}
           {/* Scan reticle — corner brackets + sweeping line, always present
               while actively composing a shot (both phases). Real feedback,
               not just decoration: brackets and the status pill switch to
