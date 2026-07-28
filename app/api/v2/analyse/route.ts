@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { getAnalysisProvider, ClaudeTimeoutError, ClaudeRateLimitError, SchemaParseError, SchemaValidationError } from "@/lib/v2/aiProvider";
 import { logV2 } from "@/lib/v2/log";
+import { checkRateLimit } from "@/lib/v2/rateLimit";
 import type { AnalysisMetric, SkinConcern, SkinType } from "@/lib/v2/types";
 
 const STALE_STAGE_MS = 5 * 60 * 1000;
@@ -45,6 +46,13 @@ export async function POST(req: NextRequest) {
 
     token = req.headers.get("authorization")!.slice(7);
     const supabase = scopedClient(token);
+
+    // Every call here triggers a real, paid Claude/Gemini request — cap per
+    // user so a scripted loop can't run up API cost unbounded.
+    const withinLimit = await checkRateLimit(supabase, auth.userId, "analyse", 15, 600);
+    if (!withinLimit) {
+      return NextResponse.json({ error: "Too many requests, try again in a few minutes" }, { status: 429 });
+    }
 
     const { data: session, error: sessErr } = await supabase
       .from("analysis_sessions_v2").select("id, user_id").eq("id", sessionId).single();

@@ -20,7 +20,7 @@ export interface AnalysisProvider {
 // always follow style instructions perfectly, and this text renders directly
 // on the report page (standing site-wide rule: no em dash anywhere in
 // user-facing content). Deep-walks any object/array of strings.
-function stripEmDash<T>(value: T): T {
+export function stripEmDash<T>(value: T): T {
   if (typeof value === "string") return (value as string).replace(/\s*—\s*/g, ", ") as unknown as T;
   if (Array.isArray(value)) return value.map(stripEmDash) as unknown as T;
   if (value && typeof value === "object") {

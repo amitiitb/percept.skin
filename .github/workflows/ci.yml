@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+      SUPABASE_SERVICE_ROLE_KEY: placeholder
+      NEXT_PUBLIC_PAYPAL_CLIENT_ID: placeholder
+      PAYPAL_SECRET: placeholder
+      ANTHROPIC_API_KEY: placeholder
+      GEMINI_API_KEY: placeholder
+      RESEND_API_KEY: placeholder
+      NEXT_PUBLIC_SITE_URL: https://glowmetry.superapp.digital
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true # pre-existing lint debt (18 errors, unrelated to CI/security hardening) — visible, not gating yet
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

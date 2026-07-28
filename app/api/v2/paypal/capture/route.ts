@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { captureOrder, PLANS, type PlanId } from "@/lib/v2/paypal";
 import { logV2 } from "@/lib/v2/log";
+import { checkRateLimit } from "@/lib/v2/rateLimit";
 
 // Service-role client — subscriptions_v2 has NO insert/update policy for
 // regular users by design (migration comment). Only this server-side path,
@@ -17,6 +18,9 @@ export async function POST(req: NextRequest) {
 
   const { orderId } = await req.json() as { orderId?: string };
   if (!orderId) return NextResponse.json({ error: "orderId is required" }, { status: 400 });
+
+  const withinLimit = await checkRateLimit(serviceClient(), auth.userId, "paypal_capture", 30, 600);
+  if (!withinLimit) return NextResponse.json({ error: "Too many requests, try again in a few minutes" }, { status: 429 });
 
   try {
     const { status, planId, userId } = await captureOrder(orderId);

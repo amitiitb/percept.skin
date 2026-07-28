@@ -4,6 +4,7 @@ import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { captureOrderRaw } from "@/lib/v2/paypal";
 import { DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 import { logV2 } from "@/lib/v2/log";
+import { checkRateLimit } from "@/lib/v2/rateLimit";
 
 function serviceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -15,6 +16,9 @@ export async function POST(req: NextRequest) {
 
   const { orderId } = await req.json() as { orderId?: string };
   if (!orderId) return NextResponse.json({ error: "orderId is required" }, { status: 400 });
+
+  const withinLimit = await checkRateLimit(serviceClient(), auth.userId, "consultation_capture", 30, 600);
+  if (!withinLimit) return NextResponse.json({ error: "Too many requests, try again in a few minutes" }, { status: 429 });
 
   try {
     const { status, customId } = await captureOrderRaw(orderId);
