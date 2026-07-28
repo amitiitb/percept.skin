@@ -22,6 +22,16 @@ const LIPS_O = [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 
 const LIPS_I = [78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95, 78];
 const NOSE = [168, 6, 197, 195, 5, 4, 1, 2, 98, 327, 326, 2, 94, 19, 1];
 
+// Single-point anchors for the feature-label callouts, drawn only from real
+// MediaPipe canonical face-mesh indices — no fabricated positions. Ears are
+// deliberately not included: the 468-point face mesh has no ear landmarks at
+// all (it only models the frontal face), so "detecting" them would be a lie.
+const FOREHEAD = 10;
+const CHEEK_L = 234;
+const CHEEK_R = 454;
+const CHIN = 152;
+const NOSE_TIP = 4;
+
 type LM = { x: number; y: number; z?: number; visibility?: number };
 type MeshConnector = { start: number; end: number };
 
@@ -46,6 +56,43 @@ function drawGroup(ctx: CanvasRenderingContext2D, lm: LM[], indices: number[], c
     ctx.arc(p.x * cw, p.y * ch, 1.8, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+function centroid(lm: LM[], indices: number[]): { x: number; y: number } | null {
+  let sx = 0, sy = 0, n = 0;
+  for (const idx of indices) {
+    const p = lm[idx];
+    if (!p) continue;
+    sx += p.x; sy += p.y; n++;
+  }
+  return n ? { x: sx / n, y: sy / n } : null;
+}
+
+// Draws a small pill-labeled callout at a normalized (0-1) landmark position.
+// The canvas element itself is CSS-mirrored (scaleX(-1)) to match the
+// selfie-view video, which is fine for the symmetric dots/lines elsewhere on
+// this canvas but would render text backwards — so text gets a local
+// counter-flip around its own anchor point to cancel just that, without
+// touching the outer mirror the rest of the mesh relies on.
+function drawLabel(ctx: CanvasRenderingContext2D, text: string, nx: number, ny: number, cw: number, ch: number, dpr: number) {
+  const x = nx * cw, y = ny * ch;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(-1, 1);
+  ctx.font = `${11 * dpr}px -apple-system, sans-serif`;
+  const padX = 6 * dpr, padY = 3 * dpr;
+  const w = ctx.measureText(text).width + padX * 2;
+  const h = 14 * dpr + padY;
+  ctx.fillStyle = "rgba(8,28,26,0.55)";
+  const r = h / 2;
+  ctx.beginPath();
+  ctx.roundRect(-w / 2, -h / 2, w, h, r);
+  ctx.fill();
+  ctx.fillStyle = "rgba(160,235,255,0.95)";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 0, 0.5 * dpr);
+  ctx.restore();
 }
 
 export default function V2CapturePage() {
@@ -174,6 +221,22 @@ export default function V2CapturePage() {
 
           ctx.strokeStyle = "rgba(120,200,255,0.5)"; ctx.fillStyle = "rgba(120,200,255,0.6)"; ctx.lineWidth = 1;
           drawGroup(ctx, lm, NOSE, cw, ch);
+
+          // Cycles through one region callout at a time (real landmark
+          // positions, not scripted) — reads as an active scan sweeping
+          // across the face rather than a static label dump.
+          const labels: Array<{ name: string; p: { x: number; y: number } | null }> = [
+            { name: "Forehead", p: lm[FOREHEAD] ?? null },
+            { name: "Left cheek", p: lm[CHEEK_L] ?? null },
+            { name: "Right cheek", p: lm[CHEEK_R] ?? null },
+            { name: "Eyes", p: centroid(lm, [...EYE_L, ...EYE_R]) },
+            { name: "Brows", p: centroid(lm, [...BROW_L, ...BROW_R]) },
+            { name: "Nose", p: lm[NOSE_TIP] ?? null },
+            { name: "Lips", p: centroid(lm, LIPS_O) },
+            { name: "Jawline", p: lm[CHIN] ?? null },
+          ];
+          const active = labels[Math.floor(ts / 650) % labels.length];
+          if (active.p) drawLabel(ctx, active.name, active.p.x, active.p.y, cw, ch, dpr);
         }
         meshRafRef.current = requestAnimationFrame(loop);
       } catch {
