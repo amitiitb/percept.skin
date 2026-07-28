@@ -145,13 +145,21 @@ export default function V2ProfileSetupPage() {
             <span style={{ fontSize: "1.1rem", color: "var(--muted)" }}>Swipe for more →</span>
           </div>
           <div className="glowmetry-concerns-scroll" style={{
-            display: "grid", gridAutoFlow: "column", gridTemplateRows: "repeat(2, auto)", justifyItems: "start",
-            columnGap: "1rem", rowGap: "1rem", marginTop: "1rem", overflowX: "auto", width: "100%",
-            scrollSnapType: "x proximity", paddingBottom: "0.4rem", paddingRight: "2rem",
+            display: "flex", flexDirection: "column", rowGap: "1rem", marginTop: "1rem",
+            overflowX: "auto", width: "100%", scrollSnapType: "x proximity",
+            paddingBottom: "0.4rem", paddingRight: "2rem",
           }}>
-            {CONCERNS.map((c) => (
-              <div key={c.value} style={{ scrollSnapAlign: "start" }}>
-                <Chip selected={form.skinConcerns.includes(c.value)} onClick={() => toggleConcern(c.value)}>{c.label}</Chip>
+            {[0, 1].map((row) => (
+              // Two independent flex rows instead of a CSS-grid column-flow —
+              // grid would size each column to its widest stacked item (a
+              // short chip under a long one), leaving a big dead gap before
+              // the next column. Plain flex rows size each chip on its own.
+              <div key={row} style={{ display: "flex", gap: "1rem" }}>
+                {CONCERNS.filter((_, i) => i % 2 === row).map((c) => (
+                  <div key={c.value} style={{ scrollSnapAlign: "start", flexShrink: 0 }}>
+                    <Chip selected={form.skinConcerns.includes(c.value)} onClick={() => toggleConcern(c.value)}>{c.label}</Chip>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
