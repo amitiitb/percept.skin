@@ -306,23 +306,23 @@ export default function V2CapturePage() {
 
   return (
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.6rem 2rem" }}>
-        <button onClick={() => router.back()} aria-label="Go back" style={{ width: "4.4rem", height: "4.4rem", borderRadius: "50%", border: "1px solid var(--line)", background: "none", cursor: "pointer" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.2rem 2rem" }}>
+        <button onClick={() => router.back()} aria-label="Go back" style={{ width: "4rem", height: "4rem", borderRadius: "50%", border: "1px solid var(--line)", background: "none", cursor: "pointer" }}>
           <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" style={{ margin: "auto" }}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
         </button>
         <span style={{ fontSize: "1.5rem", fontWeight: 600, color: "var(--primary)" }}>
           {step.phase === "face" ? "Face" : "Hair & Scalp"} · {step.phaseIndex} of {step.phaseTotal}
         </span>
-        <div style={{ width: "4.4rem" }} />
+        <div style={{ width: "4rem" }} />
       </div>
       <div style={{ height: "4px", background: "var(--line)" }}>
         <div style={{ height: "100%", width: `${(step.phaseIndex / step.phaseTotal) * 100}%`, background: "var(--primary)", transition: "width 0.3s" }} />
       </div>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "2.4rem", maxWidth: "56rem", margin: "0 auto", width: "100%" }}>
-        <p style={{ fontSize: "1.7rem", color: "var(--primary)", textAlign: "center", marginBottom: "2rem" }}>{step.instruction}</p>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "1.6rem 2rem 1.2rem", maxWidth: "56rem", margin: "0 auto", width: "100%" }}>
+        <p style={{ fontSize: "1.6rem", color: "var(--primary)", textAlign: "center", marginBottom: "1.2rem" }}>{step.instruction}</p>
 
-        <div style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "1.6rem", overflow: "hidden", background: "#000" }}>
+        <div style={{ position: "relative", width: "100%", aspectRatio: "3/3.4", borderRadius: "1.6rem", overflow: "hidden", background: "#000" }}>
           {captured ? (
             <img src={captured} alt="Captured photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : cameraError ? (
@@ -354,19 +354,6 @@ export default function V2CapturePage() {
           {!captured && !cameraError && step.phase === "hair" && step.photoType === "hair_parting" && (
             <div aria-hidden style={{ position: "absolute", top: "15%", bottom: "15%", left: "50%", width: "2px", background: "rgba(255,255,255,0.7)", transform: "translateX(-1px)" }} />
           )}
-          {/* Shutter button lives ON the camera preview (bottom-overlaid, native-
-              camera-app pattern) instead of below it in normal document flow —
-              was pushing well past the fold on shorter phones, requiring a
-              scroll to find the one button that matters most on this screen. */}
-          {!captured && (
-            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "2rem 2rem 2.4rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.8rem", background: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.55) 60%)" }}>
-              <button onClick={handleCapture} aria-label="Capture photo" style={{ width: "7.2rem", height: "7.2rem", borderRadius: "50%", background: "var(--primary)", border: "4px solid #fff", boxShadow: "0 0 0 2px var(--primary)", cursor: "pointer" }} />
-              <button onClick={() => fileInputRef.current?.click()} style={{ background: "none", border: "none", color: "#fff", fontSize: "1.4rem", cursor: "pointer", padding: "0.6rem" }}>
-                Upload from gallery →
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleGalleryFile} style={{ display: "none" }} />
-            </div>
-          )}
         </div>
         <canvas ref={canvasRef} style={{ display: "none" }} />
 
@@ -381,12 +368,33 @@ export default function V2CapturePage() {
           <p role="alert" style={{ color: "var(--rose)", fontSize: "1.4rem", marginTop: "1.6rem", textAlign: "center" }}>{saveError}</p>
         )}
 
-        {captured && (
-          <div style={{ marginTop: "3.2rem", width: "100%", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-            <PrimaryButton onClick={handleContinue} loading={saving} disabled={checking}>{saveError ? "Retry →" : "Continue →"}</PrimaryButton>
-            <PrimaryButton variant="outline" onClick={retake} disabled={saving}>Retake</PrimaryButton>
-          </div>
-        )}
+        {/* Shutter + gallery-upload sit just below the frame, not overlaid on
+            top of it — overlaying them on the video made the shutter read as
+            "inside" the oval/guide, which looked wrong. Kept compact (no
+            extra vertical filler) so this still fits without scrolling. */}
+        <div style={{ marginTop: "1rem", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem" }}>
+          {captured ? (
+            <div style={{ width: "100%", display: "flex", alignItems: "center", gap: "1.2rem" }}>
+              <PrimaryButton onClick={handleContinue} loading={saving} disabled={checking}>{saveError ? "Retry →" : "Continue →"}</PrimaryButton>
+              <button
+                onClick={retake}
+                disabled={saving}
+                aria-label="Retake photo"
+                style={{ flexShrink: 0, width: "5.2rem", height: "5.2rem", borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1 }}
+              >
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="var(--primary)" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 12a8 8 0 0114-5.3M20 12a8 8 0 01-14 5.3M4 4v5h5M20 20v-5h-5" /></svg>
+              </button>
+            </div>
+          ) : (
+            <>
+              <button onClick={handleCapture} aria-label="Capture photo" style={{ width: "7.2rem", height: "7.2rem", borderRadius: "50%", background: "var(--primary)", border: "4px solid var(--canvas)", boxShadow: "0 0 0 2px var(--primary)", cursor: "pointer" }} />
+              <button onClick={() => fileInputRef.current?.click()} style={{ background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: "0.6rem" }}>
+                Upload from gallery →
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleGalleryFile} style={{ display: "none" }} />
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
