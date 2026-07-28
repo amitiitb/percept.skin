@@ -72,6 +72,12 @@ export default function V2CapturePage() {
   const [saving, setSaving] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  // Real-time "locked on" feedback for the scan UI below — driven by whether
+  // MediaPipe actually found a face this frame, not decorative. Compared
+  // against a ref (not just prior state) so the ~20fps detection loop only
+  // triggers a re-render on the rare frame where lock status actually flips.
+  const [faceLocked, setFaceLocked] = useState(false);
+  const faceLockedRef = useRef(false);
 
   useEffect(() => {
     if (!step) { router.replace("/v2/dashboard"); return; }
@@ -140,14 +146,18 @@ export default function V2CapturePage() {
 
           const result = det.detectForVideo(video, ts);
           const lm = result.faceLandmarks?.[0];
-          if (!lm) return;
+          if (!lm) {
+            if (faceLockedRef.current) { faceLockedRef.current = false; setFaceLocked(false); }
+            return;
+          }
+          if (!faceLockedRef.current) { faceLockedRef.current = true; setFaceLocked(true); }
 
           const cw = canvas.width, ch = canvas.height;
           const dpr = Math.min(window.devicePixelRatio || 1, 2);
           const mappedLm = mapLandmarks(lm);
           const drawing = new DrawingUtils(ctx);
 
-          drawing.drawConnectors(mappedLm, FaceLandmarker.FACE_LANDMARKS_TESSELATION as MeshConnector[], { color: "rgba(135,215,255,0.23)", lineWidth: 0.65 * dpr });
+          drawing.drawConnectors(mappedLm, FaceLandmarker.FACE_LANDMARKS_TESSELATION as MeshConnector[], { color: "rgba(135,215,255,0.32)", lineWidth: 0.65 * dpr });
           drawing.drawConnectors(mappedLm, FaceLandmarker.FACE_LANDMARKS_CONTOURS as MeshConnector[], { color: "rgba(238,248,255,0.72)", lineWidth: 1.15 * dpr });
           drawing.drawConnectors(mappedLm, FaceLandmarker.FACE_LANDMARKS_FACE_OVAL as MeshConnector[], { color: "rgba(255,255,255,0.88)", lineWidth: 1.35 * dpr });
           drawing.drawConnectors(mappedLm, FaceLandmarker.FACE_LANDMARKS_LEFT_IRIS as MeshConnector[], { color: "rgba(80,220,255,0.9)", lineWidth: 1.35 * dpr });
@@ -176,6 +186,8 @@ export default function V2CapturePage() {
       cancelAnimationFrame(meshRafRef.current);
       detectorRef.current?.close();
       detectorRef.current = null;
+      faceLockedRef.current = false;
+      setFaceLocked(false);
     };
   }, [showPhaseTransition, captured, cameraError, step]);
 
@@ -340,6 +352,43 @@ export default function V2CapturePage() {
           {!captured && !cameraError && step.phase === "face" && (
             <div aria-hidden style={{ position: "absolute", inset: "8% 15%", border: "2px solid rgba(255,255,255,0.7)", borderRadius: "50%" }} />
           )}
+          {/* Scan reticle — corner brackets + sweeping line, always present
+              while actively composing a shot (both phases). Real feedback,
+              not just decoration: brackets and the status pill switch to
+              faceLocked's actual value during face steps, so "locked" means
+              MediaPipe genuinely found a face this frame. */}
+          {!captured && !cameraError && (
+            <>
+              {(["tl", "tr", "bl", "br"] as const).map((corner) => {
+                const active = step.phase !== "face" || faceLocked;
+                const vertical = corner[0] === "t" ? { top: "3%" } : { bottom: "3%" };
+                const horizontal = corner[1] === "l" ? { left: "3%" } : { right: "3%" };
+                const borderSide = {
+                  borderTop: corner[0] === "t" ? `2.5px solid ${active ? "rgba(120,220,255,0.95)" : "rgba(255,255,255,0.55)"}` : undefined,
+                  borderBottom: corner[0] === "b" ? `2.5px solid ${active ? "rgba(120,220,255,0.95)" : "rgba(255,255,255,0.55)"}` : undefined,
+                  borderLeft: corner[1] === "l" ? `2.5px solid ${active ? "rgba(120,220,255,0.95)" : "rgba(255,255,255,0.55)"}` : undefined,
+                  borderRight: corner[1] === "r" ? `2.5px solid ${active ? "rgba(120,220,255,0.95)" : "rgba(255,255,255,0.55)"}` : undefined,
+                };
+                return (
+                  <div key={corner} aria-hidden style={{
+                    position: "absolute", width: "2.4rem", height: "2.4rem",
+                    transition: "border-color 0.2s", ...vertical, ...horizontal, ...borderSide,
+                  }} />
+                );
+              })}
+              <div aria-hidden className="v2-scan-line" style={{ position: "absolute", left: "4%", right: "4%", height: "2px", background: "linear-gradient(90deg, transparent, rgba(120,220,255,0.9), transparent)", opacity: faceLocked && step.phase === "face" ? 0 : 0.85, transition: "opacity 0.3s" }} />
+              {step.phase === "face" && (
+                <div role="status" aria-live="polite" style={{
+                  position: "absolute", top: "3%", left: "50%", transform: "translateX(-50%)",
+                  display: "flex", alignItems: "center", gap: "0.6rem", background: "rgba(0,0,0,0.45)",
+                  borderRadius: "9999px", padding: "0.5rem 1.2rem",
+                }}>
+                  <span aria-hidden style={{ width: "0.7rem", height: "0.7rem", borderRadius: "50%", background: faceLocked ? "#4fe0a8" : "rgba(255,255,255,0.6)", transition: "background 0.2s" }} />
+                  <span style={{ fontSize: "1.2rem", color: "#fff", fontWeight: 500 }}>{faceLocked ? "Face locked" : "Scanning…"}</span>
+                </div>
+              )}
+            </>
+          )}
           {/* Hair-phase framing guides — a face-shaped oval made no sense for
               these shots (crown looks down at a round scalp, hairline is a
               horizontal band, parting is a thin close-up line), so each hair
@@ -396,6 +445,16 @@ export default function V2CapturePage() {
           )}
         </div>
       </div>
+      <style jsx>{`
+        .v2-scan-line { top: 6%; animation: v2-scan-sweep 2.8s ease-in-out infinite; }
+        @keyframes v2-scan-sweep {
+          0%, 100% { top: 6%; }
+          50% { top: 92%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .v2-scan-line { animation: none; top: 50%; }
+        }
+      `}</style>
     </div>
   );
 }
