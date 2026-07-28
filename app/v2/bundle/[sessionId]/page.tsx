@@ -412,37 +412,49 @@ export default function V2BundlePage() {
         </div>
 
         {/* ── 3 clear paths: report only, consultation only, or both. Picking
-            a tile toggles which checkout section is visible below — both
+            a segment toggles which checkout section is visible below — both
             sections stay permanently mounted (never unmount buttonRef/
             consultButtonRef) so the PayPal SDK buttons already rendered into
-            them don't need to be re-rendered on every tile switch. ── */}
-        <div className="v2-purchase-path-tiles" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.2rem", marginBottom: "3.6rem" }}>
-          {([
-            { key: "report" as const, label: "Just the Report", price: `$${BUNDLE_PRICE}`, badge: null },
-            { key: "consultation" as const, label: "Just a Consultation", price: `$${DOCTOR_CONSULTATION_PRICE}`, badge: null },
-            { key: "combo" as const, label: "Report + Consultation", price: `$${BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE}`, badge: "Best value" },
-          ]).map((tile) => {
-            const active = purchasePath === tile.key;
-            return (
-              <button
-                key={tile.key}
-                onClick={() => setPurchasePath(tile.key)}
-                style={{
-                  position: "relative", textAlign: "left", cursor: "pointer", borderRadius: "1.4rem",
-                  padding: "1.8rem 1.6rem", background: active ? "var(--primary)" : "var(--surface)",
-                  border: `2px solid ${active ? "var(--primary)" : "var(--line)"}`, transition: "border-color 0.15s",
-                }}
-              >
-                {tile.badge && (
-                  <span style={{ position: "absolute", top: "-1rem", left: "1.4rem", background: "var(--rose)", color: "#fff", fontSize: "1.05rem", fontWeight: 700, borderRadius: "9999px", padding: "0.3rem 1rem" }}>
-                    {tile.badge}
-                  </span>
-                )}
-                <p style={{ fontSize: "1.4rem", fontWeight: 500, color: active ? "#fff" : "var(--primary)", margin: "0 0 0.6rem" }}>{tile.label}</p>
-                <p style={{ fontSize: "2rem", fontWeight: 300, color: active ? "#fff" : "var(--primary)", margin: 0 }}>{tile.price}</p>
-              </button>
-            );
-          })}
+            them don't need to be re-rendered on every switch. One continuous
+            segmented pill (shared-layout sliding highlight) instead of 3
+            separate boxed tiles — reads as one deliberate control, not a
+            grid of rectangles. ── */}
+        <div className="v2-purchase-path-tiles" style={{ position: "relative", marginBottom: "3.6rem" }}>
+          <span style={{
+            position: "absolute", top: "-1.1rem", left: "66.6%", width: "33.3%", textAlign: "center",
+            fontSize: "1.05rem", fontWeight: 700, color: "var(--rose)", letterSpacing: "0.04em", zIndex: 2,
+          }}>
+            ★ BEST VALUE
+          </span>
+          <div style={{ position: "relative", display: "flex", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "9999px", padding: "0.6rem" }}>
+            {([
+              { key: "report" as const, label: "Just the Report", price: BUNDLE_PRICE },
+              { key: "consultation" as const, label: "Just a Consultation", price: DOCTOR_CONSULTATION_PRICE },
+              { key: "combo" as const, label: "Report + Consultation", price: BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE },
+            ]).map((tile) => {
+              const active = purchasePath === tile.key;
+              return (
+                <button
+                  key={tile.key}
+                  onClick={() => setPurchasePath(tile.key)}
+                  style={{
+                    position: "relative", flex: 1, zIndex: 1, cursor: "pointer", background: "none", border: "none",
+                    padding: "2rem 1rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem",
+                  }}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="planPill"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      style={{ position: "absolute", inset: "0.2rem", background: "var(--primary)", borderRadius: "9999px", zIndex: -1 }}
+                    />
+                  )}
+                  <span style={{ fontSize: "1.4rem", fontWeight: 700, color: active ? "#fff" : "var(--primary)", lineHeight: 1.2, transition: "color 0.2s" }}>{tile.label}</span>
+                  <span style={{ fontSize: "2.2rem", fontWeight: 800, color: active ? "#fff" : "var(--primary)", transition: "color 0.2s" }}>${tile.price}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {purchasePath === "combo" && (
@@ -637,10 +649,9 @@ export default function V2BundlePage() {
           .v2-bundle-modules-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 640px) {
-          .v2-purchase-path-tiles { gap: 0.8rem !important; }
-          .v2-purchase-path-tiles button { padding: 1.2rem 1rem !important; }
-          .v2-purchase-path-tiles p:first-child { font-size: 1.2rem !important; }
-          .v2-purchase-path-tiles p:last-child { font-size: 1.7rem !important; }
+          .v2-purchase-path-tiles button { padding: 1.4rem 0.6rem !important; }
+          .v2-purchase-path-tiles button span:first-child { font-size: 1.15rem !important; }
+          .v2-purchase-path-tiles button span:last-child { font-size: 1.7rem !important; }
         }
         @media (max-width: 520px) {
           .v2-module-tile { padding: 1.2rem 1.4rem !important; }
