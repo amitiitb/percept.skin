@@ -224,7 +224,7 @@ export default function LandingPage() {
               fill
               priority
               sizes="(max-width: 900px) 100vw, 50vw"
-              style={{ objectFit: "cover" }}
+              style={{ objectFit: "cover", objectPosition: "50% 5%" }}
             />
           </motion.div>
         </div>
