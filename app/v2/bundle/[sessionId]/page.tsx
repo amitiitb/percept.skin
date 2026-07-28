@@ -52,6 +52,7 @@ export default function V2BundlePage() {
 
   const [authChecked, setAuthChecked] = useState(false);
   const [selected, setSelected] = useState<Set<ModuleId>>(new Set(MODULES.map((m) => m.id)));
+  const [purchasePath, setPurchasePath] = useState<"report" | "consultation" | "combo">("report");
   const [stage, setStage] = useState<Stage | null>(null);
   const [failReason, setFailReason] = useState<string | null>(null);
   const [payState, setPayState] = useState<PayState>("idle");
@@ -395,13 +396,65 @@ export default function V2BundlePage() {
           </div>
         </div>
 
-        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+        <div style={{ textAlign: "center", marginBottom: "3.2rem" }}>
           <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "1.2rem" }}>
             Choose your report
           </h1>
           <p style={{ fontSize: "1.6rem", color: "var(--secondary)" }}>Unlock the insights that matter to you</p>
+          {stage === "complete" && (
+            <button
+              onClick={() => router.push(`/v2/report/${sessionId}`)}
+              style={{ marginTop: "1.2rem", background: "none", border: "none", color: "var(--rose)", fontSize: "1.4rem", fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}
+            >
+              Peek at your score first →
+            </button>
+          )}
         </div>
 
+        {/* ── 3 clear paths: report only, consultation only, or both. Picking
+            a tile toggles which checkout section is visible below — both
+            sections stay permanently mounted (never unmount buttonRef/
+            consultButtonRef) so the PayPal SDK buttons already rendered into
+            them don't need to be re-rendered on every tile switch. ── */}
+        <div className="v2-purchase-path-tiles" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.2rem", marginBottom: "3.6rem" }}>
+          {([
+            { key: "report" as const, label: "Just the Report", price: `$${BUNDLE_PRICE}`, badge: null },
+            { key: "consultation" as const, label: "Just a Consultation", price: `$${DOCTOR_CONSULTATION_PRICE}`, badge: null },
+            { key: "combo" as const, label: "Report + Consultation", price: `$${BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE}`, badge: "Best value" },
+          ]).map((tile) => {
+            const active = purchasePath === tile.key;
+            return (
+              <button
+                key={tile.key}
+                onClick={() => setPurchasePath(tile.key)}
+                style={{
+                  position: "relative", textAlign: "left", cursor: "pointer", borderRadius: "1.4rem",
+                  padding: "1.8rem 1.6rem", background: active ? "var(--primary)" : "var(--surface)",
+                  border: `2px solid ${active ? "var(--primary)" : "var(--line)"}`, transition: "border-color 0.15s",
+                }}
+              >
+                {tile.badge && (
+                  <span style={{ position: "absolute", top: "-1rem", left: "1.4rem", background: "var(--rose)", color: "#fff", fontSize: "1.05rem", fontWeight: 700, borderRadius: "9999px", padding: "0.3rem 1rem" }}>
+                    {tile.badge}
+                  </span>
+                )}
+                <p style={{ fontSize: "1.4rem", fontWeight: 500, color: active ? "#fff" : "var(--primary)", margin: "0 0 0.6rem" }}>{tile.label}</p>
+                <p style={{ fontSize: "2rem", fontWeight: 300, color: active ? "#fff" : "var(--primary)", margin: 0 }}>{tile.price}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        {purchasePath === "combo" && (
+          <p style={{ fontSize: "1.3rem", color: "var(--muted)", textAlign: "center", marginTop: "-2rem", marginBottom: "3.2rem" }}>
+            Two separate charges below — the report, then the consultation.
+          </p>
+        )}
+
+        <div style={{ display: purchasePath === "report" || purchasePath === "combo" ? "block" : "none" }}>
+        {purchasePath === "combo" && (
+          <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Step 1 · Report</p>
+        )}
         {/* ── Premium bundle card ── */}
         <motion.button
           onClick={selectBundle}
@@ -473,6 +526,7 @@ export default function V2BundlePage() {
             return (
               <button
                 key={m.id}
+                className="v2-module-tile"
                 onClick={() => toggleModule(m.id)}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem",
@@ -481,7 +535,7 @@ export default function V2BundlePage() {
                   transition: "border-color 0.15s",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "1.6rem", minWidth: 0 }}>
                   <span style={{
                     width: "2.4rem", height: "2.4rem", borderRadius: "0.6rem", flexShrink: 0,
                     border: `2px solid ${checked ? "var(--primary)" : "var(--line-strong)"}`,
@@ -490,9 +544,9 @@ export default function V2BundlePage() {
                   }}>
                     {checked && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                   </span>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <p style={{ fontSize: "1.6rem", color: "var(--primary)", margin: 0, fontWeight: 500 }}>{m.label}</p>
-                    <p style={{ fontSize: "1.3rem", color: "var(--secondary)", margin: "0.3rem 0 0" }}>{m.description}</p>
+                    <p className="v2-module-tile-desc" style={{ fontSize: "1.3rem", color: "var(--secondary)", margin: "0.3rem 0 0" }}>{m.description}</p>
                   </div>
                 </div>
                 <span style={{ fontSize: "1.6rem", color: "var(--primary)", fontWeight: 500, flexShrink: 0 }}>${m.price}</span>
@@ -525,12 +579,19 @@ export default function V2BundlePage() {
         <p style={{ fontSize: "1.2rem", color: "var(--muted)", textAlign: "center", marginTop: "2.4rem" }}>
           Sandbox mode · no real charge · secure checkout via PayPal
         </p>
+        </div>
 
         {/* ── Doctor Consultation — separate paid tier, not part of the report bundle ── */}
-        <div style={{ marginTop: "5.6rem", paddingTop: "4rem", borderTop: "1px solid var(--line)" }}>
-          <p style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem", textAlign: "center" }}>
-            Or talk to a real dermatologist
-          </p>
+        <div style={{ display: purchasePath === "consultation" || purchasePath === "combo" ? "block" : "none", marginTop: purchasePath === "combo" ? "3.6rem" : 0 }}>
+        {purchasePath === "combo" && (
+          <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem", textAlign: "center" }}>Step 2 · Consultation</p>
+        )}
+        <div style={{ paddingTop: purchasePath === "combo" ? 0 : "4rem", borderTop: purchasePath === "combo" ? "none" : "1px solid var(--line)" }}>
+          {purchasePath !== "combo" && (
+            <p style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem", textAlign: "center" }}>
+              Talk to a real dermatologist
+            </p>
+          )}
           <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem", maxWidth: "56rem", margin: "0 auto" }}>
             <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", margin: "0 0 0.8rem" }}>Doctor Consultation</h2>
             <p style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "2rem" }}>
@@ -569,10 +630,21 @@ export default function V2BundlePage() {
             )}
           </div>
         </div>
+        </div>
       </div>
       <style>{`
         @media (max-width: 480px) {
           .v2-bundle-modules-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .v2-purchase-path-tiles { gap: 0.8rem !important; }
+          .v2-purchase-path-tiles button { padding: 1.2rem 1rem !important; }
+          .v2-purchase-path-tiles p:first-child { font-size: 1.2rem !important; }
+          .v2-purchase-path-tiles p:last-child { font-size: 1.7rem !important; }
+        }
+        @media (max-width: 520px) {
+          .v2-module-tile { padding: 1.2rem 1.4rem !important; }
+          .v2-module-tile-desc { display: none !important; }
         }
       `}</style>
     </div>

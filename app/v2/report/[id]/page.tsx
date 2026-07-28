@@ -51,14 +51,36 @@ function MetricRow({ m }: { m: AnalysisMetric }) {
   );
 }
 
-function Section({ title, intro, metrics }: { title: string; intro?: string; metrics: AnalysisMetric[] }) {
+// Pre-purchase teaser row — real metric name (what was measured), score/bar
+// blurred behind a lock (real proportions still faintly visible, exact value
+// not readable), no explanation. The data itself already exists for every
+// scan regardless of purchase (analyse runs before checkout) — this is a
+// rendering-only gate, nothing new computed or stored.
+function LockedMetricRow({ m }: { m: AnalysisMetric }) {
+  return (
+    <div style={{ padding: "1.8rem 0", borderBottom: "1px solid var(--line)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
+        <span style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, flex: "0 0 auto", minWidth: "15rem" }}>{m.metricName}</span>
+        <div style={{ position: "relative", flex: 1, display: "flex", alignItems: "center", gap: "1.6rem" }}>
+          <div style={{ filter: "blur(5px)", display: "flex", alignItems: "center", gap: "1.6rem", flex: 1, userSelect: "none" }} aria-hidden>
+            <ScoreBar score={m.score} />
+            <span style={{ fontSize: "1.5rem", color: "var(--secondary)", fontWeight: 500, width: "3.2rem", textAlign: "right", flexShrink: 0 }}>{m.score ?? "—"}</span>
+          </div>
+          <span style={{ position: "absolute", right: "3.2rem", fontSize: "1.3rem" }} aria-label="Locked">🔒</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, intro, metrics, locked }: { title: string; intro?: string; metrics: AnalysisMetric[]; locked?: boolean }) {
   if (metrics.length === 0) return null;
   return (
     <div style={{ marginBottom: "4.8rem" }}>
       <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: intro ? "0.6rem" : "1.6rem" }}>{title}</h2>
       {intro && <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2rem", maxWidth: "60rem" }}>{intro}</p>}
       <div className="v2-metric-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 4.8rem" }}>
-        {metrics.map((m) => <MetricRow key={m.metricName} m={m} />)}
+        {metrics.map((m) => locked ? <LockedMetricRow key={m.metricName} m={m} /> : <MetricRow key={m.metricName} m={m} />)}
       </div>
     </div>
   );
@@ -105,10 +127,12 @@ export default function V2ReportPage() {
 
     if (!sess) { setNotFound(true); setLoading(false); return; }
 
-    // Bundle-first model: no purchase record means nothing was ever bought
-    // for this scan — send back to the purchase screen rather than showing
-    // an empty report.
-    if (!purchase) { router.replace(`/v2/bundle/${sessionId}`); return; }
+    // Bundle-first model: no purchase record means nothing was bought yet —
+    // used to hard-redirect to the paywall here. Now renders a teaser instead
+    // (real score + locked metric names, no explanations) so there's something
+    // worth being curious about before asking for payment. purchased stays an
+    // empty Set (not null) to distinguish "loaded, nothing bought" from "still
+    // loading" — the render below branches on that.
 
     // Separate, best-effort fetch for the richer report content — kept apart
     // from the core session query above so a pre-migration environment
@@ -129,7 +153,7 @@ export default function V2ReportPage() {
     }
 
     setSession({ ...sess, ...content });
-    setPurchased(new Set(purchase.modules as ModuleId[]));
+    setPurchased(new Set((purchase?.modules ?? []) as ModuleId[]));
     setMetrics((metricRows ?? []).map((r) => ({
       category: r.category as MetricCategory, metricName: r.metric_name, score: r.score,
       label: r.label as AnalysisMetric["label"], confidence: r.confidence, explanation: r.explanation,
@@ -181,6 +205,53 @@ export default function V2ReportPage() {
         <p style={{ fontSize: "1.8rem", color: "var(--secondary)", textAlign: "center", maxWidth: "36rem" }}>Your analysis is still finishing up. This page will update automatically, usually within a minute or two.</p>
         <PrimaryButton fullWidth={false} onClick={() => router.push("/v2/dashboard")}>Back to dashboard</PrimaryButton>
         <style>{`@keyframes v2-spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  // Nothing purchased yet, but analysis is done (it always runs before
+  // checkout) — show the teaser instead of the old hard-redirect-to-paywall.
+  if (purchased.size === 0) {
+    const score = session.overall_score ?? 0;
+    const skinMetrics = metrics.filter((m) => m.category === "skin");
+    const faceMetrics = metrics.filter((m) => m.category === "face");
+    const hairMetrics = metrics.filter((m) => m.category === "hair");
+    return (
+      <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
+        <div style={{ maxWidth: "88rem", margin: "0 auto" }}>
+          <button
+            onClick={() => router.push("/v2/dashboard")}
+            style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0, marginBottom: "3.2rem" }}
+          >
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            Dashboard
+          </button>
+
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            {photo && (
+              <div style={{ position: "relative", width: "12rem", height: "15rem", borderRadius: "1.6rem", overflow: "hidden", margin: "0 auto 2.4rem", boxShadow: "0 1.6rem 3.2rem -1rem rgba(0,57,52,0.28)" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={photo} alt="Your guided-capture photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              </div>
+            )}
+            <ScoreReveal score={score} />
+            <p style={{ fontSize: "1.8rem", color: "var(--secondary)", marginTop: "1.2rem" }}>{verdictFor(score)} · Glow Score</p>
+            <p style={{ fontSize: "1.4rem", color: "var(--muted)", marginTop: "0.8rem" }}>This is real, from your own photos. The rest is still locked.</p>
+          </div>
+
+          <Section title="Skin" intro={SECTION_INTRO.Skin} metrics={skinMetrics} locked />
+          <Section title="Face" intro={SECTION_INTRO.Face} metrics={faceMetrics} locked />
+          <Section title="Hair & Scalp" intro={SECTION_INTRO["Hair & Scalp"]} metrics={hairMetrics} locked />
+
+          <div style={{ background: "var(--primary)", borderRadius: "1.6rem", padding: "3.6rem", textAlign: "center", marginTop: "2.4rem" }}>
+            <p style={{ fontSize: "2rem", fontWeight: 500, color: "#fff", marginBottom: "0.8rem" }}>Every score above is real and already computed</p>
+            <p style={{ fontSize: "1.5rem", color: "rgba(255,255,255,0.7)", marginBottom: "2.4rem", maxWidth: "48rem", marginLeft: "auto", marginRight: "auto" }}>
+              Unlock the exact numbers, what they mean, and your personalized routine.
+            </p>
+            <PrimaryButton fullWidth={false} onClick={() => router.push(`/v2/bundle/${sessionId}`)}>Unlock full report →</PrimaryButton>
+          </div>
+        </div>
+        <style>{`@media (max-width: 900px) { .v2-metric-cols { grid-template-columns: 1fr !important; } }`}</style>
       </div>
     );
   }
