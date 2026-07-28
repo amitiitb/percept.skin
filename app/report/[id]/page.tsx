@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -81,21 +82,63 @@ const SECTION_ACCENT: Record<string, string> = {
   "Hair & Scalp": "#E8604F",
 };
 
+// How many metrics show before a section needs a "show more" toggle at all
+// — the actual complaint this fixes: a section with 7-8 full explanations
+// stacked made the whole report read as one long scroll. 3 up front is
+// enough to give a real read on that section without opening anything.
+const COLLAPSED_COUNT = 3;
+
 function Section({ title, intro, metrics, locked }: { title: string; intro?: string; metrics: AnalysisMetric[]; locked?: boolean }) {
+  const [expanded, setExpanded] = useState(false);
   if (metrics.length === 0) return null;
   const accent = SECTION_ACCENT[title] ?? "var(--rose)";
+  const hiddenCount = locked ? 0 : Math.max(0, metrics.length - COLLAPSED_COUNT);
+  // Always just the first COLLAPSED_COUNT here — the rest render in the
+  // AnimatePresence block below only, never both at once.
+  const visible = hiddenCount > 0 ? metrics.slice(0, COLLAPSED_COUNT) : metrics;
   return (
     <div style={{
       marginBottom: "3.2rem", background: "var(--surface)", borderRadius: "1.6rem",
       borderTop: `0.4rem solid ${accent}`, padding: "3.2rem 3.2rem 2.4rem",
     }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "1.2rem", flexWrap: "wrap", marginBottom: intro ? "0.6rem" : "2rem" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.2rem", flexWrap: "wrap", marginBottom: intro ? "0.6rem" : "2rem" }}>
         <h2 style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", margin: 0 }}>{title}</h2>
+        <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          {metrics.length} metric{metrics.length > 1 ? "s" : ""}
+        </span>
       </div>
       {intro && <p style={{ fontSize: "1.4rem", color: "var(--secondary)", marginBottom: "2.4rem", maxWidth: "60rem" }}>{intro}</p>}
       <div className="v2-metric-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 4.8rem" }}>
-        {metrics.map((m) => locked ? <LockedMetricRow key={m.metricName} m={m} /> : <MetricRow key={m.metricName} m={m} />)}
+        {visible.map((m) => locked ? <LockedMetricRow key={m.metricName} m={m} /> : <MetricRow key={m.metricName} m={m} />)}
       </div>
+      <AnimatePresence initial={false}>
+        {hiddenCount > 0 && expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{ overflow: "hidden" }}
+          >
+            <div className="v2-metric-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 4.8rem" }}>
+              {metrics.slice(COLLAPSED_COUNT).map((m) => <MetricRow key={m.metricName} m={m} />)}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {hiddenCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            display: "flex", alignItems: "center", gap: "0.6rem", marginTop: "1.6rem", background: "none",
+            border: "none", padding: 0, cursor: "pointer", fontSize: "1.4rem", fontWeight: 600, color: accent,
+          }}
+        >
+          {expanded ? "Show less" : `Show ${hiddenCount} more`}
+          <span style={{ display: "inline-block", transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "none" }}>▾</span>
+        </button>
+      )}
     </div>
   );
 }
