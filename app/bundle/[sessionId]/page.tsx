@@ -44,6 +44,49 @@ declare global {
   interface Window { paypal?: { Buttons: (opts: unknown) => { render: (el: HTMLElement) => void } }; }
 }
 
+// Cart summary, right above whichever checkout button is currently active —
+// what's actually in the cart, plus a one-tap cross-sell for the thing
+// that isn't in it yet (consultation from the report view, or vice versa).
+function CartSummary({
+  lines, crossSell,
+}: {
+  lines: { label: string; price: number }[];
+  crossSell?: { label: string; price: number; onClick: () => void };
+}) {
+  const total = lines.reduce((s, l) => s + l.price, 0);
+  return (
+    <div style={{ background: "var(--wash)", borderRadius: "1.2rem", padding: "2rem 2.4rem", marginBottom: "2rem" }}>
+      <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 1.2rem" }}>
+        {lines.length} item{lines.length > 1 ? "s" : ""} added
+      </p>
+      {lines.map((l) => (
+        <div key={l.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", padding: "0.4rem 0" }}>
+          <span style={{ fontSize: "1.4rem", color: "var(--secondary)" }}>{l.label}</span>
+          <span style={{ fontSize: "1.4rem", color: "var(--primary)", fontWeight: 600 }}>${l.price}</span>
+        </div>
+      ))}
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid var(--line)" }}>
+        <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
+        <strong style={{ fontSize: "2.4rem", fontWeight: 300, color: "var(--primary)" }}>${total}</strong>
+      </div>
+      {crossSell && (
+        <button
+          type="button"
+          onClick={crossSell.onClick}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", width: "100%",
+            marginTop: "1.6rem", background: "var(--canvas)", border: "1px dashed var(--line-strong)",
+            borderRadius: "0.8rem", padding: "1.2rem 1.4rem", cursor: "pointer", textAlign: "left",
+          }}
+        >
+          <span style={{ fontSize: "1.4rem", color: "var(--primary)", fontWeight: 500 }}>+ {crossSell.label}</span>
+          <span style={{ fontSize: "1.3rem", color: "var(--rose)", fontWeight: 700, flexShrink: 0 }}>Add for ${crossSell.price} →</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function V2BundlePage() {
   const router = useRouter();
   const params = useParams();
@@ -598,6 +641,40 @@ export default function V2BundlePage() {
           </div>
         </motion.button>
 
+        {/* ── Consultation add-on toggle — same effect as the "Both" pill up
+            top, kept here too so adding it doesn't mean scrolling back up. ── */}
+        <button
+          type="button"
+          onClick={() => setPurchasePath(purchasePath === "combo" ? "report" : "combo")}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", width: "100%",
+            background: purchasePath === "combo" ? "var(--wash)" : "var(--surface)",
+            border: `1px solid ${purchasePath === "combo" ? "var(--primary)" : "var(--line)"}`,
+            borderRadius: "1.2rem", padding: "1.6rem 2rem", cursor: "pointer", textAlign: "left", marginBottom: "2.4rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "1.4rem", minWidth: 0 }}>
+            <span style={{
+              width: "2.8rem", height: "2.8rem", borderRadius: "50%", flexShrink: 0,
+              background: purchasePath === "combo" ? "var(--primary)" : "var(--wash)",
+              color: purchasePath === "combo" ? "#fff" : "var(--primary)",
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem", fontWeight: 700,
+              transition: "background 0.15s, color 0.15s",
+            }}>
+              {purchasePath === "combo" ? "✓" : "+"}
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: "1.5rem", fontWeight: 600, color: "var(--primary)", margin: 0 }}>
+                {purchasePath === "combo" ? "Dermatologist consultation added" : "Add a dermatologist consultation"}
+              </p>
+              <p style={{ fontSize: "1.3rem", color: "var(--secondary)", margin: "0.2rem 0 0" }}>A real person reviews your case, follows up within 24 hours</p>
+            </div>
+          </div>
+          <span style={{ fontSize: "1.6rem", fontWeight: 700, color: "var(--primary)", flexShrink: 0 }}>
+            {purchasePath === "combo" ? `$${DOCTOR_CONSULTATION_PRICE}` : `+$${DOCTOR_CONSULTATION_PRICE}`}
+          </span>
+        </button>
+
         {/* ── Individual module selection ── */}
         <p style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>
           Or choose individual modules
@@ -637,21 +714,18 @@ export default function V2BundlePage() {
           })}
         </div>
 
-        {/* ── Price summary ── */}
-        <div style={{ background: "var(--wash)", borderRadius: "1.2rem", padding: "2rem 2.4rem", marginBottom: "2.4rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-          <div>
-            <p style={{ fontSize: "1.4rem", color: "var(--secondary)", margin: 0 }}>{selected.size} of {MODULES.length} modules selected</p>
-            {!isBundle && (
-              <p style={{ fontSize: "1.3rem", color: "#C8503A", margin: "0.4rem 0 0" }}>
-                Select all 4 to save ${BUNDLE_SAVINGS} with the bundle
-              </p>
-            )}
-          </div>
-          <strong style={{ fontSize: "2.8rem", fontWeight: 300, color: "var(--primary)" }}>${price}</strong>
-        </div>
+        {!isBundle && (
+          <p style={{ fontSize: "1.3rem", color: "#C8503A", marginBottom: "2.4rem" }}>
+            Select all 4 to save ${BUNDLE_SAVINGS} with the bundle
+          </p>
+        )}
 
         {purchasePath === "report" && (
           <>
+            <CartSummary
+              lines={[{ label: isBundle ? "Complete Beauty Report" : `${selected.size} report module${selected.size > 1 ? "s" : ""}`, price }]}
+              crossSell={{ label: "Add a dermatologist consultation", price: DOCTOR_CONSULTATION_PRICE, onClick: () => setPurchasePath("combo") }}
+            />
             {payState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{payError}</p>}
             {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
             {payState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
@@ -700,13 +774,12 @@ export default function V2BundlePage() {
                   style={{ width: "100%", padding: "1.2rem 1.6rem", fontSize: "1.5rem", border: "1px solid var(--line)", borderRadius: "0.8rem", marginBottom: "2rem", background: "var(--canvas)", color: "var(--primary)" }}
                 />
 
-                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "2rem" }}>
-                  <span style={{ fontSize: "1.5rem", color: "var(--secondary)" }}>One-time consultation</span>
-                  <strong style={{ fontSize: "2.4rem", fontWeight: 300, color: "var(--primary)" }}>${DOCTOR_CONSULTATION_PRICE}</strong>
-                </div>
-
                 {purchasePath === "consultation" && (
                   <>
+                    <CartSummary
+                      lines={[{ label: "Doctor Consultation", price: DOCTOR_CONSULTATION_PRICE }]}
+                      crossSell={{ label: "Add your AI beauty report", price, onClick: () => setPurchasePath("combo") }}
+                    />
                     {consultPayState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{consultPayError}</p>}
                     {consultPayState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
                     {consultPayState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
@@ -725,12 +798,12 @@ export default function V2BundlePage() {
         {/* ── Combined checkout — one PayPal order/capture for report + consultation together ── */}
         {purchasePath === "combo" && (
           <div style={{ marginTop: "3.6rem" }}>
-            <div style={{ background: "var(--wash)", borderRadius: "1.2rem", padding: "2rem 2.4rem", marginBottom: "2.4rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-              <div>
-                <p style={{ fontSize: "1.4rem", color: "var(--secondary)", margin: 0 }}>Report ({selected.size} of {MODULES.length} modules) + consultation</p>
-              </div>
-              <strong style={{ fontSize: "2.8rem", fontWeight: 300, color: "var(--primary)" }}>${price + DOCTOR_CONSULTATION_PRICE}</strong>
-            </div>
+            <CartSummary
+              lines={[
+                { label: isBundle ? "Complete Beauty Report" : `${selected.size} report module${selected.size > 1 ? "s" : ""}`, price },
+                { label: "Doctor Consultation", price: DOCTOR_CONSULTATION_PRICE },
+              ]}
+            />
 
             {payState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{payError}</p>}
             {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
