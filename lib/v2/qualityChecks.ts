@@ -71,7 +71,11 @@ function sampleBlur(img: HTMLImageElement): number {
   return variance / ((size - 2) * (size - 2));
 }
 
-export async function runQualityChecks(img: HTMLImageElement): Promise<QualityResult> {
+// checkFace: false for hair/scalp shots (scalp_crown, hair_parting, and often
+// hairline_front) — those are expected to show little or no face, so running
+// face-detection on them was flagging a real "no_face" warning on a correctly
+// framed photo. Brightness/blur checks still apply to every photo type.
+export async function runQualityChecks(img: HTMLImageElement, checkFace: boolean = true): Promise<QualityResult> {
   const issues: QualityIssue[] = [];
 
   const brightness = sampleBrightness(img);
@@ -79,6 +83,10 @@ export async function runQualityChecks(img: HTMLImageElement): Promise<QualityRe
 
   const blur = sampleBlur(img);
   if (blur < 8) issues.push("too_blurry");
+
+  if (!checkFace) {
+    return { passed: issues.length === 0, issues };
+  }
 
   const detector = await getDetector();
   if (!detector) {

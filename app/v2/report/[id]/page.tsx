@@ -86,6 +86,15 @@ function Section({ title, intro, metrics, locked }: { title: string; intro?: str
   );
 }
 
+// Same order/labels as lib/v2/captureSteps.ts (kept as a separate small map
+// here rather than importing that module, which also pulls in capture-flow
+// types not needed on this page).
+const PHOTO_ORDER = ["face_front", "face_left", "face_right", "face_detail", "hairline_front", "scalp_crown", "hair_parting"];
+const PHOTO_LABELS: Record<string, string> = {
+  face_front: "Front face", face_left: "Left angle", face_right: "Right angle", face_detail: "Close-up",
+  hairline_front: "Hairline", scalp_crown: "Crown", hair_parting: "Parting",
+};
+
 const SECTION_INTRO: Record<string, string> = {
   Skin: "Texture, tone, and hydration across your face, read from your guided photos.",
   Face: "Proportion, symmetry, and structural balance — the framework the rest of your look sits on.",
@@ -111,17 +120,18 @@ export default function V2ReportPage() {
   const [metrics, setMetrics] = useState<AnalysisMetric[]>([]);
   const [purchased, setPurchased] = useState<Set<ModuleId> | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [allPhotos, setAllPhotos] = useState<Array<{ photoType: string; url: string }>>([]);
   const [colourAnalysis, setColourAnalysis] = useState<ColourAnalysis | null>(null);
 
   async function load(): Promise<string | undefined> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.replace(`/auth/login?next=/v2/report/${sessionId}`); return; }
 
-    const [{ data: sess }, { data: purchase }, { data: metricRows }, { data: photoRow }, { data: colourRow }] = await Promise.all([
+    const [{ data: sess }, { data: purchase }, { data: metricRows }, { data: photoRows }, { data: colourRow }] = await Promise.all([
       supabase.from("analysis_sessions_v2").select("id, status, overall_score, skin_age, created_at").eq("id", sessionId).eq("user_id", user.id).maybeSingle(),
       supabase.from("report_purchases_v2").select("modules").eq("session_id", sessionId).eq("user_id", user.id).maybeSingle(),
       supabase.from("analysis_metrics_v2").select("category, metric_name, score, label, confidence, explanation, recommendation, is_premium").eq("session_id", sessionId).eq("user_id", user.id),
-      supabase.from("analysis_photos_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id).eq("photo_type", "face_front").maybeSingle(),
+      supabase.from("analysis_photos_v2").select("photo_type, storage_path").eq("session_id", sessionId).eq("user_id", user.id),
       supabase.from("colour_analysis_v2").select("data").eq("session_id", sessionId).eq("user_id", user.id).maybeSingle(),
     ]);
 
@@ -161,9 +171,17 @@ export default function V2ReportPage() {
     })));
     setColourAnalysis((colourRow?.data as ColourAnalysis) ?? null);
 
-    if (photoRow?.storage_path) {
-      const { data: signed } = await supabase.storage.from("photos_v2").createSignedUrl(photoRow.storage_path, 60 * 60 * 24 * 7);
-      setPhoto(signed?.signedUrl ?? null);
+    if (photoRows?.length) {
+      const signedEntries = await Promise.all(
+        photoRows.map(async (p) => {
+          const { data: signed } = await supabase.storage.from("photos_v2").createSignedUrl(p.storage_path, 60 * 60 * 24 * 7);
+          return signed?.signedUrl ? { photoType: p.photo_type, url: signed.signedUrl } : null;
+        }),
+      );
+      const signed = signedEntries.filter((e): e is { photoType: string; url: string } => e !== null);
+      signed.sort((a, b) => PHOTO_ORDER.indexOf(a.photoType) - PHOTO_ORDER.indexOf(b.photoType));
+      setAllPhotos(signed);
+      setPhoto(signed.find((p) => p.photoType === "face_front")?.url ?? signed[0]?.url ?? null);
     }
 
     setLoading(false);
@@ -337,6 +355,26 @@ export default function V2ReportPage() {
             )}
           </div>
         </div>
+
+        {/* All 7 guided-capture photos — previously only face_front ever
+            rendered anywhere on the report; the other 6 (angles, hairline,
+            crown, parting) were captured but never shown back to the user. */}
+        {allPhotos.length > 0 && (
+          <div style={{ marginBottom: "4.8rem" }}>
+            <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.4rem" }}>Your photos</p>
+            <div style={{ display: "flex", gap: "1.2rem", overflowX: "auto", paddingBottom: "0.4rem" }}>
+              {allPhotos.map((p) => (
+                <div key={p.photoType} style={{ flex: "0 0 auto", width: "11rem" }}>
+                  <div style={{ position: "relative", aspectRatio: "4/5", borderRadius: "1rem", overflow: "hidden", border: "1px solid var(--line)" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.url} alt={PHOTO_LABELS[p.photoType] ?? p.photoType} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+                  <p style={{ fontSize: "1.2rem", color: "var(--secondary)", marginTop: "0.6rem", textAlign: "center" }}>{PHOTO_LABELS[p.photoType] ?? p.photoType}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* What's working well — the AI's positive observations, previously
             generated on every analysis but never surfaced anywhere. */}

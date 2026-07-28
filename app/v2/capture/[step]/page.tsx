@@ -205,7 +205,7 @@ export default function V2CapturePage() {
     const img = new Image();
     img.src = dataUrl;
     await new Promise((r) => { img.onload = r; });
-    const result = await runQualityChecks(img);
+    const result = await runQualityChecks(img, step?.phase === "face");
     setIssues(result.issues);
     setChecking(false);
   }
@@ -337,8 +337,22 @@ export default function V2CapturePage() {
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none", transform: "scaleX(-1)" }}
             />
           )}
-          {!captured && !cameraError && (
+          {!captured && !cameraError && step.phase === "face" && (
             <div aria-hidden style={{ position: "absolute", inset: "8% 15%", border: "2px solid rgba(255,255,255,0.7)", borderRadius: "50%" }} />
+          )}
+          {/* Hair-phase framing guides — a face-shaped oval made no sense for
+              these shots (crown looks down at a round scalp, hairline is a
+              horizontal band, parting is a thin close-up line), so each hair
+              step gets a guide matching its actual framing instead of reusing
+              the face oval or showing nothing at all. */}
+          {!captured && !cameraError && step.phase === "hair" && step.photoType === "hairline_front" && (
+            <div aria-hidden style={{ position: "absolute", top: "18%", left: "10%", right: "10%", height: "22%", border: "2px dashed rgba(255,255,255,0.7)", borderRadius: "9999px" }} />
+          )}
+          {!captured && !cameraError && step.phase === "hair" && step.photoType === "scalp_crown" && (
+            <div aria-hidden style={{ position: "absolute", inset: "10% 10%", border: "2px dashed rgba(255,255,255,0.7)", borderRadius: "50%" }} />
+          )}
+          {!captured && !cameraError && step.phase === "hair" && step.photoType === "hair_parting" && (
+            <div aria-hidden style={{ position: "absolute", top: "15%", bottom: "15%", left: "50%", width: "2px", background: "rgba(255,255,255,0.7)", transform: "translateX(-1px)" }} />
           )}
         </div>
         <canvas ref={canvasRef} style={{ display: "none" }} />
