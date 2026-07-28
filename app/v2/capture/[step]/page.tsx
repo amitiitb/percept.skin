@@ -354,6 +354,19 @@ export default function V2CapturePage() {
           {!captured && !cameraError && step.phase === "hair" && step.photoType === "hair_parting" && (
             <div aria-hidden style={{ position: "absolute", top: "15%", bottom: "15%", left: "50%", width: "2px", background: "rgba(255,255,255,0.7)", transform: "translateX(-1px)" }} />
           )}
+          {/* Shutter button lives ON the camera preview (bottom-overlaid, native-
+              camera-app pattern) instead of below it in normal document flow —
+              was pushing well past the fold on shorter phones, requiring a
+              scroll to find the one button that matters most on this screen. */}
+          {!captured && (
+            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "2rem 2rem 2.4rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.8rem", background: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.55) 60%)" }}>
+              <button onClick={handleCapture} aria-label="Capture photo" style={{ width: "7.2rem", height: "7.2rem", borderRadius: "50%", background: "var(--primary)", border: "4px solid #fff", boxShadow: "0 0 0 2px var(--primary)", cursor: "pointer" }} />
+              <button onClick={() => fileInputRef.current?.click()} style={{ background: "none", border: "none", color: "#fff", fontSize: "1.4rem", cursor: "pointer", padding: "0.6rem" }}>
+                Upload from gallery →
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleGalleryFile} style={{ display: "none" }} />
+            </div>
+          )}
         </div>
         <canvas ref={canvasRef} style={{ display: "none" }} />
 
@@ -368,22 +381,12 @@ export default function V2CapturePage() {
           <p role="alert" style={{ color: "var(--rose)", fontSize: "1.4rem", marginTop: "1.6rem", textAlign: "center" }}>{saveError}</p>
         )}
 
-        <div style={{ marginTop: "3.2rem", width: "100%", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-          {captured ? (
-            <>
-              <PrimaryButton onClick={handleContinue} loading={saving} disabled={checking}>{saveError ? "Retry →" : "Continue →"}</PrimaryButton>
-              <PrimaryButton variant="outline" onClick={retake} disabled={saving}>Retake</PrimaryButton>
-            </>
-          ) : (
-            <>
-              <button onClick={handleCapture} aria-label="Capture photo" style={{ width: "7.2rem", height: "7.2rem", borderRadius: "50%", background: "var(--primary)", border: "4px solid var(--canvas)", boxShadow: "0 0 0 2px var(--primary)", margin: "0 auto", cursor: "pointer" }} />
-              <button onClick={() => fileInputRef.current?.click()} style={{ background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: "1rem" }}>
-                Upload from gallery →
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleGalleryFile} style={{ display: "none" }} />
-            </>
-          )}
-        </div>
+        {captured && (
+          <div style={{ marginTop: "3.2rem", width: "100%", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+            <PrimaryButton onClick={handleContinue} loading={saving} disabled={checking}>{saveError ? "Retry →" : "Continue →"}</PrimaryButton>
+            <PrimaryButton variant="outline" onClick={retake} disabled={saving}>Retake</PrimaryButton>
+          </div>
+        )}
       </div>
     </div>
   );

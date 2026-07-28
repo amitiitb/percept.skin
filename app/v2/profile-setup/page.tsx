@@ -145,7 +145,7 @@ export default function V2ProfileSetupPage() {
             <span style={{ fontSize: "1.1rem", color: "var(--muted)" }}>Swipe for more →</span>
           </div>
           <div className="glowmetry-concerns-scroll" style={{
-            display: "grid", gridAutoFlow: "column", gridTemplateRows: "repeat(2, auto)",
+            display: "grid", gridAutoFlow: "column", gridTemplateRows: "repeat(2, auto)", justifyItems: "start",
             columnGap: "1rem", rowGap: "1rem", marginTop: "1rem", overflowX: "auto", width: "100%",
             scrollSnapType: "x proximity", paddingBottom: "0.4rem", paddingRight: "2rem",
           }}>
