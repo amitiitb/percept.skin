@@ -187,7 +187,14 @@ export default function V2BundlePage() {
       comboButtonRef.current.innerHTML = "";
       renderComboButton();
     }
-  }, [selected]);
+    // purchasePath is here too: the combo checkout div (comboButtonRef) only
+    // mounts once purchasePath becomes "combo" (see JSX below), so the very
+    // first renderComboButton() call at script-load time always finds
+    // comboButtonRef.current still null and silently no-ops. Nothing else
+    // re-ran it when the div actually mounted — the $20 button never
+    // appeared at all. This effect firing again on that transition is what
+    // actually renders it.
+  }, [selected, purchasePath]);
 
   function renderButton() {
     if (!window.paypal || !buttonRef.current) return;
@@ -481,42 +488,43 @@ export default function V2BundlePage() {
             segmented pill (shared-layout sliding highlight) instead of 3
             separate boxed tiles — reads as one deliberate control, not a
             grid of rectangles. ── */}
-        <div className="v2-purchase-path-tiles" style={{ position: "relative", marginBottom: "3.6rem" }}>
-          <span style={{
-            position: "absolute", top: "-1.1rem", left: "66.6%", width: "33.3%", textAlign: "center",
-            fontSize: "1.05rem", fontWeight: 700, color: "var(--rose)", letterSpacing: "0.04em", zIndex: 2,
-          }}>
-            ★ BEST VALUE
-          </span>
-          <div style={{ position: "relative", display: "flex", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "9999px", padding: "0.6rem" }}>
-            {([
-              { key: "report" as const, label: "Just the Report", price: BUNDLE_PRICE },
-              { key: "consultation" as const, label: "Just a Consultation", price: DOCTOR_CONSULTATION_PRICE },
-              { key: "combo" as const, label: "Report + Consultation", price: BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE },
-            ]).map((tile) => {
-              const active = purchasePath === tile.key;
-              return (
-                <button
-                  key={tile.key}
-                  onClick={() => setPurchasePath(tile.key)}
-                  style={{
-                    position: "relative", flex: 1, zIndex: 1, cursor: "pointer", background: "none", border: "none",
-                    padding: "2rem 1rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem",
-                  }}
-                >
-                  {active && (
-                    <motion.div
-                      layoutId="planPill"
-                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                      style={{ position: "absolute", inset: "0.2rem", background: "var(--primary)", borderRadius: "9999px", zIndex: -1 }}
-                    />
-                  )}
-                  <span style={{ fontSize: "1.4rem", fontWeight: 700, color: active ? "#fff" : "var(--primary)", lineHeight: 1.2, transition: "color 0.2s" }}>{tile.label}</span>
-                  <span style={{ fontSize: "2.2rem", fontWeight: 800, color: active ? "#fff" : "var(--primary)", transition: "color 0.2s" }}>${tile.price}</span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="v2-purchase-path-tiles" style={{ position: "relative", marginBottom: "3.6rem", display: "flex", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "0.5rem" }}>
+          {([
+            { key: "report" as const, label: "Report", price: BUNDLE_PRICE },
+            { key: "consultation" as const, label: "Consultation", price: DOCTOR_CONSULTATION_PRICE },
+            { key: "combo" as const, label: "Both", price: BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE, badge: true },
+          ]).map((tile) => {
+            const active = purchasePath === tile.key;
+            return (
+              <button
+                key={tile.key}
+                onClick={() => setPurchasePath(tile.key)}
+                style={{
+                  position: "relative", flex: 1, zIndex: 1, cursor: "pointer", background: "none", border: "none",
+                  padding: "1.2rem 0.6rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.3rem",
+                  minWidth: 0,
+                }}
+              >
+                {active && (
+                  <motion.div
+                    layoutId="planPill"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    style={{ position: "absolute", inset: "0.2rem", background: "var(--primary)", borderRadius: "1.2rem", zIndex: -1 }}
+                  />
+                )}
+                {tile.badge && (
+                  <span style={{
+                    fontSize: "1rem", fontWeight: 700, letterSpacing: "0.04em", whiteSpace: "nowrap",
+                    color: active ? "#D9A62E" : "var(--rose)", transition: "color 0.2s",
+                  }}>
+                    ★ BEST VALUE
+                  </span>
+                )}
+                <span style={{ fontSize: "1.3rem", fontWeight: 600, color: active ? "#fff" : "var(--secondary)", lineHeight: 1.2, transition: "color 0.2s" }}>{tile.label}</span>
+                <span style={{ fontSize: "1.9rem", fontWeight: 800, color: active ? "#fff" : "var(--primary)", transition: "color 0.2s" }}>${tile.price}</span>
+              </button>
+            );
+          })}
         </div>
 
         {purchasePath === "combo" && (
@@ -741,11 +749,6 @@ export default function V2BundlePage() {
       <style>{`
         @media (max-width: 480px) {
           .v2-bundle-modules-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 640px) {
-          .v2-purchase-path-tiles button { padding: 1.4rem 0.6rem !important; }
-          .v2-purchase-path-tiles button span:first-child { font-size: 1.15rem !important; }
-          .v2-purchase-path-tiles button span:last-child { font-size: 1.7rem !important; }
         }
         @media (max-width: 520px) {
           .v2-module-tile { padding: 1.2rem 1.4rem !important; }
