@@ -13,7 +13,10 @@ function serviceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
 
-function buildReportReadyEmail(sessionId: string): string {
+function buildReportReadyEmail(sessionId: string, consultationIncluded: boolean): string {
+  const upsellHtml = consultationIncluded
+    ? `<p style="margin-bottom:0">Your dermatologist consultation is included, our team will reach out within 24 hours with a real plan.</p>`
+    : `<p style="margin-bottom:0">Want a real dermatologist's take too? Add a consultation for just $${DOCTOR_CONSULTATION_PRICE}, a certified dermatologist reviews your case and follows up directly.</p>`;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,7 +44,7 @@ function buildReportReadyEmail(sessionId: string): string {
     <p>Your Glow Score and full breakdown are ready to view now.</p>
     <a href="${process.env.NEXT_PUBLIC_SITE_URL}/v2/report/${sessionId}" class="btn">View my report →</a>
     <div class="upsell">
-      <p style="margin-bottom:0">Want a real dermatologist's take too? Add a consultation for just $${DOCTOR_CONSULTATION_PRICE}, a certified dermatologist reviews your case and follows up directly.</p>
+      ${upsellHtml}
     </div>
   </div>
   <div class="footer">
@@ -82,7 +85,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ status: "complete" });
     }
 
-    const [userId, sessionId, modulesRaw] = customId.split("|");
+    // consultFlag/contactPhoneRaw are absent on any order created before this
+    // combined-purchase option existed — undefined splits to "-", read as
+    // "no consultation", so old in-flight orders still capture correctly.
+    const [userId, sessionId, modulesRaw, consultFlag, contactPhoneRaw] = customId.split("|");
     if (userId !== auth.userId) {
       logV2.error("v2_report_purchase_user_mismatch", { auth_user: auth.userId, order_user: userId, order_id: orderId });
       return NextResponse.json({ error: "Order does not belong to this account" }, { status: 403 });
@@ -90,6 +96,7 @@ export async function POST(req: NextRequest) {
 
     const modules = modulesRaw.split(",") as ModuleId[];
     const amount = priceFor(modules);
+    const includeConsultation = consultFlag === "1";
 
     const supabase = serviceClient();
     const { error } = await supabase.from("report_purchases_v2").upsert({
@@ -98,7 +105,22 @@ export async function POST(req: NextRequest) {
     }, { onConflict: "session_id" });
     if (error) throw error;
 
-    logV2.info("v2_report_purchase_completed", { user_id: auth.userId, session_id: sessionId, modules: modules.join(","), amount });
+    // Same PayPal order pays for both, one atomic combined checkout instead
+    // of the two separate charges the "combo" path used to require. Written
+    // best-effort: if this write fails, the report purchase above already
+    // succeeded and must not be rolled back over it, log loudly instead.
+    if (includeConsultation) {
+      const { error: consultErr } = await supabase.from("doctor_consultations_v2").upsert({
+        session_id: sessionId, user_id: auth.userId,
+        contact_phone: contactPhoneRaw && contactPhoneRaw !== "-" ? contactPhoneRaw : null,
+        amount_paid: DOCTOR_CONSULTATION_PRICE, provider: "paypal", provider_order_id: orderId,
+      }, { onConflict: "provider_order_id" });
+      if (consultErr) {
+        logV2.error("v2_combo_consultation_write_failed", { user_id: auth.userId, session_id: sessionId, order_id: orderId, message: consultErr.message });
+      }
+    }
+
+    logV2.info("v2_report_purchase_completed", { user_id: auth.userId, session_id: sessionId, modules: modules.join(","), amount, include_consultation: includeConsultation });
 
     // Confirmation email, fire and forget, never blocks the response. The
     // report page itself already handles "still finishing" gracefully (polls
@@ -111,11 +133,11 @@ export async function POST(req: NextRequest) {
         from: "Glowmetry <noreply@superapp.digital>",
         to: email,
         subject: "Your Glowmetry report is ready",
-        html: buildReportReadyEmail(sessionId),
+        html: buildReportReadyEmail(sessionId, includeConsultation),
       });
     }).catch(() => { /* non-fatal */ });
 
-    return NextResponse.json({ status: "complete", modules });
+    return NextResponse.json({ status: "complete", modules, includeConsultation });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logV2.error("v2_report_purchase_capture_failed", { user_id: auth.userId, order_id: orderId, message });

@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect, type ReactNode } from "react";
 import Image from "next/image";
-import { motion, useMotionValue, animate } from "framer-motion";
+import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
-import { MODULES, BUNDLE_PRICE, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
+import { MODULES, BUNDLE_PRICE, BUNDLE_DISCOUNT_PCT, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 
 const GOLD = "#D9A62E";
 const CORAL = "#E8604F";
@@ -43,6 +43,155 @@ function Carousel({ children }: { children: ReactNode }) {
   );
 }
 
+// Pricing/feature highlights, always visible, no interaction needed to see
+// all of them, unlike the hero which only fits one message at a time.
+const MARQUEE_ITEMS = [
+  `Best value, everything for $${BUNDLE_PRICE}`,
+  `Bundle all ${MODULES.length} modules, save ${BUNDLE_DISCOUNT_PCT}%`,
+  `Individual modules from just $${MODULES[0].price}`,
+  "Know your skin in minutes",
+  "Talk to a real dermatologist",
+  "Which colours suit you? Find out",
+  "See yourself in new frames before you buy",
+  "Live frame try-on, right in your browser",
+  "AI hairstyle suggestions, see it on you",
+];
+
+function MarqueeGroup({ duplicate }: { duplicate?: boolean }) {
+  return (
+    <div className={duplicate ? "glowmetry-marquee-dup" : undefined} style={{ display: "flex", flexShrink: 0 }}>
+      {MARQUEE_ITEMS.map((item, i) => (
+        <span key={i} style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", fontSize: "1.4rem", fontWeight: 600, color: "var(--primary)", padding: "0 2.4rem" }}>
+          {item}
+          <span style={{ marginLeft: "2.4rem", color: "var(--rose)" }}>●</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function MarqueeStrip() {
+  return (
+    <div className="glowmetry-marquee" aria-hidden style={{ overflow: "hidden", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)" }}>
+      <div className="glowmetry-marquee-track" style={{ display: "flex", width: "max-content", padding: "1.4rem 0" }}>
+        <MarqueeGroup />
+        {/* Duplicated once so the CSS animation can loop seamlessly at -50%
+            instead of snapping back to 0. Hidden under reduced motion so a
+            manually-scrolled static strip shows the list once, not twice. */}
+        <MarqueeGroup duplicate />
+      </div>
+    </div>
+  );
+}
+
+function ResearchSlider() {
+  const [index, setIndex] = useState(0);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const t = setInterval(() => setIndex((i) => (i + 1) % RESEARCH_SLIDES.length), 6500);
+    return () => clearInterval(t);
+  }, [reduceMotion]);
+
+  const slide = RESEARCH_SLIDES[index];
+
+  return (
+    <div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "#fff", textAlign: "center", lineHeight: 1.2, maxWidth: "60rem", margin: "0 auto 4rem" }}>
+            {slide.title}
+          </h2>
+
+          {slide.kind === "bars" && (
+            <>
+              <div className="glowmetry-research-tags" style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "0.8rem", marginBottom: "3.6rem" }}>
+                {slide.tags.map((tag) => (
+                  <span key={tag} style={{ fontSize: "1.2rem", fontWeight: 600, color: "rgba(255,255,255,0.85)", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "9999px", padding: "0.6rem 1.4rem" }}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <div style={{ maxWidth: "64rem", margin: "0 auto 2.4rem" }}>
+                {BAR_DATA.map((row) => (
+                  <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "1.6rem", marginBottom: "2rem" }}>
+                    <span style={{ flexShrink: 0, width: "13rem", fontSize: "1.3rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{row.label}</span>
+                    <div style={{ flex: 1, height: "1.6rem", background: "rgba(255,255,255,0.08)", borderRadius: "9999px", overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${row.width}%`, background: row.highlight ? GOLD : "rgba(255,255,255,0.4)", borderRadius: "9999px" }} />
+                    </div>
+                    <strong style={{ flexShrink: 0, width: "5.6rem", textAlign: "right", fontSize: "1.8rem", fontWeight: 800, color: row.highlight ? GOLD : "#fff" }}>{row.value}</strong>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {slide.kind === "stat" && (
+            <div style={{ textAlign: "center", marginBottom: "2.4rem" }}>
+              <p style={{ fontSize: "clamp(5.6rem, 12vw, 8rem)", fontWeight: 800, color: GOLD, lineHeight: 1, marginBottom: "1.2rem", textShadow: "0 0 6rem rgba(217,166,46,0.4)" }}>
+                {slide.stat}
+              </p>
+              <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.75)", maxWidth: "48rem", margin: "0 auto" }}>{slide.statLabel}</p>
+            </div>
+          )}
+
+          {slide.kind === "insight" && (
+            <p style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.85)", lineHeight: 1.6, textAlign: "center", maxWidth: "64rem", margin: "0 auto 2.4rem" }}>
+              {slide.body}
+            </p>
+          )}
+
+          <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.75)", textAlign: "center", maxWidth: "56rem", margin: "0 auto 3.2rem" }}>
+            {slide.caption}
+          </p>
+
+          <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.45)", textAlign: "center" }}>
+            Source: {slide.source}
+          </p>
+        </motion.div>
+      </AnimatePresence>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "2rem", marginTop: "4rem" }}>
+        <button
+          aria-label="Previous insight"
+          onClick={() => setIndex((i) => (i - 1 + RESEARCH_SLIDES.length) % RESEARCH_SLIDES.length)}
+          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "50%", width: "3.6rem", height: "3.6rem", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", flexShrink: 0 }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+        <div style={{ display: "flex", gap: "0.8rem" }}>
+          {RESEARCH_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              aria-label={`Show insight ${i + 1}`}
+              onClick={() => setIndex(i)}
+              style={{ width: i === index ? "2rem" : "0.8rem", height: "0.8rem", borderRadius: "9999px", background: i === index ? GOLD : "rgba(255,255,255,0.3)", border: "none", cursor: "pointer", transition: "width 0.25s, background 0.25s", padding: 0 }}
+            />
+          ))}
+        </div>
+        <button
+          aria-label="Next insight"
+          onClick={() => setIndex((i) => (i + 1) % RESEARCH_SLIDES.length)}
+          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "50%", width: "3.6rem", height: "3.6rem", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", flexShrink: 0 }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Illustrative anchor comparison (typical U.S. session pricing, not verified
 // quotes) — same pattern iMorph uses: separate specialist visits vs. one
 // Glowmetry payment. Disclaimed below the comparison, not presented as fact.
@@ -61,6 +210,41 @@ const BAR_DATA = [
   { label: "Below average", value: "-9%", width: (91 / 105) * 100, highlight: false },
   { label: "Average", value: "Baseline", width: (100 / 105) * 100, highlight: false },
   { label: "Above average", value: "+5%", width: 100, highlight: true },
+];
+
+// 3 research-backed slides instead of one — broadens who the section speaks
+// to (not just one demographic pictured at the top) by naming the actual
+// range of people this applies to directly in copy, and gives 3 different
+// real findings instead of repeating one. Auto-advances, but stays fully
+// operable via the dots/arrows for anyone who doesn't want to wait.
+type ResearchSlide =
+  | { kind: "bars"; title: string; tags: string[]; caption: string; source: string }
+  | { kind: "stat"; title: string; stat: string; statLabel: string; caption: string; source: string }
+  | { kind: "insight"; title: string; body: string; caption: string; source: string };
+
+const RESEARCH_SLIDES: ResearchSlide[] = [
+  {
+    kind: "bars",
+    title: "Presentation is a measurable business asset",
+    tags: ["Retail & mall staff", "Office & corporate", "Students & Gen Z"],
+    caption: "Hourly pay by perceived appearance, every occupation studied, no exceptions.",
+    source: "Hamermesh and Biddle, Beauty and the Labor Market, American Economic Review, NBER Working Paper No. 4518.",
+  },
+  {
+    kind: "stat",
+    title: "First impressions form before you say a word",
+    stat: "100ms",
+    statLabel: "How little time it takes to judge competence and trustworthiness from a face alone",
+    caption: "Behind a counter, on a sales floor, or on a video call, that snap judgment happens either way.",
+    source: "Todorov and Willis, Princeton University, published in Psychological Science.",
+  },
+  {
+    kind: "insight",
+    title: "Grooming shows up in who gets called back",
+    body: "In controlled hiring studies, candidates rated as well-groomed and put together received meaningfully more interview callbacks than equally qualified candidates rated lower, before a single word was exchanged.",
+    caption: "Not about looking a certain way, about showing up as your clearest, healthiest self, whoever you are.",
+    source: "Labor-economics \"beauty premium\" research literature, multiple studies.",
+  },
 ];
 
 const WHY_ITEMS = [
@@ -84,19 +268,19 @@ const WHY_ITEMS = [
 const TRUST_ITEMS = [
   {
     title: "No fake before-and-afters",
-    body: "Every score comes from your own photos, analyzed fresh by real AI vision each time, not a canned demo result.",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2h6l2 2h3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8z M12 17a4 4 0 100-8 4 4 0 000 8z" />,
   },
   {
     title: "Transparent pricing, always",
-    body: "The exact price is visible before you pay, every time. No subscription, no silent renewal, no surprise charge.",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 2l2.4 4.8 5.3.8-3.85 3.75.9 5.3L12 14.2l-4.75 2.45.9-5.3L4.3 7.6l5.3-.8z" />,
   },
   {
     title: "Your photos stay yours",
-    body: "Used only to generate your report. Never used to train AI models without separate, explicit consent you control.",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M6 10V7a6 6 0 1112 0v3M5 10h14a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1v-9a1 1 0 011-1z" />,
   },
   {
     title: "Grounded in real research",
-    body: "Our appearance-and-opportunity framing cites a peer-reviewed labor-economics study, not a claim we invented for marketing.",
+    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20 M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" />,
   },
 ];
 
@@ -230,6 +414,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <MarqueeStrip />
+
       {/* ── Report preview — the actual product, not a promised outcome ── */}
       <section style={{ padding: "8rem 3.2rem", position: "relative" }}>
         <div className="glowmetry-hero-grid" style={{ maxWidth: "108rem", margin: "0 auto", display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "5.6rem", alignItems: "center" }}>
@@ -305,39 +491,10 @@ export default function LandingPage() {
       <section style={{ padding: "8rem 3.2rem", background: "var(--primary)", position: "relative", overflow: "hidden" }}>
         <div aria-hidden style={{ position: "absolute", top: "-25%", right: "-10%", width: "48rem", height: "48rem", borderRadius: "50%", background: `radial-gradient(circle, ${GOLD} 0%, transparent 70%)`, opacity: 0.12, filter: "blur(60px)" }} />
         <div style={{ maxWidth: "108rem", margin: "0 auto", position: "relative" }}>
-          <div className="glowmetry-avatar-row" style={{ display: "flex", justifyContent: "center", gap: "1rem", marginBottom: "3.2rem" }}>
-            {["/images/skincare-portraits/portrait-deep-brown.png", "/images/skincare-portraits/portrait-light-freckled.png", "/images/skincare-portraits/portrait-olive-brown.png"].map((src) => (
-              <div key={src} style={{ position: "relative", width: "5.6rem", height: "5.6rem", borderRadius: "50%", overflow: "hidden", border: "2px solid rgba(255,255,255,0.2)" }}>
-                <Image src={src} alt="" fill sizes="56px" style={{ objectFit: "cover" }} />
-              </div>
-            ))}
-          </div>
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             The research
           </p>
-          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "#fff", textAlign: "center", lineHeight: 1.2, maxWidth: "60rem", margin: "0 auto 5.6rem" }}>
-            Presentation is a measurable business asset
-          </h2>
-
-          <div style={{ maxWidth: "64rem", margin: "0 auto 2.4rem" }}>
-            {BAR_DATA.map((row) => (
-              <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "1.6rem", marginBottom: "2rem" }}>
-                <span style={{ flexShrink: 0, width: "13rem", fontSize: "1.3rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{row.label}</span>
-                <div style={{ flex: 1, height: "1.6rem", background: "rgba(255,255,255,0.08)", borderRadius: "9999px", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${row.width}%`, background: row.highlight ? GOLD : "rgba(255,255,255,0.4)", borderRadius: "9999px" }} />
-                </div>
-                <strong style={{ flexShrink: 0, width: "5.6rem", textAlign: "right", fontSize: "1.8rem", fontWeight: 800, color: row.highlight ? GOLD : "#fff" }}>{row.value}</strong>
-              </div>
-            ))}
-          </div>
-
-          <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.75)", textAlign: "center", maxWidth: "56rem", margin: "0 auto 3.2rem" }}>
-            Hourly pay by perceived appearance, every occupation studied, no exceptions.
-          </p>
-
-          <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.45)", textAlign: "center" }}>
-            Source: Hamermesh and Biddle, Beauty and the Labor Market, American Economic Review, NBER Working Paper No. 4518.
-          </p>
+          <ResearchSlider />
         </div>
         <WaveDivider fill="var(--canvas)" variant={1} flip />
       </section>
@@ -394,29 +551,29 @@ export default function LandingPage() {
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
             Why trust this
           </p>
-          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "5.6rem" }}>
+          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", lineHeight: 1.15, marginBottom: "3.6rem" }}>
             No fake reviews. Just what&apos;s actually true.
           </h2>
-          <Carousel>
+          <div className="glowmetry-trust-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem" }}>
             {TRUST_ITEMS.map((item, i) => (
               <motion.div
                 key={item.title}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                whileHover={{ y: -4 }}
+                transition={{ duration: 0.4, delay: i * 0.06 }}
                 style={{
-                  flex: "0 0 27rem", scrollSnapAlign: "start", background: "var(--canvas)",
-                  borderTop: `0.4rem solid ${ACCENTS[(i + 1) % ACCENTS.length]}`, borderRadius: "1.6rem", padding: "3.2rem",
-                  boxShadow: "0 1.2rem 2.4rem -1.2rem rgba(0,57,52,0.18)",
+                  display: "flex", alignItems: "center", gap: "1.2rem", background: "var(--canvas)",
+                  borderLeft: `0.3rem solid ${ACCENTS[(i + 1) % ACCENTS.length]}`, borderRadius: "1rem", padding: "1.4rem 1.6rem",
                 }}
               >
-                <h3 style={{ fontSize: "1.9rem", fontWeight: 500, color: "var(--primary)", marginBottom: "1rem" }}>{item.title}</h3>
-                <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.6 }}>{item.body}</p>
+                <span style={{ flexShrink: 0, width: "3.2rem", height: "3.2rem", borderRadius: "50%", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ACCENTS[(i + 1) % ACCENTS.length]} strokeWidth="1.8">{item.icon}</svg>
+                </span>
+                <h3 style={{ fontSize: "1.35rem", fontWeight: 600, color: "var(--primary)", lineHeight: 1.25, margin: 0 }}>{item.title}</h3>
               </motion.div>
             ))}
-          </Carousel>
+          </div>
         </div>
         <WaveDivider fill="var(--primary)" variant={2} />
       </section>
@@ -650,6 +807,23 @@ export default function LandingPage() {
         }
         @media (max-width: 700px) {
           .glowmetry-pricing-compare { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .glowmetry-research-tags { gap: 0.6rem !important; }
+        }
+        @media (max-width: 400px) {
+          .glowmetry-trust-grid h3 { font-size: 1.2rem !important; }
+        }
+        .glowmetry-marquee-track { animation: glowmetry-marquee-scroll 32s linear infinite; }
+        .glowmetry-marquee:hover .glowmetry-marquee-track { animation-play-state: paused; }
+        @keyframes glowmetry-marquee-scroll {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .glowmetry-marquee-track { animation: none !important; }
+          .glowmetry-marquee { overflow-x: auto !important; }
+          .glowmetry-marquee-dup { display: none !important; }
         }
         @media (max-width: 600px) {
           .glowmetry-cta-banner { flex-direction: column !important; align-items: stretch !important; }

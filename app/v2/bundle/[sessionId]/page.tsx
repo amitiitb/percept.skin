@@ -59,13 +59,22 @@ export default function V2BundlePage() {
   const [payError, setPayError] = useState("");
 
   // Doctor Consultation — separate paid tier, own PayPal button + state,
-  // independent of the report-module purchase above.
+  // independent of the report-module purchase above (unless purchasePath is
+  // "combo", see comboButtonRef below).
   const [consultPhone, setConsultPhone] = useState("");
   const [consultPayState, setConsultPayState] = useState<PayState | "success">("idle");
   const [consultPayError, setConsultPayError] = useState("");
+  // PayPal's createOrder callback closes over whatever `consultPhone` was at
+  // render time, so a phone typed after the button rendered would otherwise
+  // be silently dropped from the order — read the ref instead for the real
+  // current value regardless of when the button instance was created.
+  const consultPhoneRef = useRef("");
 
   const buttonRef = useRef<HTMLDivElement>(null);
   const consultButtonRef = useRef<HTMLDivElement>(null);
+  // Combined report + consultation checkout — one PayPal order/capture
+  // instead of the two sequential charges the "combo" path used to require.
+  const comboButtonRef = useRef<HTMLDivElement>(null);
   const scriptLoadedRef = useRef(false);
   const analysisKickedRef = useRef(false);
   const analysisReadyRef = useRef(false);
@@ -160,10 +169,10 @@ export default function V2BundlePage() {
     scriptLoadedRef.current = true;
     const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
     if (!clientId) return;
-    if (window.paypal) { renderButton(); renderConsultButton(); return; }
+    if (window.paypal) { renderButton(); renderConsultButton(); renderComboButton(); return; }
     const script = document.createElement("script");
     script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
-    script.onload = () => { renderButton(); renderConsultButton(); };
+    script.onload = () => { renderButton(); renderConsultButton(); renderComboButton(); };
     document.body.appendChild(script);
   }, [authChecked]);
 
@@ -173,6 +182,10 @@ export default function V2BundlePage() {
     if (window.paypal && buttonRef.current) {
       buttonRef.current.innerHTML = "";
       renderButton();
+    }
+    if (window.paypal && comboButtonRef.current) {
+      comboButtonRef.current.innerHTML = "";
+      renderComboButton();
     }
   }, [selected]);
 
@@ -232,7 +245,7 @@ export default function V2BundlePage() {
         const res = await fetch("/api/v2/consultation/create-order", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-          body: JSON.stringify({ sessionId, contactPhone: consultPhone || undefined }),
+          body: JSON.stringify({ sessionId, contactPhone: consultPhoneRef.current || undefined }),
         });
         if (!res.ok) { setConsultPayState("failed"); setConsultPayError("Payment service unavailable, try again shortly"); throw new Error("create-order failed"); }
         const data = await res.json() as { orderId: string };
@@ -263,6 +276,53 @@ export default function V2BundlePage() {
       onCancel: () => setConsultPayState("cancelled"),
       onError: () => { setConsultPayError("Payment service unavailable, try again shortly"); setConsultPayState("failed"); },
     }).render(consultButtonRef.current);
+  }
+
+  // Combined checkout: one PayPal order for report + consultation together,
+  // one capture writes both report_purchases_v2 and doctor_consultations_v2.
+  function renderComboButton() {
+    if (!window.paypal || !comboButtonRef.current) return;
+    window.paypal.Buttons({
+      createOrder: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error("Please log in again.");
+        const res = await fetch("/api/v2/report-purchase/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ sessionId, modules: [...selected], includeConsultation: true, contactPhone: consultPhoneRef.current || undefined }),
+        });
+        if (!res.ok) { setPayState("failed"); setPayError("Payment service unavailable, try again shortly"); throw new Error("create-order failed"); }
+        const data = await res.json() as { orderId: string };
+        return data.orderId;
+      },
+      onApprove: async (data: { orderID: string }) => {
+        setPayState("confirming");
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) throw new Error("Not authenticated");
+          const res = await fetch("/api/v2/report-purchase/capture", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ orderId: data.orderID }),
+          });
+          if (!res.ok) {
+            const body = await res.json() as { error?: string };
+            setPayError(body.error ?? "We couldn't verify this payment.");
+            setPayState("failed");
+            return;
+          }
+          for (let i = 0; i < 20 && !analysisReadyRef.current; i++) {
+            await new Promise((r) => setTimeout(r, 500));
+          }
+          setPayState("success");
+        } catch {
+          setPayError("We couldn't verify this payment. Contact support if you were charged.");
+          setPayState("failed");
+        }
+      },
+      onCancel: () => setPayState("cancelled"),
+      onError: () => { setPayError("Payment service unavailable, try again shortly"); setPayState("failed"); },
+    }).render(comboButtonRef.current);
   }
 
   function toggleModule(id: ModuleId) {
@@ -342,7 +402,9 @@ export default function V2BundlePage() {
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.4 }}
               style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.7)", textAlign: "center", marginBottom: "4rem", maxWidth: "44rem" }}
             >
-              Your Complete Beauty Report is ready to view.
+              {purchasePath === "combo"
+                ? "Your report is ready, and our team will reach out about your consultation within 24 hours."
+                : "Your Complete Beauty Report is ready to view."}
             </motion.p>
 
             <motion.button
@@ -459,13 +521,13 @@ export default function V2BundlePage() {
 
         {purchasePath === "combo" && (
           <p style={{ fontSize: "1.3rem", color: "var(--muted)", textAlign: "center", marginTop: "-2rem", marginBottom: "3.2rem" }}>
-            Two separate charges below: the report, then the consultation.
+            One payment covers both, the report and the consultation.
           </p>
         )}
 
         <div style={{ display: purchasePath === "report" || purchasePath === "combo" ? "block" : "none" }}>
         {purchasePath === "combo" && (
-          <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Step 1 · Report</p>
+          <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Report modules</p>
         )}
         {/* ── Premium bundle card ── */}
         <motion.button
@@ -580,23 +642,27 @@ export default function V2BundlePage() {
           <strong style={{ fontSize: "2.8rem", fontWeight: 300, color: "var(--primary)" }}>${price}</strong>
         </div>
 
-        {payState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{payError}</p>}
-        {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
-        {payState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
+        {purchasePath === "report" && (
+          <>
+            {payState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{payError}</p>}
+            {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
+            {payState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
 
-        <div style={{ opacity: payState === "confirming" ? 0.4 : 1, pointerEvents: payState === "confirming" ? "none" : "auto" }}>
-          <div ref={buttonRef} />
-        </div>
+            <div style={{ opacity: payState === "confirming" ? 0.4 : 1, pointerEvents: payState === "confirming" ? "none" : "auto" }}>
+              <div ref={buttonRef} />
+            </div>
 
-        <p style={{ fontSize: "1.2rem", color: "var(--muted)", textAlign: "center", marginTop: "2.4rem" }}>
-          Sandbox mode · no real charge · secure checkout via PayPal
-        </p>
+            <p style={{ fontSize: "1.2rem", color: "var(--muted)", textAlign: "center", marginTop: "2.4rem" }}>
+              Sandbox mode · no real charge · secure checkout via PayPal
+            </p>
+          </>
+        )}
         </div>
 
         {/* ── Doctor Consultation — separate paid tier, not part of the report bundle ── */}
         <div style={{ display: purchasePath === "consultation" || purchasePath === "combo" ? "block" : "none", marginTop: purchasePath === "combo" ? "3.6rem" : 0 }}>
         {purchasePath === "combo" && (
-          <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem", textAlign: "center" }}>Step 2 · Consultation</p>
+          <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem", textAlign: "center" }}>Consultation details</p>
         )}
         <div style={{ paddingTop: purchasePath === "combo" ? 0 : "4rem", borderTop: purchasePath === "combo" ? "none" : "1px solid var(--line)" }}>
           {purchasePath !== "combo" && (
@@ -610,7 +676,7 @@ export default function V2BundlePage() {
               A certified dermatologist reviews your case and follows up directly. No AI, a real person. We&apos;ll contact you within 24 hours after payment.
             </p>
 
-            {consultPayState === "success" ? (
+            {consultPayState === "success" && purchasePath === "consultation" ? (
               <div style={{ background: "var(--wash)", borderRadius: "1.2rem", padding: "2rem", textAlign: "center" }}>
                 <p style={{ fontSize: "1.6rem", color: "var(--primary)", fontWeight: 500, margin: "0 0 0.4rem" }}>Confirmed</p>
                 <p style={{ fontSize: "1.4rem", color: "var(--secondary)", margin: 0 }}>Our team will contact you within 24 hours.</p>
@@ -621,7 +687,7 @@ export default function V2BundlePage() {
                 <input
                   type="tel"
                   value={consultPhone}
-                  onChange={(e) => setConsultPhone(e.target.value)}
+                  onChange={(e) => { setConsultPhone(e.target.value); consultPhoneRef.current = e.target.value; }}
                   placeholder="+1 555 000 0000"
                   style={{ width: "100%", padding: "1.2rem 1.6rem", fontSize: "1.5rem", border: "1px solid var(--line)", borderRadius: "0.8rem", marginBottom: "2rem", background: "var(--canvas)", color: "var(--primary)" }}
                 />
@@ -631,18 +697,46 @@ export default function V2BundlePage() {
                   <strong style={{ fontSize: "2.4rem", fontWeight: 300, color: "var(--primary)" }}>${DOCTOR_CONSULTATION_PRICE}</strong>
                 </div>
 
-                {consultPayState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{consultPayError}</p>}
-                {consultPayState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
-                {consultPayState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
+                {purchasePath === "consultation" && (
+                  <>
+                    {consultPayState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{consultPayError}</p>}
+                    {consultPayState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
+                    {consultPayState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
 
-                <div style={{ opacity: consultPayState === "confirming" ? 0.4 : 1, pointerEvents: consultPayState === "confirming" ? "none" : "auto" }}>
-                  <div ref={consultButtonRef} />
-                </div>
+                    <div style={{ opacity: consultPayState === "confirming" ? 0.4 : 1, pointerEvents: consultPayState === "confirming" ? "none" : "auto" }}>
+                      <div ref={consultButtonRef} />
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>
         </div>
         </div>
+
+        {/* ── Combined checkout — one PayPal order/capture for report + consultation together ── */}
+        {purchasePath === "combo" && (
+          <div style={{ marginTop: "3.6rem" }}>
+            <div style={{ background: "var(--wash)", borderRadius: "1.2rem", padding: "2rem 2.4rem", marginBottom: "2.4rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
+              <div>
+                <p style={{ fontSize: "1.4rem", color: "var(--secondary)", margin: 0 }}>Report ({selected.size} of {MODULES.length} modules) + consultation</p>
+              </div>
+              <strong style={{ fontSize: "2.8rem", fontWeight: 300, color: "var(--primary)" }}>${price + DOCTOR_CONSULTATION_PRICE}</strong>
+            </div>
+
+            {payState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{payError}</p>}
+            {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
+            {payState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
+
+            <div style={{ opacity: payState === "confirming" ? 0.4 : 1, pointerEvents: payState === "confirming" ? "none" : "auto" }}>
+              <div ref={comboButtonRef} />
+            </div>
+
+            <p style={{ fontSize: "1.2rem", color: "var(--muted)", textAlign: "center", marginTop: "2.4rem" }}>
+              Sandbox mode · no real charge · secure checkout via PayPal
+            </p>
+          </div>
+        )}
       </div>
       <style>{`
         @media (max-width: 480px) {

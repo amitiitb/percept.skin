@@ -1,28 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { createCustomOrder } from "@/lib/v2/paypal";
-import { MODULES, priceFor, type ModuleId } from "@/lib/v2/reportModules";
+import { MODULES, priceFor, DOCTOR_CONSULTATION_PRICE, type ModuleId } from "@/lib/v2/reportModules";
 import { logV2 } from "@/lib/v2/log";
 
 export async function POST(req: NextRequest) {
   const auth = await verifySupabaseUser(req);
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { sessionId, modules } = await req.json() as { sessionId?: string; modules?: ModuleId[] };
+  const { sessionId, modules, includeConsultation, contactPhone } = await req.json() as {
+    sessionId?: string; modules?: ModuleId[]; includeConsultation?: boolean; contactPhone?: string;
+  };
   if (!sessionId || !modules?.length) return NextResponse.json({ error: "sessionId and at least one module are required" }, { status: 400 });
 
   const validIds = new Set(MODULES.map((m) => m.id));
   if (!modules.every((m) => validIds.has(m))) return NextResponse.json({ error: "Invalid module selection" }, { status: 400 });
 
-  const amount = priceFor(modules);
-  // custom_id round-trips user + session + module selection so capture doesn't
-  // have to trust a second client-supplied payload — same defense-in-depth
-  // pattern as the subscription order flow.
-  const customId = `${auth.userId}|${sessionId}|${modules.join(",")}`;
+  const reportAmount = priceFor(modules);
+  const amount = reportAmount + (includeConsultation ? DOCTOR_CONSULTATION_PRICE : 0);
+  // custom_id round-trips user + session + module selection + (optionally) the
+  // combined-purchase consultation flag/phone, so capture doesn't have to trust
+  // a second client-supplied payload — same defense-in-depth pattern as the
+  // subscription order flow. "0"/"-" keep the pipe-delimited shape stable when
+  // a combo purchase wasn't requested (plain report-only order).
+  const customId = `${auth.userId}|${sessionId}|${modules.join(",")}|${includeConsultation ? "1" : "0"}|${contactPhone ?? "-"}`;
 
   try {
-    const { orderId } = await createCustomOrder(amount, `Glowmetry Report: ${modules.length === MODULES.length ? "Complete Bundle" : modules.join(", ")}`, customId);
-    logV2.info("v2_report_purchase_order_created", { user_id: auth.userId, session_id: sessionId, modules: modules.join(","), amount, order_id: orderId });
+    const description = `Glowmetry Report: ${modules.length === MODULES.length ? "Complete Bundle" : modules.join(", ")}${includeConsultation ? " + Doctor Consultation" : ""}`;
+    const { orderId } = await createCustomOrder(amount, description, customId);
+    logV2.info("v2_report_purchase_order_created", { user_id: auth.userId, session_id: sessionId, modules: modules.join(","), amount, include_consultation: !!includeConsultation, order_id: orderId });
     return NextResponse.json({ orderId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
