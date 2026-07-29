@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { SuitsYouDraping, AvoidDraping } from "@/components/v2/ColourDraping";
+import { ColourGrid } from "@/components/v2/ColourGrid";
 import type { ColourAnalysis, ColourSwatch } from "@/lib/v2/types";
 
 interface Props {
@@ -127,17 +127,10 @@ export default function ColourAnalysisPanel({ sessionId, photo, initialAnalysis 
         </div>
       </Section>
 
-      {/* ── Colours that suit you (draped) ── */}
-      <Section number={++sn} title="How These Colours Look On You" subtitle={`Your ${analysis.sub_season} palette, draped on your own photo.`}>
-        <SuitsYouDraping photo={photo} analysis={analysis} />
+      {/* ── Colours that suit you: one real generated image, not a CSS tint ── */}
+      <Section number={++sn} title="How These Colours Look On You" subtitle={`Your ${analysis.sub_season} palette, on your own photo.`}>
+        <ColourGrid sessionId={sessionId} photo={photo} analysis={analysis} />
       </Section>
-
-      {/* ── Colours to avoid (draped) ── */}
-      {analysis.worst_colours.length > 0 && (
-        <Section number={++sn} title="Colours To Avoid On You" subtitle="These tones tend to wash you out or fight your natural colouring.">
-          <AvoidDraping photo={photo} analysis={analysis} />
-        </Section>
-      )}
 
       {/* ── Best colours to wear — swatch reference ── */}
       <Section number={++sn} title="Best Colours to Wear">

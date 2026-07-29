@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 interface Props {
   sessionId: string;
@@ -9,47 +10,45 @@ interface Props {
   onRequirePremium: () => void;
 }
 
-// Five options spanning short to long so there is a realistic choice for any
-// starting hair length, rather than four that skew long.
-const STYLES = [
-  { name: "Long Layers", prompt: "long layered hair with soft waves" },
-  { name: "Textured Bob", prompt: "a chin-length textured bob haircut" },
-  { name: "Curtain Bangs", prompt: "hair with soft curtain bangs framing the face" },
-  { name: "Blunt Lob", prompt: "a blunt shoulder-length lob with a sharp, even hemline" },
-  { name: "Buzz Cut", prompt: "a short, clean buzz cut" },
+// One generated grid instead of a style-picker that billed a separate
+// generation per tap. Same reasoning as the colour grid: cheaper, one wait
+// instead of five, and every panel is lit and framed identically.
+const STYLE_LABELS = ["Long layers", "Textured bob", "Curtain bangs", "Blunt lob", "Pixie cut"];
+
+// Short, practical guidance. Deliberately brief: the report already carries
+// the scored hair metrics and their reference material, so this is the
+// "what do I actually do" layer, not another wall of explanation.
+const CARE_TIPS: Array<{ heading: string; body: string }> = [
+  { heading: "Wash", body: "Two to three times a week for most hair types. Daily washing strips the natural oils that protect the lengths." },
+  { heading: "Heat", body: "The single biggest cause of visible damage. Use heat protection every time, and keep tools below 180C." },
+  { heading: "Condition", body: "Through the mid-lengths and ends, not the scalp. Conditioner on the roots flattens volume and can clog follicles." },
+  { heading: "Handle wet hair gently", body: "Hair is at its weakest when wet. Blot rather than rub, and use a wide-tooth comb instead of a brush." },
+  { heading: "If density is dropping", body: "Act early, hair responds far better to early intervention. Check iron and vitamin D, avoid tight styles that pull on the hairline, and see a dermatologist rather than guessing with topicals." },
+  { heading: "Trim", body: "Every eight to twelve weeks. Split ends travel upward and cannot be repaired once they start." },
 ];
 
-type GenState = "idle" | "loading" | "done" | "error";
-
-// New feature (Cherry-pick 3/4) — no existing code to port. Gated behind an
-// explicit tap per style (never auto-generates) since each call is a real,
-// billed Gemini generation.
 export default function HairstylePanel({ sessionId, photo, isPremium, onRequirePremium }: Props) {
   const supabase = createClient();
-  const [active, setActive] = useState<string | null>(null);
-  const [state, setState] = useState<GenState>("idle");
-  const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
+  const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
 
-  async function tryStyle(styleName: string, stylePrompt: string) {
+  async function generate() {
     if (!isPremium) { onRequirePremium(); return; }
     if (!photo) { setError("No photo available for this scan."); return; }
-    setActive(styleName);
-    setState("loading");
-    setError("");
-    setResultUrl(null);
+    setState("loading"); setError("");
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Please log in again.");
-      const res = await fetch("/api/hairstyle/generate", {
+      const res = await fetch("/api/hairstyle/grid", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ sessionId, styleName, stylePrompt, photoDataUrl: photo }),
+        body: JSON.stringify({ sessionId, photoDataUrl: photo }),
       });
-      const body = await res.json() as { imageUrl?: string; error?: string };
-      if (!res.ok) throw new Error(body.error ?? "Style generation failed");
-      setResultUrl(body.imageUrl ?? null);
-      setState("done");
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? "Could not generate your hairstyle previews");
+      setUrl(body.url);
+      setState("idle");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setState("error");
@@ -57,45 +56,42 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
   }
 
   return (
-    <div style={{ borderTop: "1px solid var(--line)", paddingTop: "4rem", marginTop: "3.2rem" }}>
-      <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.8rem" }}>Try a Hairstyle</h2>
-      <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2.4rem", lineHeight: 1.5 }}>
-        See an AI-generated preview of a new style on your own photo. Illustrative only, actual results vary by stylist.
+    <div style={{ marginTop: "4rem", paddingTop: "4rem", borderTop: "1px solid var(--line)" }}>
+      <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.8rem" }}>Hairstyles For You</h2>
+      <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "2.4rem" }}>
+        {STYLE_LABELS.join(" · ")}, previewed on your own photo. Illustrative only, actual results vary by stylist.
       </p>
 
-      <div style={{ display: "flex", gap: "1.2rem", flexWrap: "wrap", marginBottom: "2.4rem" }}>
-        {STYLES.map((s) => (
-          <button
-            key={s.name}
-            onClick={() => tryStyle(s.name, s.prompt)}
-            disabled={state === "loading" && active === s.name}
-            style={{
-              padding: "1.2rem 2rem", borderRadius: "9999px", fontSize: "1.4rem", fontWeight: 500,
-              border: `1px solid ${active === s.name ? "var(--primary)" : "var(--line)"}`,
-              background: active === s.name ? "var(--primary)" : "var(--canvas)",
-              color: active === s.name ? "#fff" : "var(--secondary)",
-              cursor: "pointer",
-            }}
-          >
-            {state === "loading" && active === s.name ? "Generating…" : s.name}
-          </button>
-        ))}
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="Hairstyle previews on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block", marginBottom: "3.2rem" }} />
+      ) : (
+        <div style={{ textAlign: "center", padding: "1.2rem 0 3.2rem" }}>
+          {state === "error" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>}
+          <PrimaryButton fullWidth={false} onClick={generate} loading={state === "loading"} disabled={!photo}>
+            {state === "loading" ? "Generating your styles…" : "Show these styles on me →"}
+          </PrimaryButton>
+          {state === "loading" && (
+            <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1.2rem" }}>This takes around 15 seconds.</p>
+          )}
+        </div>
+      )}
+
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem 3.2rem" }}>
+        <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 1.8rem" }}>
+          Looking after your hair
+        </p>
+        <div className="v2-care-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.8rem 3.2rem" }}>
+          {CARE_TIPS.map((t) => (
+            <div key={t.heading}>
+              <p style={{ fontSize: "1.4rem", fontWeight: 600, color: "var(--primary)", margin: "0 0 0.4rem" }}>{t.heading}</p>
+              <p style={{ fontSize: "1.35rem", color: "var(--secondary)", lineHeight: 1.55, margin: 0 }}>{t.body}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {error && <p style={{ color: "var(--rose)", fontSize: "1.4rem", marginBottom: "1.6rem" }}>{error}</p>}
-
-      {state === "loading" && (
-        <div style={{ background: "var(--wash)", borderRadius: "1.2rem", padding: "6rem 2rem", textAlign: "center" }}>
-          <p style={{ fontSize: "1.5rem", color: "var(--secondary)" }}>Generating your {active} preview, this takes a few seconds…</p>
-        </div>
-      )}
-
-      {state === "done" && resultUrl && (
-        <div style={{ maxWidth: "40rem" }}>
-          <img src={resultUrl} alt={`${active} preview`} style={{ width: "100%", borderRadius: "1.2rem", border: "1px solid var(--line)" }} />
-          <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1rem" }}>AI-generated preview: {active}</p>
-        </div>
-      )}
+      <style>{`@media (max-width: 700px) { .v2-care-grid { grid-template-columns: 1fr !important; } }`}</style>
     </div>
   );
 }
