@@ -16,6 +16,12 @@ export async function POST(req: NextRequest) {
   const validIds = new Set(MODULES.map((m) => m.id));
   if (!modules.every((m) => validIds.has(m))) return NextResponse.json({ error: "Invalid module selection" }, { status: 400 });
 
+  // Same rule as the standalone consultation order: if this purchase includes
+  // a consultation, a reachable phone number is mandatory before charging.
+  if (includeConsultation && (!contactPhone || contactPhone.trim().length < 6)) {
+    return NextResponse.json({ error: "A phone number is required so the dermatologist can reach you" }, { status: 400 });
+  }
+
   const reportAmount = priceFor(modules);
   const amount = reportAmount + (includeConsultation ? DOCTOR_CONSULTATION_PRICE : 0);
   // custom_id round-trips user + session + module selection + (optionally) the

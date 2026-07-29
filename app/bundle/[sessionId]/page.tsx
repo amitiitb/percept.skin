@@ -123,6 +123,9 @@ export default function V2BundlePage() {
   const analysisReadyRef = useRef(false);
 
   const isBundle = selected.size === MODULES.length;
+  // Mirrors the server-side check in both create-order routes, so the PayPal
+  // button is never clickable in a state the server will reject.
+  const phoneValid = consultPhone.trim().length >= 6;
   const price = priceFor([...selected]);
 
   // Auth + existing-purchase guard — don't let a user pay twice for the same session.
@@ -715,7 +718,9 @@ export default function V2BundlePage() {
               </div>
             ) : (
               <>
-                <label style={{ display: "block", fontSize: "1.3rem", color: "var(--muted)", marginBottom: "0.6rem" }}>Phone number (optional, for follow-up)</label>
+                <label style={{ display: "block", fontSize: "1.3rem", color: "var(--muted)", marginBottom: "0.6rem" }}>
+                  Phone number <span style={{ color: "var(--rose)" }}>*</span> so the dermatologist can reach you
+                </label>
                 <input
                   type="tel"
                   value={consultPhone}
@@ -734,7 +739,19 @@ export default function V2BundlePage() {
                     {consultPayState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
                     {consultPayState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
 
-                    <div style={{ opacity: consultPayState === "confirming" ? 0.4 : 1, pointerEvents: consultPayState === "confirming" ? "none" : "auto" }}>
+                    {!phoneValid && (
+                      <p style={{ fontSize: "1.3rem", color: "var(--muted)", textAlign: "center", marginBottom: "1.2rem" }}>
+                        Enter your phone number above to continue.
+                      </p>
+                    )}
+                    {/* Gated rather than left clickable: the server rejects a
+                        consultation order without a phone, and hitting that
+                        error inside the PayPal popup is a confusing place to
+                        discover a missing field. */}
+                    <div style={{
+                      opacity: consultPayState === "confirming" || !phoneValid ? 0.4 : 1,
+                      pointerEvents: consultPayState === "confirming" || !phoneValid ? "none" : "auto",
+                    }}>
                       <div ref={consultButtonRef} />
                     </div>
                   </>
@@ -759,7 +776,15 @@ export default function V2BundlePage() {
             {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
             {payState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
 
-            <div style={{ opacity: payState === "confirming" ? 0.4 : 1, pointerEvents: payState === "confirming" ? "none" : "auto" }}>
+            {!phoneValid && (
+              <p style={{ fontSize: "1.3rem", color: "var(--muted)", textAlign: "center", marginBottom: "1.2rem" }}>
+                Enter your phone number in the consultation section above to continue.
+              </p>
+            )}
+            <div style={{
+              opacity: payState === "confirming" || !phoneValid ? 0.4 : 1,
+              pointerEvents: payState === "confirming" || !phoneValid ? "none" : "auto",
+            }}>
               <div ref={comboButtonRef} />
             </div>
 

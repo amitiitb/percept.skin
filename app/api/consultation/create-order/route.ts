@@ -10,6 +10,13 @@ export async function POST(req: NextRequest) {
 
   const { sessionId, contactPhone } = await req.json() as { sessionId?: string; contactPhone?: string };
 
+  // Enforced server-side, not only in the form: a paid consultation with no
+  // phone number is a lead nobody can act on, and by capture time the user has
+  // already been charged.
+  if (!contactPhone || contactPhone.trim().length < 6) {
+    return NextResponse.json({ error: "A phone number is required so the dermatologist can reach you" }, { status: 400 });
+  }
+
   // custom_id round-trips user + session + phone so capture doesn't have to
   // trust a second client-supplied payload — same pattern as report-purchase.
   // "-" placeholders keep the pipe-delimited shape stable when a field is absent.

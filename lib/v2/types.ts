@@ -23,17 +23,20 @@ export interface UserProfileV2 {
   consentGiven: boolean;
 }
 
-// 7 guided capture steps — 4 face + 3 hair/scalp, phase-grouped (Design review Decision #13).
+// 6 guided capture steps — 4 face + 2 hair/scalp, phase-grouped (Design review Decision #13).
 // Face trimmed from 9 to 4 (front/left/right + one combined close-up) — the
 // 5 separate close-ups (forehead/eyes/nose/chin) traded capture friction for
 // per-metric framing precision that isn't worth it pre-launch; a single
 // close-up still covers pore/redness/under-eye detail a wide shot misses.
-// Hair trimmed from 6 to 3 (scalp_top + crown merged into scalp_crown; left/right
-// temple folded into one hairline_front shot) — scalp_top/crown originally used
-// the rear camera, which faces away from the user and can't line up with the
-// on-screen framing oval; every step is front camera now, and one shot per
-// area (hairline+temples, top+crown, parting) still covers density, hairline
-// pattern, scalp visibility, and part width without the extra capture friction.
+// Hair trimmed from 6 to 2 (scalp_top + crown merged into scalp_crown; left/right
+// temple folded into one hairline_front shot; the parting close-up dropped as
+// redundant with the crown angle) — scalp_top/crown originally used the rear
+// camera, which faces away from the user and can't line up with the on-screen
+// framing oval; every step is front camera now.
+//
+// hair_parting stays in this union deliberately: it is no longer captured, but
+// sessions recorded before the change still have those photos, and the report
+// and AI context must keep rendering them.
 export type PhotoType =
   | "face_front" | "face_left" | "face_right" | "face_detail"
   | "hairline_front" | "scalp_crown" | "hair_parting";

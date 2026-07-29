@@ -6,6 +6,7 @@ import { captureOrderRaw } from "@/lib/v2/paypal";
 import { priceFor, DOCTOR_CONSULTATION_PRICE, type ModuleId } from "@/lib/v2/reportModules";
 import { logV2 } from "@/lib/v2/log";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
+import { sendConsultationLead } from "@/lib/v2/consultationLead";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -118,6 +119,14 @@ export async function POST(req: NextRequest) {
       if (consultErr) {
         logV2.error("v2_combo_consultation_write_failed", { user_id: auth.userId, session_id: sessionId, order_id: orderId, message: consultErr.message });
       }
+      // A combo buyer is a paid consultation lead too, and previously nothing
+      // told anyone about it, so the report email went out while the promised
+      // callback had no owner.
+      await sendConsultationLead({
+        supabase, userId: auth.userId, sessionId,
+        contactPhone: contactPhoneRaw && contactPhoneRaw !== "-" ? contactPhoneRaw : null,
+        amountPaid: DOCTOR_CONSULTATION_PRICE, orderId,
+      });
     }
 
     logV2.info("v2_report_purchase_completed", { user_id: auth.userId, session_id: sessionId, modules: modules.join(","), amount, include_consultation: includeConsultation });

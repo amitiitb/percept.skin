@@ -7,10 +7,14 @@ const FACE_STEPS: Array<[PhotoType, string, string]> = [
   ["face_detail", "Close-up", "Move closer so your forehead, eyes, nose, and cheeks fill the frame"],
 ];
 
+// Two hair shots, not three. The parting close-up was dropped: it largely
+// duplicated what the crown shot already covers (part width and scalp
+// visibility both read from the crown angle), and it was the step most likely
+// to be captured badly, since it needs an awkward one-handed overhead angle
+// on an area the user cannot see while framing.
 const HAIR_STEPS: Array<[PhotoType, string, string]> = [
   ["hairline_front", "Hairline & temples", "Show your front hairline and both temples clearly"],
   ["scalp_crown", "Top & crown", "Hold your phone above your head and tilt it down to show the top and crown of your scalp"],
-  ["hair_parting", "Hair parting close-up", "Show your natural hair parting up close"],
 ];
 
 export const CAPTURE_STEPS: CaptureStepDef[] = [

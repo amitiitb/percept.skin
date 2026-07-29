@@ -5,6 +5,7 @@ import { captureOrderRaw } from "@/lib/v2/paypal";
 import { DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 import { logV2 } from "@/lib/v2/log";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
+import { sendConsultationLead } from "@/lib/v2/consultationLead";
 
 function serviceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -56,6 +57,15 @@ export async function POST(req: NextRequest) {
       provider_order_id: orderId,
     }, { onConflict: "provider_order_id" });
     if (error) throw error;
+
+    // Hand the lead to a human. Awaited but internally guarded, so a mail
+    // failure logs loudly without failing a capture whose money already moved.
+    await sendConsultationLead({
+      supabase, userId: auth.userId,
+      sessionId: sessionIdRaw === "-" ? null : sessionIdRaw,
+      contactPhone: contactPhoneRaw === "-" ? null : contactPhoneRaw,
+      amountPaid: DOCTOR_CONSULTATION_PRICE, orderId,
+    });
 
     logV2.info("v2_consultation_completed", { user_id: auth.userId, order_id: orderId });
     return NextResponse.json({ status: "complete" });
