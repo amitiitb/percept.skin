@@ -150,6 +150,24 @@ export function generateColourGrid(photoDataUrl: string, colourNames: string[]) 
   );
 }
 
+// Frames need more prompt weight than colour or hair: the model will happily
+// return the same silhouette five times, or float the frame off the face, so
+// the distinctness and fit requirements are stated explicitly. The existing
+// per-frame route stays for users who want to try one style at a time.
+export function generateFrameGrid(photoDataUrl: string, frameNames: string[]) {
+  return generateImageEdit(
+    photoDataUrl,
+    `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same hair, same neutral background and same clothing in every panel. ` +
+    `Each panel shows them wearing a CLEARLY DIFFERENT pair of eyeglasses, one per panel, drawn from: ${frameNames.join("; ")}. ` +
+    `Every panel must show a visibly distinct frame shape and material, never the same design twice. ` +
+    `In each panel the glasses must sit correctly on the face: temple width matching face width, bridge centred on the nose, ` +
+    `a subtle realistic shadow on the nose bridge and under the brow, and a faint lens sheen rather than flat opaque glass. ` +
+    `No warping, no floating frames, no misaligned temples. ` +
+    `Photorealistic, identical framing and lighting in every panel, thin white gutters between panels. ` +
+    `Absolutely no text, no words, no letters and no labels anywhere in the image.`
+  );
+}
+
 export function generateHairstyleGrid(photoDataUrl: string, styleNames: string[]) {
   return generateImageEdit(
     photoDataUrl,
