@@ -119,4 +119,8 @@ export interface ColourAnalysis {
     avoid: string[];
   };
   clothing_tips: string[];
+  // Generated draping photos (the user wearing each colour), added by
+  // /api/colour-analysis/draping after the Claude analysis exists. Absent on
+  // analyses created before this feature, so always treat as optional.
+  drapings?: Array<{ label: string; hex: string; kind: "best" | "avoid"; storagePath: string }>;
 }

@@ -9,10 +9,13 @@ interface Props {
   onRequirePremium: () => void;
 }
 
+// Five options spanning short to long so there is a realistic choice for any
+// starting hair length, rather than four that skew long.
 const STYLES = [
   { name: "Long Layers", prompt: "long layered hair with soft waves" },
   { name: "Textured Bob", prompt: "a chin-length textured bob haircut" },
   { name: "Curtain Bangs", prompt: "hair with soft curtain bangs framing the face" },
+  { name: "Blunt Lob", prompt: "a blunt shoulder-length lob with a sharp, even hemline" },
   { name: "Buzz Cut", prompt: "a short, clean buzz cut" },
 ];
 

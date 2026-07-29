@@ -127,6 +127,21 @@ export function generateHairstylePreview(photoDataUrl: string, stylePrompt: stri
   );
 }
 
+// Colour draping: the same person, same everything, only the garment colour
+// changed, so the user is comparing colours against their own skin rather
+// than against a model's. Claude decides the palette; this only renders it.
+// The "pixel for pixel" framing is doing real work here, without it the model
+// tends to re-pose or re-light the subject, which destroys the comparison.
+export function generateColourDraping(photoDataUrl: string, colourName: string, hex: string) {
+  return generateImageEdit(
+    photoDataUrl,
+    `Replace only the clothing in this photo with a plain ${colourName} (${hex}) crew-neck t-shirt. ` +
+    `Keep the person's face, skin tone, hair, expression, head position, body position and the background EXACTLY unchanged, pixel for pixel. ` +
+    `Only the garment and its colour may change. The garment colour must read as accurate ${colourName}. ` +
+    `Photorealistic studio portrait, natural even lighting, no text, no logos, no patterns.`
+  );
+}
+
 export function generateFramePreview(photoDataUrl: string, framePrompt: string) {
   return generateImageEdit(
     photoDataUrl,

@@ -12,11 +12,15 @@ interface Props {
 // Same 4 style names as the canvas/live try-on catalog (GlassesVirtualTryOn.tsx)
 // so the AI-generated previews stay consistent with what the real-time overlay
 // already shows — just rendered photorealistically instead of composited.
+// Five distinct silhouettes and materials. Tortoiseshell is included because
+// it is the shade that suits the widest range of warm/autumn palettes, which
+// is what the colour analysis most often returns.
 const FRAME_STYLES = [
   { name: "Clubmaster", prompt: "black and gold Clubmaster-style browline eyeglasses with a thick acetate top rim and thin metal bottom rim" },
   { name: "Aviator", prompt: "classic gold-metal aviator eyeglasses with thin wire frames and teardrop-shaped lenses" },
   { name: "Wayfarer", prompt: "matte black Wayfarer-style acetate eyeglasses with a bold rectangular frame" },
   { name: "Round", prompt: "thin gold-metal round eyeglasses with a minimalist vintage look" },
+  { name: "Tortoiseshell", prompt: "warm tortoiseshell acetate eyeglasses with a soft rounded-square frame and visible amber and brown mottling" },
 ];
 
 type GenState = "idle" | "loading" | "done" | "error";
