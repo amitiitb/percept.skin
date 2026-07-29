@@ -119,8 +119,10 @@ export interface ColourAnalysis {
     avoid: string[];
   };
   clothing_tips: string[];
-  // Generated draping photos (the user wearing each colour), added by
-  // /api/colour-analysis/draping after the Claude analysis exists. Absent on
-  // analyses created before this feature, so always treat as optional.
-  drapings?: Array<{ label: string; hex: string; kind: "best" | "avoid"; storagePath: string }>;
+  // One generated composite grid of the user wearing their recommended
+  // colours, added by /api/colour-analysis/draping after the Claude analysis
+  // exists. Absent on analyses created before this feature, so treat as
+  // optional. Panel order is not guaranteed to match `colours`, so never
+  // label panels positionally, show the swatch list separately.
+  drapings?: { storagePath: string; colours: Array<{ label: string; hex: string }> };
 }

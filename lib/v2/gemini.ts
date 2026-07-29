@@ -127,18 +127,36 @@ export function generateHairstylePreview(photoDataUrl: string, stylePrompt: stri
   );
 }
 
-// Colour draping: the same person, same everything, only the garment colour
-// changed, so the user is comparing colours against their own skin rather
-// than against a model's. Claude decides the palette; this only renders it.
-// The "pixel for pixel" framing is doing real work here, without it the model
-// tends to re-pose or re-light the subject, which destroys the comparison.
-export function generateColourDraping(photoDataUrl: string, colourName: string, hex: string) {
+// One composite grid rather than one call per colour. Measured on real runs:
+// a single grid costs ~1/6th of six separate generations, returns in ~10s
+// instead of ~17s, and reads as more cohesive because every panel is lit and
+// framed identically by construction.
+//
+// "No text" is load-bearing. Image models garble small type badly, so every
+// label, swatch and hex code is rendered in HTML over/around this image
+// instead, where it stays crisp, selectable and translatable.
+//
+// Panel count is a request, not a guarantee: observed runs returned 9 panels
+// for a 6-panel ask and 6 for a 5-panel ask. So the UI must never label
+// panels positionally, it shows the palette names separately. Same reason
+// the colour list is phrased as "drawn from" rather than an exact sequence.
+export function generateColourGrid(photoDataUrl: string, colourNames: string[]) {
   return generateImageEdit(
     photoDataUrl,
-    `Replace only the clothing in this photo with a plain ${colourName} (${hex}) crew-neck t-shirt. ` +
-    `Keep the person's face, skin tone, hair, expression, head position, body position and the background EXACTLY unchanged, pixel for pixel. ` +
-    `Only the garment and its colour may change. The garment colour must read as accurate ${colourName}. ` +
-    `Photorealistic studio portrait, natural even lighting, no text, no logos, no patterns.`
+    `Create a single clean grid collage image of THIS EXACT person: same face, same hair, same neutral background in every panel. ` +
+    `Each panel shows them wearing a plain crew-neck t-shirt in a different colour, drawn from: ${colourNames.join(", ")}. ` +
+    `Photorealistic studio portraits, identical framing, pose and lighting in every panel, thin white gutters between panels. ` +
+    `Absolutely no text, no words, no letters, no labels and no colour names anywhere in the image.`
+  );
+}
+
+export function generateHairstyleGrid(photoDataUrl: string, styleNames: string[]) {
+  return generateImageEdit(
+    photoDataUrl,
+    `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same neutral background and same clothing in every panel. ` +
+    `Each panel shows a different hairstyle, drawn from: ${styleNames.join(", ")}. ` +
+    `Photorealistic, identical framing and lighting in every panel, thin white gutters between panels. ` +
+    `Absolutely no text, no words, no letters and no labels anywhere in the image.`
   );
 }
 
