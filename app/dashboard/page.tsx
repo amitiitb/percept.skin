@@ -26,9 +26,13 @@ function WaitingRing() {
           transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
         />
       </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
-        <span style={{ fontSize: "1.1rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Glow Score</span>
-        <span style={{ fontSize: "1.4rem", color: "var(--secondary)", marginTop: "0.3rem" }}>...</span>
+      {/* No "..." placeholder under the label: an ellipsis where a number
+          belongs reads as a value that failed to load rather than one that
+          has not been earned yet. The label alone is clearer. */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: "0.12em", textAlign: "center", lineHeight: 1.5 }}>
+          Glow<br />Score
+        </span>
       </div>
     </div>
   );
@@ -104,9 +108,14 @@ export default function V2DashboardPage() {
           </button>
         </div>
 
-        <div style={{ marginBottom: "3.2rem" }}>
-          <PrimaryButton fullWidth={false} onClick={startNewAnalysis}>Start New Analysis →</PrimaryButton>
-        </div>
+        {/* Only shown once there is history. Before the first scan the empty
+            state below already carries the single, clearer call to action, and
+            two buttons firing the same function read as a layout mistake. */}
+        {latest && (
+          <div style={{ marginBottom: "3.2rem" }}>
+            <PrimaryButton fullWidth={false} onClick={startNewAnalysis}>Start New Analysis →</PrimaryButton>
+          </div>
+        )}
 
         {!latest ? (
           <motion.div
@@ -176,8 +185,14 @@ export default function V2DashboardPage() {
       </div>
       <style>{`
         @media (max-width: 800px) { .v2-dash-grid { grid-template-columns: 1fr !important; } }
-        @media (max-width: 700px) { .v2-empty-facts { grid-template-columns: 1fr !important; } }
-        @media (max-width: 560px) { .v2-empty-hero { flex-direction: column !important; text-align: center; } }
+        @media (max-width: 700px) { .v2-empty-facts { grid-template-columns: 1fr !important; gap: 2.4rem !important; } }
+        @media (max-width: 560px) {
+          /* Centred column on narrow screens, with the ring scaled down so the
+             card does not run to two full screen-heights before the facts. */
+          .v2-empty-hero { flex-direction: column !important; text-align: center; align-items: center !important; gap: 2rem !important; }
+          .v2-empty-hero > div:first-child { width: 10rem !important; height: 10rem !important; }
+          .v2-empty-hero button { margin: 0 auto; }
+        }
       `}</style>
     </div>
   );

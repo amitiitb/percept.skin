@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
@@ -56,6 +56,16 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
     }
   }
 
+  // Already paid for, so it should not need a second click to unlock.
+  // Ref guard prevents React's dev double-mount billing two generations.
+  const kicked = useRef(false);
+  useEffect(() => {
+    if (kicked.current || url || !photo || !isPremium) return;
+    kicked.current = true;
+    generate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photo, isPremium]);
+
   return (
     <div style={{ marginTop: "4rem", paddingTop: "4rem", borderTop: "1px solid var(--line)" }}>
       <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.8rem" }}>Hairstyles For You</h2>
@@ -77,13 +87,17 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
           </div>
         </div>
       ) : (
-        <div style={{ textAlign: "center", padding: "1.2rem 0 3.2rem" }}>
-          {state === "error" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>}
-          <PrimaryButton fullWidth={false} onClick={generate} loading={state === "loading"} disabled={!photo}>
-            {state === "loading" ? "Generating your styles…" : "Show these styles on me →"}
-          </PrimaryButton>
-          {state === "loading" && (
-            <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1.2rem" }}>This takes around 15 seconds.</p>
+        <div style={{ textAlign: "center", padding: "3.2rem 0", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.2rem", marginBottom: "3.2rem" }}>
+          {state === "error" ? (
+            <>
+              <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>
+              <PrimaryButton fullWidth={false} onClick={generate}>Try again</PrimaryButton>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, margin: "0 0 0.6rem" }}>Creating your hairstyle previews…</p>
+              <p style={{ fontSize: "1.3rem", color: "var(--muted)", margin: 0 }}>This takes around 15 seconds.</p>
+            </>
           )}
         </div>
       )}

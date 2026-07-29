@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import type { ColourAnalysis } from "@/lib/v2/types";
@@ -52,6 +52,18 @@ export function ColourGrid({
     }
   }
 
+  // The user has already paid, so nothing here should need a second click to
+  // "unlock". Generates once on mount when no stored grid exists. The ref
+  // guard matters: without it React's dev double-mount fires two billed
+  // generations for a single page view.
+  const kicked = useRef(false);
+  useEffect(() => {
+    if (kicked.current || existing || url || !photo) return;
+    kicked.current = true;
+    generate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photo, existing]);
+
   if (url) {
     return (
       <div>
@@ -74,16 +86,19 @@ export function ColourGrid({
   }
 
   return (
-    <div style={{ textAlign: "center", padding: "1.2rem 0" }}>
-      <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.6, marginBottom: "2rem" }}>
-        See your {analysis.sub_season} palette on your own photo, side by side.
-      </p>
-      {state === "error" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>}
-      <PrimaryButton fullWidth={false} onClick={generate} loading={state === "loading"} disabled={!photo}>
-        {state === "loading" ? "Generating your previews…" : "Show these colours on me →"}
-      </PrimaryButton>
-      {state === "loading" && (
-        <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1.2rem" }}>This takes around 15 seconds.</p>
+    <div style={{ textAlign: "center", padding: "3.2rem 0", background: "var(--canvas)", borderRadius: "1.2rem" }}>
+      {state === "error" ? (
+        <>
+          <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>
+          <PrimaryButton fullWidth={false} onClick={generate}>Try again</PrimaryButton>
+        </>
+      ) : (
+        <>
+          <p style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, margin: "0 0 0.6rem" }}>
+            Dressing you in your {analysis.sub_season} palette…
+          </p>
+          <p style={{ fontSize: "1.3rem", color: "var(--muted)", margin: 0 }}>This takes around 15 seconds.</p>
+        </>
       )}
     </div>
   );
