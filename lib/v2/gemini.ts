@@ -5,12 +5,54 @@
 // Cost note: each call is a real, billed generation. Gated behind an explicit
 // user action in the UI (never auto-run on every scan) per the cherry-pick decision.
 
+import { GoogleAuth } from "google-auth-library";
+
 const GEMINI_MODEL = "gemini-2.5-flash-image";
-const GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+
+// Vertex AI, not the Gemini Developer API (generativelanguage.googleapis.com).
+// Both serve the same models, but they bill through different rails: the
+// Developer API draws down an AI Studio "prepay" wallet, while Vertex bills
+// through ordinary Google Cloud billing on the project. This account's prepay
+// wallet is empty and, per Google's billing docs, prepay users cannot apply
+// Cloud credits until they have first bought prepay credit, so every Developer
+// API call returned 429 RESOURCE_EXHAUSTED even for a two-word text prompt.
+// Vertex sidesteps that entirely. Verified working on this project before the
+// switch: text and a real 1.1MB image edit both returned 200.
+const VERTEX_LOCATION = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
+const VERTEX_PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? "glowmetry";
 
 export class GeminiGenerationError extends Error {}
 export class GeminiEmptyResponseError extends Error {}
 export class GeminiQuotaError extends Error {}
+
+// Unlike a static API key, OAuth access tokens expire (~1h), so they are
+// cached and refreshed rather than re-minted per call. GoogleAuth resolves
+// credentials in this order: GOOGLE_SERVICE_ACCOUNT_JSON (set in deployed
+// environments), then Application Default Credentials (gcloud login locally,
+// or the attached service account when running on Google Cloud).
+let authClient: GoogleAuth | null = null;
+
+function getAuth(): GoogleAuth {
+  if (authClient) return authClient;
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  authClient = new GoogleAuth({
+    scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+    ...(raw ? { credentials: JSON.parse(raw) } : {}),
+  });
+  return authClient;
+}
+
+async function vertexAccessToken(): Promise<string> {
+  try {
+    const token = await getAuth().getAccessToken();
+    if (!token) throw new Error("empty token");
+    return token;
+  } catch (err) {
+    throw new GeminiGenerationError(
+      `Could not obtain Google Cloud credentials for Vertex AI: ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
+}
 
 // The report page passes a Supabase signed URL (https://...), not a base64
 // data URL — fetch it server-side when needed rather than treating the URL
@@ -33,29 +75,35 @@ export async function generateImageEdit(
   photoDataUrl: string,
   editInstruction: string
 ): Promise<{ mimeType: string; base64: string }> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new GeminiGenerationError("GEMINI_API_KEY not configured");
-
+  const token = await vertexAccessToken();
   const { mimeType, data } = await toImageBytes(photoDataUrl);
 
-  const res = await fetch(`${GEMINI_API_BASE}/models/${GEMINI_MODEL}:generateContent`, {
+  const url =
+    `https://${VERTEX_LOCATION}-aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT}` +
+    `/locations/${VERTEX_LOCATION}/publishers/google/models/${GEMINI_MODEL}:generateContent`;
+
+  const res = await fetch(url, {
     method: "POST",
-    headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{
+        role: "user",
+        // Vertex uses camelCase (inlineData/mimeType) where the Developer API
+        // used snake_case, and needs responseModalities set explicitly or it
+        // returns only a text description instead of an edited image.
         parts: [
           { text: editInstruction },
-          { inline_data: { mime_type: mimeType, data } },
+          { inlineData: { mimeType, data } },
         ],
       }],
+      generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
     }),
   });
 
   if (!res.ok) {
     const errText = await res.text();
-    // 429 RESOURCE_EXHAUSTED on this model usually means image generation isn't
-    // enabled for the project (needs billing, not just a rate-limit backoff) —
-    // surface that distinctly so the error message doesn't lie by saying "retry".
+    // 429 here means a real Vertex quota/rate limit for the project, which is
+    // worth surfacing distinctly so the message doesn't wrongly say "retry".
     if (res.status === 429 && /RESOURCE_EXHAUSTED|quota/i.test(errText)) {
       throw new GeminiQuotaError(`Gemini quota exceeded: ${errText}`);
     }
