@@ -350,7 +350,13 @@ export default function V2ReportPage() {
       const signed = signedEntries.filter((e): e is { photoType: string; url: string } => e !== null);
       signed.sort((a, b) => PHOTO_ORDER.indexOf(a.photoType) - PHOTO_ORDER.indexOf(b.photoType));
       setAllPhotos(signed);
-      setPhoto(signed.find((p) => p.photoType === "face_front")?.url ?? signed[0]?.url ?? null);
+      // Every generated preview (colour, hairstyle, frames) is built from this
+      // photo, so it must be a front-facing shot. A profile or angled source
+      // makes the model reconstruct the far side of the face and the identity
+      // drifts. Fall back only to the front close-up, never to a side angle or
+      // a scalp shot, and rather show nothing than generate from a bad source.
+      const frontOnly = ["face_front", "face_detail"];
+      setPhoto(frontOnly.map((t) => signed.find((p) => p.photoType === t)?.url).find(Boolean) ?? null);
     }
 
     setLoading(false);

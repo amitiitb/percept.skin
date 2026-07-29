@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
-import { generateHairstyleGrid } from "@/lib/v2/gemini";
+import { generateHairstyleGrid, HAIRSTYLE_OCCASIONS } from "@/lib/v2/gemini";
 import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     if (dbErr) logV2.warn("v2_hairstyle_grid_row_failed", { user_id: auth.userId, session_id: sessionId, message: dbErr.message });
 
     logV2.info("v2_hairstyle_grid_generated", { user_id: auth.userId, session_id: sessionId });
-    return NextResponse.json({ storagePath: path, styles: STYLES, url: signed?.signedUrl });
+    return NextResponse.json({ storagePath: path, occasions: HAIRSTYLE_OCCASIONS, url: signed?.signedUrl });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logV2.error("v2_hairstyle_grid_failed", { user_id: auth.userId, session_id: sessionId, message });

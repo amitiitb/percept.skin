@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
-import { generateFrameGrid } from "@/lib/v2/gemini";
+import { generateFrameGrid, FRAME_OCCASIONS } from "@/lib/v2/gemini";
 import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     if (dbErr) logV2.warn("v2_frame_grid_row_failed", { user_id: auth.userId, session_id: sessionId, message: dbErr.message });
 
     logV2.info("v2_frame_grid_generated", { user_id: auth.userId, session_id: sessionId });
-    return NextResponse.json({ storagePath: path, frames: FRAMES, url: signed?.signedUrl });
+    return NextResponse.json({ storagePath: path, occasions: FRAME_OCCASIONS, url: signed?.signedUrl });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logV2.error("v2_frame_grid_failed", { user_id: auth.userId, session_id: sessionId, message });

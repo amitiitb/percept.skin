@@ -17,6 +17,7 @@ export function ColourGrid({
 }: { sessionId: string; photo: string | null; analysis: ColourAnalysis }) {
   const existing = analysis.drapings ?? null;
   const [url, setUrl] = useState<string | null>(null);
+  const [occasions, setOccasions] = useState<string[]>([]);
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
   const supabase = createClient();
@@ -43,7 +44,7 @@ export function ColourGrid({
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Could not generate your colour previews");
-      setUrl(body.url);
+      setUrl(body.url); setOccasions(body.occasions ?? []);
       setState("idle");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -56,8 +57,17 @@ export function ColourGrid({
       <div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={url} alt="You wearing your recommended colours" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
+        {occasions.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(14rem, 1fr))", gap: "0.8rem", marginTop: "1.4rem" }}>
+            {occasions.map((o, i) => (
+              <p key={i} style={{ fontSize: "1.25rem", color: "var(--secondary)", margin: 0, lineHeight: 1.4 }}>
+                <span style={{ color: "var(--rose)", fontWeight: 700 }}>{i + 1}.</span> {o.charAt(0).toUpperCase() + o.slice(1)}
+              </p>
+            ))}
+          </div>
+        )}
         <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1.2rem", lineHeight: 1.5 }}>
-          Generated from your own photo. Shades shown are drawn from your palette below.
+          Generated from your own photo, using shades from your palette below.
         </p>
       </div>
     );

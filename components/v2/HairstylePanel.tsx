@@ -13,7 +13,7 @@ interface Props {
 // One generated grid instead of a style-picker that billed a separate
 // generation per tap. Same reasoning as the colour grid: cheaper, one wait
 // instead of five, and every panel is lit and framed identically.
-const STYLE_LABELS = ["Long layers", "Textured bob", "Curtain bangs", "Blunt lob", "Pixie cut"];
+const OCCASION_LABELS = ["Office", "Wedding / formal", "Everyday casual", "Evening party", "Short & low-maintenance"];
 
 // Short, practical guidance. Deliberately brief: the report already carries
 // the scored hair metrics and their reference material, so this is the
@@ -30,6 +30,7 @@ const CARE_TIPS: Array<{ heading: string; body: string }> = [
 export default function HairstylePanel({ sessionId, photo, isPremium, onRequirePremium }: Props) {
   const supabase = createClient();
   const [url, setUrl] = useState<string | null>(null);
+  const [occasions, setOccasions] = useState<string[]>([]);
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
 
@@ -47,7 +48,7 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Could not generate your hairstyle previews");
-      setUrl(body.url);
+      setUrl(body.url); setOccasions(body.occasions ?? []);
       setState("idle");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -59,12 +60,22 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
     <div style={{ marginTop: "4rem", paddingTop: "4rem", borderTop: "1px solid var(--line)" }}>
       <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.8rem" }}>Hairstyles For You</h2>
       <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "2.4rem" }}>
-        {STYLE_LABELS.join(" · ")}, previewed on your own photo. Illustrative only, actual results vary by stylist.
+        A look for each occasion, previewed on your own photo. Illustrative only, actual results vary by stylist.
       </p>
 
       {url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="Hairstyle previews on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block", marginBottom: "3.2rem" }} />
+        <div style={{ marginBottom: "3.2rem" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt="Hairstyle previews on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(13rem, 1fr))", gap: "0.8rem", marginTop: "1.4rem" }}>
+            {(occasions.length ? occasions : OCCASION_LABELS).map((o, i) => (
+              <p key={i} style={{ fontSize: "1.25rem", color: "var(--secondary)", margin: 0, lineHeight: 1.4 }}>
+                <span style={{ color: "var(--rose)", fontWeight: 700 }}>{i + 1}.</span> {OCCASION_LABELS[i] ?? o}
+              </p>
+            ))}
+          </div>
+        </div>
       ) : (
         <div style={{ textAlign: "center", padding: "1.2rem 0 3.2rem" }}>
           {state === "error" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>}

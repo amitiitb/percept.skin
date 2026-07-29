@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
-import { generateColourGrid } from "@/lib/v2/gemini";
+import { generateColourGrid, COLOUR_OCCASIONS } from "@/lib/v2/gemini";
 import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       .eq("session_id", sessionId).eq("user_id", auth.userId);
 
     logV2.info("v2_colour_grid_generated", { user_id: auth.userId, session_id: sessionId, colours: colours.length });
-    return NextResponse.json({ storagePath: path, colours, url: signed?.signedUrl } as DrapingResult);
+    return NextResponse.json({ storagePath: path, colours, occasions: COLOUR_OCCASIONS, url: signed?.signedUrl } as DrapingResult);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logV2.error("v2_colour_draping_failed", { user_id: auth.userId, session_id: sessionId, message });
