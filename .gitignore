@@ -45,3 +45,4 @@ next-env.d.ts
 # design reference material — kept locally for design work, not shipped/tracked
 /report copy
 /design-reference-screenshots
+VERCEL-GOOGLE-SERVICE-ACCOUNT.json

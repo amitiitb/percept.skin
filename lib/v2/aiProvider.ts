@@ -136,7 +136,14 @@ const PHOTO_LABELS: Record<string, string> = {
 };
 
 const metricSchema = z.object({
-  score: z.number().min(0).max(100),
+  // Nullable on purpose. The model correctly returns null when a metric
+  // cannot be judged from the photos supplied, and metricsFromMap already
+  // handles that case ("Not enough visual data for this metric"), as does
+  // AnalysisMetric, whose score is `number | null`. Requiring a number here
+  // meant an honest null failed schema validation and killed the whole
+  // analysis. That became common once the hair-parting capture step was
+  // dropped, since "Hair part width" is exactly the metric that shot fed.
+  score: z.number().min(0).max(100).nullable(),
   confidence: z.string(),
   explanation: z.string(),
   recommendation: z.string(),
@@ -169,7 +176,7 @@ async function toBase64(photoUrl: string): Promise<{ mediaType: string; data: st
   return { mediaType: contentType.split(";")[0], data: Buffer.from(buf).toString("base64") };
 }
 
-function metricsFromMap(map: Record<string, { score: number; confidence: string; explanation: string; recommendation: string }>, names: string[], category: MetricCategory): AnalysisMetric[] {
+function metricsFromMap(map: Record<string, { score: number | null; confidence: string; explanation: string; recommendation: string }>, names: string[], category: MetricCategory): AnalysisMetric[] {
   return names.map((metricName) => {
     const m = map[metricName];
     if (!m) {
@@ -178,6 +185,14 @@ function metricsFromMap(map: Record<string, { score: number; confidence: string;
         explanation: "This metric could not be assessed from the provided photos.",
         recommendation: "Retake the relevant photo with better lighting or framing for a full estimate.",
         isPremium: false,
+      };
+    }
+    // A returned-but-unscoreable metric keeps the model's own explanation of
+    // why, which is more useful than the generic missing-key copy above.
+    if (m.score === null) {
+      return {
+        category, metricName, score: null, label: "Moderate", confidence: m.confidence,
+        explanation: m.explanation, recommendation: m.recommendation, isPremium: false,
       };
     }
     return {
