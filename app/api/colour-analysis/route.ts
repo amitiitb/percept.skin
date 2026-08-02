@@ -3,7 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
 import { logV2 } from "@/lib/v2/log";
+import { vertexAccessToken, VERTEX_LOCATION, VERTEX_PROJECT } from "@/lib/v2/gemini";
+import { stripEmDash } from "@/lib/v2/aiProvider";
 import type { ColourAnalysis } from "@/lib/v2/types";
+
+const GEMINI_TEXT_MODEL = "gemini-2.5-flash";
 
 function scopedClient(token: string) {
   return createClient(
@@ -72,37 +76,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Purchase the Color Analysis module to generate this report" }, { status: 403 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 500 });
-
     const base64Photo = await toBase64(photoDataUrl);
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const url =
+      `https://${VERTEX_LOCATION}-aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT}` +
+      `/locations/${VERTEX_LOCATION}/publishers/google/models/${GEMINI_TEXT_MODEL}:generateContent`;
+    const vertexToken = await vertexAccessToken();
+
+    const response = await fetch(url, {
       method: "POST",
-      headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      headers: { Authorization: `Bearer ${vertexToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1500,
-        system: "You are a certified personal colour analysis expert trained in seasonal colour theory. Analyze facial photos accurately to determine skin undertone, contrast level, and seasonal colour type. This is cosmetic/wellness guidance, not medical advice. Return only valid JSON with no extra text.",
-        messages: [{
+        systemInstruction: { parts: [{ text: "You are a certified personal colour analysis expert trained in seasonal colour theory. Analyze facial photos accurately to determine skin undertone, contrast level, and seasonal colour type. This is cosmetic/wellness guidance, not medical advice. Return only valid JSON with no extra text. Never use the em dash character (—) anywhere in your output; use a comma, colon, period, or hyphen instead." }] },
+        contents: [{
           role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: base64Photo } },
-            { type: "text", text: USER_PROMPT },
+          parts: [
+            { inlineData: { mimeType: "image/jpeg", data: base64Photo } },
+            { text: USER_PROMPT },
           ],
         }],
+        // Native JSON mode — the markdown-fence stripping below is a no-op
+        // safety net here, same as the main analysis path. thinkingBudget caps
+        // internal reasoning so it can't crowd out the JSON body (measured
+        // thinking spend up to ~2470 tokens on this exact prompt); maxOutputTokens
+        // is well above budget + JSON body (~900 tokens observed) so a truncated,
+        // unparseable reply is a config bug here, not something the model did.
+        generationConfig: {
+          responseMimeType: "application/json", maxOutputTokens: 6000, temperature: 0.4,
+          thinkingConfig: { thinkingBudget: 1024 },
+        },
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Claude API error: ${response.status} ${errText}`);
+      throw new Error(`Gemini API error: ${response.status} ${errText}`);
     }
 
-    const claudeResponse = await response.json() as { content: Array<{ type: string; text?: string }> };
-    const rawText = claudeResponse.content.find((b) => b.type === "text")?.text ?? "";
+    const geminiResponse = await response.json() as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> }; finishReason?: string }>;
+    };
+    const candidate = geminiResponse.candidates?.[0];
+    // Same truncation shape as the main analysis path: MAX_TOKENS means the
+    // reply was cut off mid-JSON, not that the model wrote invalid JSON.
+    // Caught explicitly so the failure reads as "ran out of budget", not a
+    // confusing JSON.parse syntax error over a string that looks fine at a glance.
+    if (candidate?.finishReason === "MAX_TOKENS") {
+      throw new Error("Gemini exhausted its output budget before producing a complete result");
+    }
+    const rawText = candidate?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
     const cleaned = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
-    const analysis = JSON.parse(cleaned) as ColourAnalysis;
+    const analysis = stripEmDash(JSON.parse(cleaned) as ColourAnalysis);
 
     const { error } = await supabase.from("colour_analysis_v2").upsert({
       session_id: sessionId, user_id: auth.userId, data: analysis,

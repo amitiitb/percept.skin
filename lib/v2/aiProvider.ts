@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { vertexAccessToken, VERTEX_LOCATION, VERTEX_PROJECT } from "./gemini";
 import type { AnalysisMetric, AnalysisResultV2, MetricCategory, SkinConcern, UserProfileV2 } from "./types";
 
 export class SchemaParseError extends Error {}
@@ -150,7 +151,10 @@ const metricSchema = z.object({
 });
 const metricsMapSchema = z.record(z.string(), metricSchema);
 
-const claudeResponseSchema = z.object({
+// Shared by every provider — the report page, the metrics table, and the
+// database column types all key off this one shape, so a provider swap must
+// never change what analyse() returns.
+const analysisResponseSchema = z.object({
   overallScore: z.number().min(0).max(100),
   skinAgeEstimate: z.number().min(10).max(100),
   imageQuality: z.enum(["good", "fair", "poor"]),
@@ -202,27 +206,39 @@ function metricsFromMap(map: Record<string, { score: number | null; confidence: 
   });
 }
 
-export const claudeProvider: AnalysisProvider = {
-  async analyse(input: AnalysisInput): Promise<AnalysisResultV2> {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new ClaudeAPIError("ANTHROPIC_API_KEY not configured");
+// Shared across every real provider: the "you never diagnose, only estimate"
+// framing and the em-dash ban apply regardless of which model reads the
+// photos. Gemini's own JSON mode enforces valid JSON on the wire, but the
+// prose rules (no em dash, no diagnosis language) are still the model's job.
+const SYSTEM_PROMPT =
+  "You are a cosmetic and wellness photo analysis assistant. You never provide medical or dermatological diagnoses, only general cosmetic/wellness observations framed as estimates, not facts. Return only valid JSON with no extra text. Never use the em dash character (—) anywhere in your output; use a comma, colon, period, or hyphen instead.";
 
-    const entries = Object.entries(input.photoUrls).filter(([, url]) => !!url) as [string, string][];
-    if (entries.length === 0) throw new ClaudeAPIError("No photos available to analyse");
+interface PreparedRequest {
+  images: Array<{ photoType: string; mediaType: string; data: string }>;
+  missing: string[];
+  userPrompt: string;
+}
 
-    const images = await Promise.all(
-      entries.map(async ([photoType, url]) => ({ photoType, ...(await toBase64(url)) }))
-    );
+// Builds the photo set and prompt once, shared by every provider — a provider
+// swap must never change what the model is asked, only how the request is
+// transported.
+async function prepareRequest(input: AnalysisInput): Promise<PreparedRequest> {
+  const entries = Object.entries(input.photoUrls).filter(([, url]) => !!url) as [string, string][];
+  if (entries.length === 0) throw new ClaudeAPIError("No photos available to analyse");
 
-    const missing = Object.keys(PHOTO_LABELS).filter((type) => !entries.some(([t]) => t === type));
+  const images = await Promise.all(
+    entries.map(async ([photoType, url]) => ({ photoType, ...(await toBase64(url)) }))
+  );
 
-    const profileLines = [
-      input.profile.skinType ? `Self-reported skin type: ${input.profile.skinType}` : null,
-      input.profile.skinConcerns.length ? `Self-reported concerns: ${input.profile.skinConcerns.join(", ")}` : null,
-      input.profile.ageRange ? `Age range: ${input.profile.ageRange}` : null,
-    ].filter(Boolean).join("\n");
+  const missing = Object.keys(PHOTO_LABELS).filter((type) => !entries.some(([t]) => t === type));
 
-    const userPrompt = `Analyze these guided-capture photos and produce a cosmetic/wellness skin, face, and hair assessment. Each photo is labeled with what it shows.
+  const profileLines = [
+    input.profile.skinType ? `Self-reported skin type: ${input.profile.skinType}` : null,
+    input.profile.skinConcerns.length ? `Self-reported concerns: ${input.profile.skinConcerns.join(", ")}` : null,
+    input.profile.ageRange ? `Age range: ${input.profile.ageRange}` : null,
+  ].filter(Boolean).join("\n");
+
+  const userPrompt = `Analyze these guided-capture photos and produce a cosmetic/wellness skin, face, and hair assessment. Each photo is labeled with what it shows.
 
 ${images.map((img) => `- ${PHOTO_LABELS[img.photoType] ?? img.photoType}`).join("\n")}
 ${missing.length ? `\nMissing (not provided, do not invent data for these): ${missing.map((m) => PHOTO_LABELS[m]).join("; ")}` : ""}
@@ -242,7 +258,54 @@ Return ONLY valid JSON (no markdown fences, no extra text) with exactly this sha
   "recommendations": {"morning":["string",...],"evening":["string",...],"weekly":["string",...],"hairScalp":["string",...]},
   "limitations": ["string", ...]
 }
-Every key listed above under skinMetrics/faceMetrics/hairMetrics must be present. "explanation" and "confidence" must be 1-2 sentences each, specific to what you actually observe in the photos, not generic filler. If a relevant photo is missing or too unclear to assess a metric, give it a lower confidence description and note it in "limitations" rather than guessing wildly. This is cosmetic and wellness guidance only, never a medical or dermatological diagnosis.`;
+Every key listed above under skinMetrics/faceMetrics/hairMetrics must be present. "explanation" and "confidence" must be 1-2 sentences each, specific to what you actually observe in the photos, not generic filler. If a relevant photo is missing or too unclear to assess a metric, give it a lower confidence description and note it in "limitations" rather than guessing wildly. If a metric truly cannot be judged because the photo that would show it was not provided or is unusable, set that metric's "score" to null rather than inventing a number — do not guess a numeric score you have no visual basis for. This is cosmetic and wellness guidance only, never a medical or dermatological diagnosis.`;
+
+  return { images, missing, userPrompt };
+}
+
+// Parses and validates a model's raw text reply into the shared result shape.
+// Both providers funnel through here so a provider swap can never change the
+// downstream shape metricsFromMap/report/database code depends on.
+function finishAnalysis(rawText: string, missing: string[], input: AnalysisInput): AnalysisResultV2 {
+  const cleaned = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new SchemaParseError(`Model returned non-JSON response: ${rawText.slice(0, 300)}`);
+  }
+
+  const validated = analysisResponseSchema.safeParse(parsed);
+  if (!validated.success) {
+    throw new SchemaValidationError(`Model response failed schema validation: ${validated.error.message}`);
+  }
+  const r = validated.data;
+
+  return stripEmDash({
+    overallScore: Math.round(r.overallScore),
+    skinAgeEstimate: Math.round(r.skinAgeEstimate),
+    imageQuality: r.imageQuality,
+    skinMetrics: metricsFromMap(r.skinMetrics, SKIN_METRIC_NAMES, "skin"),
+    faceMetrics: metricsFromMap(r.faceMetrics, FACE_METRIC_NAMES, "face"),
+    hairMetrics: metricsFromMap(r.hairMetrics, HAIR_METRIC_NAMES, "hair"),
+    priorityConcerns: r.priorityConcerns.length ? r.priorityConcerns : concernToPriority(input.profile.skinConcerns),
+    positiveObservations: r.positiveObservations,
+    recommendations: r.recommendations,
+    limitations: missing.length
+      ? [...r.limitations, `Missing photos: ${missing.map((m) => PHOTO_LABELS[m]).join(", ")}`]
+      : r.limitations,
+    professionalConsultationNote:
+      "This is a cosmetic and wellness estimate, not a medical diagnosis. Consult a qualified dermatologist for any visible change that concerns you.",
+  });
+}
+
+export const claudeProvider: AnalysisProvider = {
+  async analyse(input: AnalysisInput): Promise<AnalysisResultV2> {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new ClaudeAPIError("ANTHROPIC_API_KEY not configured");
+
+    const { images, missing, userPrompt } = await prepareRequest(input);
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 120_000);
@@ -255,7 +318,7 @@ Every key listed above under skinMetrics/faceMetrics/hairMetrics must be present
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
           max_tokens: 4096,
-          system: "You are a cosmetic and wellness photo analysis assistant. You never provide medical or dermatological diagnoses, only general cosmetic/wellness observations framed as estimates, not facts. Return only valid JSON with no extra text. Never use the em dash character (—) anywhere in your output; use a comma, colon, period, or hyphen instead.",
+          system: SYSTEM_PROMPT,
           messages: [{
             role: "user",
             content: [
@@ -266,7 +329,7 @@ Every key listed above under skinMetrics/faceMetrics/hairMetrics must be present
         }),
       });
     } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") throw new ClaudeTimeoutError("Claude API timed out after 60s");
+      if (err instanceof Error && err.name === "AbortError") throw new ClaudeTimeoutError("Claude API timed out after 120s");
       throw new ClaudeAPIError(err instanceof Error ? err.message : String(err));
     } finally {
       clearTimeout(timeout);
@@ -280,44 +343,104 @@ Every key listed above under skinMetrics/faceMetrics/hairMetrics must be present
 
     const body = await response.json() as { content: Array<{ type: string; text?: string }> };
     const rawText = body.content.find((b) => b.type === "text")?.text ?? "";
-    const cleaned = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(cleaned);
-    } catch {
-      throw new SchemaParseError(`Claude returned non-JSON response: ${rawText.slice(0, 300)}`);
-    }
-
-    const validated = claudeResponseSchema.safeParse(parsed);
-    if (!validated.success) {
-      throw new SchemaValidationError(`Claude response failed schema validation: ${validated.error.message}`);
-    }
-    const r = validated.data;
-
-    return stripEmDash({
-      overallScore: Math.round(r.overallScore),
-      skinAgeEstimate: Math.round(r.skinAgeEstimate),
-      imageQuality: r.imageQuality,
-      skinMetrics: metricsFromMap(r.skinMetrics, SKIN_METRIC_NAMES, "skin"),
-      faceMetrics: metricsFromMap(r.faceMetrics, FACE_METRIC_NAMES, "face"),
-      hairMetrics: metricsFromMap(r.hairMetrics, HAIR_METRIC_NAMES, "hair"),
-      priorityConcerns: r.priorityConcerns.length ? r.priorityConcerns : concernToPriority(input.profile.skinConcerns),
-      positiveObservations: r.positiveObservations,
-      recommendations: r.recommendations,
-      limitations: missing.length
-        ? [...r.limitations, `Missing photos: ${missing.map((m) => PHOTO_LABELS[m]).join(", ")}`]
-        : r.limitations,
-      professionalConsultationNote:
-        "This is a cosmetic and wellness estimate, not a medical diagnosis. Consult a qualified dermatologist for any visible change that concerns you.",
-    });
+    return finishAnalysis(rawText, missing, input);
   },
 };
 
+// ── Gemini provider — same photo set and prompt, routed through Vertex AI
+// instead of the Anthropic API. Uses gemini-2.5-flash (text/vision, not the
+// -image variant used for generation) with native JSON response mode, which
+// enforces valid JSON at the decoder rather than by asking nicely in the
+// prompt — SchemaParseError becomes largely unreachable on this path.
+const GEMINI_TEXT_MODEL = "gemini-2.5-flash";
+
+export const geminiProvider: AnalysisProvider = {
+  async analyse(input: AnalysisInput): Promise<AnalysisResultV2> {
+    const { images, missing, userPrompt } = await prepareRequest(input);
+
+    const url =
+      `https://${VERTEX_LOCATION}-aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT}` +
+      `/locations/${VERTEX_LOCATION}/publishers/google/models/${GEMINI_TEXT_MODEL}:generateContent`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120_000);
+    let response: Response;
+    try {
+      const token = await vertexAccessToken();
+      response = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{
+            role: "user",
+            parts: [
+              ...images.map((img) => ({ inlineData: { mimeType: img.mediaType, data: img.data } })),
+              { text: userPrompt },
+            ],
+          }],
+          // JSON mode: the response is guaranteed valid JSON, so finishAnalysis's
+          // markdown-fence stripping is a no-op safety net here, not load-bearing.
+          //
+          // thinkingBudget caps internal reasoning tokens. Without it, thinking
+          // spend on this exact prompt varied 852-2950 tokens across identical
+          // requests (measured), and a high roll left too little of the 8192
+          // ceiling for the ~2500-3500 token JSON body, truncating it mid-object
+          // — a real production failure caught in E2E testing, not theoretical.
+          // 2048 is generous for a grounded extraction task (no multi-step
+          // reasoning needed) and maxOutputTokens is raised well past the
+          // thinking cap so the full JSON always has room after it.
+          generationConfig: {
+            responseMimeType: "application/json", maxOutputTokens: 12000, temperature: 0.4,
+            thinkingConfig: { thinkingBudget: 2048 },
+          },
+        }),
+      });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") throw new ClaudeTimeoutError("Gemini API timed out after 120s");
+      throw new ClaudeAPIError(err instanceof Error ? err.message : String(err));
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (response.status === 429) throw new ClaudeRateLimitError("Gemini API rate limited");
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new ClaudeAPIError(`Gemini API error: ${response.status} ${errText}`);
+    }
+
+    const body = await response.json() as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> }; finishReason?: string }>;
+    };
+    const candidate = body.candidates?.[0];
+    // MAX_TOKENS means the response was cut off mid-generation — whether that
+    // left zero output (spent the whole budget on internal "thinking" tokens)
+    // or a partial JSON object (cut off mid-field). Both are a genuine
+    // timeout-shaped failure, not a schema/parse problem: the fix is to retry
+    // or raise the budget, not to debug the "invalid" JSON, which is actually
+    // just incomplete. Checked before finishAnalysis so a truncated response
+    // never gets a misleading SchemaParseError instead of this clearer one.
+    const rawText = candidate?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
+    if (candidate?.finishReason === "MAX_TOKENS") {
+      throw new ClaudeTimeoutError("Gemini exhausted its output budget before producing a complete result");
+    }
+    return finishAnalysis(rawText, missing, input);
+  },
+};
+
+// "claude" | "gemini". Defaults to gemini: Vertex billing is healthy and it
+// is materially cheaper per report (~$0.015 vs ~$0.12 measured), while the
+// Anthropic path is kept intact behind this switch rather than deleted, so
+// flipping back is a one-line env change if quality ever calls for it.
 export function getAnalysisProvider(): AnalysisProvider {
-  // Real analysis when configured — never silently serve mock data as real
-  // (docs/V2_PLAN.md "critical rule enforced across all AI failure paths").
-  // Falls back to mock only when the key is genuinely absent (local/offline
-  // dev), which is visibly different data, not a disguised failure.
-  return process.env.ANTHROPIC_API_KEY ? claudeProvider : mockProvider;
+  const requested = (process.env.ANALYSIS_PROVIDER ?? "gemini").toLowerCase();
+  if (requested === "claude") {
+    // Real analysis when configured — never silently serve mock data as real
+    // (docs/V2_PLAN.md "critical rule enforced across all AI failure paths").
+    // Falls back to mock only when the key is genuinely absent (local/offline
+    // dev), which is visibly different data, not a disguised failure.
+    return process.env.ANTHROPIC_API_KEY ? claudeProvider : mockProvider;
+  }
+  return geminiProvider;
 }

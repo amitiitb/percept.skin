@@ -18,8 +18,8 @@ const GEMINI_MODEL = "gemini-2.5-flash-image";
 // API call returned 429 RESOURCE_EXHAUSTED even for a two-word text prompt.
 // Vertex sidesteps that entirely. Verified working on this project before the
 // switch: text and a real 1.1MB image edit both returned 200.
-const VERTEX_LOCATION = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
-const VERTEX_PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? "glowmetry";
+export const VERTEX_LOCATION = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
+export const VERTEX_PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? "glowmetry";
 
 export class GeminiGenerationError extends Error {}
 export class GeminiEmptyResponseError extends Error {}
@@ -42,7 +42,10 @@ function getAuth(): GoogleAuth {
   return authClient;
 }
 
-async function vertexAccessToken(): Promise<string> {
+// Exported so the text-generation callers (aiProvider.ts, colour-analysis
+// route) share this token cache instead of each standing up their own
+// GoogleAuth instance and re-authenticating on every request.
+export async function vertexAccessToken(): Promise<string> {
   try {
     const token = await getAuth().getAccessToken();
     if (!token) throw new Error("empty token");
@@ -150,6 +153,7 @@ export const COLOUR_OCCASIONS = [
   "a wedding or festive celebration outfit",
   "a relaxed weekend casual top",
   "an evening party or night-out outfit",
+  "a smart-casual blazer over a plain tee",
 ] as const;
 
 export function generateColourGrid(photoDataUrl: string, colourNames: string[]) {
@@ -158,6 +162,11 @@ export function generateColourGrid(photoDataUrl: string, colourNames: string[]) 
     `Create a single clean grid collage image of THIS EXACT person: same face, same hair, same neutral background in every panel. ` +
     `Each panel shows them dressed for a different occasion, in this exact order: ${COLOUR_OCCASIONS.join("; then ")}. ` +
     `Every outfit must use colours drawn from this palette: ${colourNames.join(", ")}. ` +
+    `Return EXACTLY 6 panels arranged in a grid 3 panels wide and 2 panels tall, and fill every one of the 6 cells. ` +
+    `Never leave a cell blank, grey or empty, and never pad the grid with a duplicate. ` +
+    `Not one of the 6 panels may be the original unedited photograph: every panel must show a real, visible change. ` +
+    `All 6 panels must differ clearly from one another. ` +
+
     `Photorealistic studio portraits, identical framing, pose and lighting in every panel, thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters, no labels and no colour names anywhere in the image.`
   );
@@ -173,6 +182,7 @@ export const FRAME_OCCASIONS = [
   "classic timeless eyeglasses for formal and wedding wear",
   "relaxed everyday casual eyeglasses",
   "lightweight minimal rimless eyeglasses for all-day wear",
+  "sporty lightweight frames for everyday errands",
 ] as const;
 
 export function generateFrameGrid(photoDataUrl: string, _frameNames: string[]) {
@@ -181,6 +191,11 @@ export function generateFrameGrid(photoDataUrl: string, _frameNames: string[]) {
     `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same hair, same neutral background and same clothing in every panel. ` +
     `Each panel shows them wearing a CLEARLY DIFFERENT pair of eyeglasses suited to a different occasion, in this exact order: ${FRAME_OCCASIONS.join("; then ")}. ` +
     `Every panel must show a visibly distinct frame shape and material, never the same design twice. ` +
+    `Return EXACTLY 6 panels arranged in a grid 3 panels wide and 2 panels tall, and fill every one of the 6 cells. ` +
+    `Never leave a cell blank, grey or empty, and never pad the grid with a duplicate. ` +
+    `Not one of the 6 panels may be the original unedited photograph: every panel must show a real, visible change. ` +
+    `All 6 panels must differ clearly from one another. ` +
+
     `In each panel the glasses must sit correctly on the face: temple width matching face width, bridge centred on the nose, ` +
     `a subtle realistic shadow on the nose bridge and under the brow, and a faint lens sheen rather than flat opaque glass. ` +
     `No warping, no floating frames, no misaligned temples. ` +
@@ -195,6 +210,7 @@ export const HAIRSTYLE_OCCASIONS = [
   "a relaxed everyday casual look",
   "a sharp evening party look",
   "a low-maintenance short practical look",
+  "a textured, slightly tousled everyday look",
 ] as const;
 
 export function generateHairstyleGrid(photoDataUrl: string, _styleNames: string[]) {
@@ -203,6 +219,11 @@ export function generateHairstyleGrid(photoDataUrl: string, _styleNames: string[
     `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same neutral background and same clothing in every panel. ` +
     `Each panel shows a different hairstyle suited to a different occasion, in this exact order: ${HAIRSTYLE_OCCASIONS.join("; then ")}. ` +
     `Every panel must show a visibly distinct cut and styling, never the same look twice. ` +
+    `Return EXACTLY 6 panels arranged in a grid 3 panels wide and 2 panels tall, and fill every one of the 6 cells. ` +
+    `Never leave a cell blank, grey or empty, and never pad the grid with a duplicate. ` +
+    `Not one of the 6 panels may be the original unedited photograph: every panel must show a real, visible change. ` +
+    `All 6 panels must differ clearly from one another. ` +
+
     `Keep the person's own hair colour and hairline. ` +
     `Photorealistic, identical framing and lighting in every panel, thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters and no labels anywhere in the image.`
