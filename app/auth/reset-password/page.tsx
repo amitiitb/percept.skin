@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
 
   const inputStyle = (focused: boolean) => ({
     width: "100%", height: "5.6rem", padding: "0 2rem",
-    fontSize: "1.6rem", color: "var(--primary)", background: "#fff",
+    fontSize: "1.6rem", color: "var(--primary)", background: "var(--surface)",
     border: `1px solid ${focused ? "var(--primary)" : "var(--line)"}`,
     borderRadius: "1.2rem", outline: "none",
     transition: "border-color 0.15s", boxSizing: "border-box" as const,
@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
             whileTap={!loading ? { scale: 0.985 } : {}}
             style={{
               marginTop: "0.8rem", height: "6rem",
-              background: loading ? "var(--secondary)" : "var(--primary)",
+              background: loading ? "var(--secondary)" : "var(--btn-fill)",
               color: "#fff", border: "none", borderRadius: "9999px",
               fontSize: "1.8rem", fontWeight: 500,
               cursor: loading ? "not-allowed" : "pointer",

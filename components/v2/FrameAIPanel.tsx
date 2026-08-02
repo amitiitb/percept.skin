@@ -79,8 +79,8 @@ export default function FrameAIPanel({ sessionId, photo, isPremium, onRequirePre
             style={{
               padding: "1.2rem 2rem", borderRadius: "9999px", fontSize: "1.4rem", fontWeight: 500,
               border: `1px solid ${active === f.name ? "var(--primary)" : "var(--line)"}`,
-              background: active === f.name ? "var(--primary)" : "var(--canvas)",
-              color: active === f.name ? "#fff" : "var(--secondary)",
+              background: active === f.name ? "var(--btn-fill)" : "var(--canvas)",
+              color: active === f.name ? "var(--btn-fill-ink)" : "var(--secondary)",
               cursor: "pointer",
             }}
           >

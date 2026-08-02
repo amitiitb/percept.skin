@@ -47,7 +47,7 @@ export default function V2PlansPage() {
             ))}
           </div>
 
-          <div style={{ background: "var(--primary)", borderRadius: "1.6rem", padding: "3.2rem", color: "#fff" }}>
+          <div style={{ background: "var(--panel)", borderRadius: "1.6rem", padding: "3.2rem", color: "#fff" }}>
             <h2 style={{ fontSize: "2rem", marginBottom: "0.4rem" }}>Glowmetry Premium</h2>
             <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.7)", marginBottom: "2rem" }}>Everything, unlocked</p>
             {PREMIUM_FEATURES.map((f) => (
@@ -61,8 +61,8 @@ export default function V2PlansPage() {
             <button key={id} onClick={() => setSelected(id)} style={{
               padding: "1.6rem 2.4rem", borderRadius: "1.2rem", cursor: "pointer", position: "relative",
               border: `2px solid ${selected === id ? "var(--primary)" : "var(--line)"}`,
-              background: selected === id ? "var(--primary)" : "var(--canvas)",
-              color: selected === id ? "#fff" : "var(--primary)", textAlign: "center", minWidth: "16rem",
+              background: selected === id ? "var(--btn-fill)" : "var(--canvas)",
+              color: selected === id ? "var(--btn-fill-ink)" : "var(--primary)", textAlign: "center", minWidth: "16rem",
             }}>
               {id === "annual" && (
                 <span style={{ position: "absolute", top: "-1.2rem", left: "50%", transform: "translateX(-50%)", background: "var(--rose)", color: "#fff", fontSize: "1.1rem", fontWeight: 700, padding: "0.3rem 1rem", borderRadius: "9999px" }}>

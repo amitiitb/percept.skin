@@ -8,6 +8,7 @@
    loaded from Fontshare's CDN in app/layout.tsx, not self-hosted (their
    license requires ITF's written consent to self-host the font file). */
 :root {
+  color-scheme: light;
   --font-display: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 
   /* Canvas — warm beige, SkyClinics background */
@@ -31,6 +32,31 @@
   --on-dark:       #CFE3DE;   /* text on dark sections */
   --rose:          #1A9E8F;
 
+  /* Dark panels. --primary is the text colour AND was doubling as the
+     background of every inverted card, which cannot survive a theme flip:
+     in dark mode the text colour goes near-white and those cards would turn
+     white with white type on them. --panel is that background, tracked
+     separately, and it stays dark in both themes so the #fff sitting on it
+     keeps working. */
+  --panel:         #003934;
+  --panel-line:    rgba(255,255,255,0.14);
+
+  /* The primary button is the one filled shape that has to out-contrast its
+     own background rather than match it, so it gets its own pair. In light
+     mode that is the dark panel colour; in dark mode it inverts to a light
+     pill, because a near-black button on a near-black page is not a call to
+     action, it is an outline. */
+  --btn-fill:      #003934;
+  --btn-fill-ink:  #FFFFFF;
+  --btn-fill-hover:#0A4F49;
+
+  /* Translucent surfaces that used to be hardcoded to the beige canvas:
+     the sticky header pill, and the fade over locked content. */
+  --header-bg:     rgba(232,231,229,0.82);
+  --scrim-top:     rgba(239,238,236,0.2);
+  --scrim-bottom:  rgba(239,238,236,0.88);
+  --shadow-strong: rgba(0,57,52,0.28);
+
   /* Spacing unit — 1px at the 1920px design size, scales with root font.
      Used as calc(64 * var(--multiplier)) etc. Was previously undefined,
      which collapsed those paddings to 0. */
@@ -41,6 +67,53 @@
   --ease-expo:     cubic-bezier(0.24, 0.43, 0.15, 0.97);
   --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* ─── Dark theme ──────────────────────────────────────────────────────────
+   Not an inversion of the light palette. The brand ground is forest-teal, so
+   the dark canvas is a deep teal rather than neutral grey, and the accent is
+   lifted (#1A9E8F reads muddy at 4:1 against a dark ground, #2FC7B3 does not).
+   Every token below is the same name the components already use, so nothing
+   needs a dark-mode branch in JS.
+
+   The attribute wins over the media query on purpose: an explicit choice from
+   the toggle has to beat the OS preference in BOTH directions, so there is a
+   light block too, not only a dark one. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --canvas:        #08201D;
+  --surface:       #0E2C28;
+  --wash:          #163A34;
+
+  --primary:       #E6F1EE;
+  --body:          #D5E6E2;
+  --secondary:     #9CB6B1;
+  --muted:         #708A85;
+
+  --line:          #1E403A;
+  --line-strong:   #305A53;
+
+  --accent-muted:  #4E8B82;
+  --sage:          #21453F;
+  --on-dark:       #CFE3DE;
+  --rose:          #2FC7B3;
+
+  /* Panels stay darker than the surfaces around them so an inverted card is
+     still legible as a card, and the white type printed on it still passes. */
+  --panel:         #041614;
+  --panel-line:    rgba(255,255,255,0.12);
+
+  --btn-fill:      #E6F1EE;
+  --btn-fill-ink:  #04211E;
+  --btn-fill-hover:#FFFFFF;
+
+  --header-bg:     rgba(8,32,29,0.82);
+  --scrim-top:     rgba(14,44,40,0.2);
+  --scrim-bottom:  rgba(14,44,40,0.9);
+  --shadow-strong: rgba(0,0,0,0.6);
+}
+
+:root[data-theme="light"] { color-scheme: light; }
 
 /* ─── Fluid font scaling ──────────────────────────── */
 html {

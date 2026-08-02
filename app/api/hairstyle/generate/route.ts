@@ -4,6 +4,7 @@ import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { generateHairstylePreview, GeminiGenerationError, GeminiEmptyResponseError, GeminiQuotaError } from "@/lib/v2/gemini";
 import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
 import { logV2 } from "@/lib/v2/log";
+import { replaceImage } from "@/lib/v2/storageUpload";
 
 function scopedClient(token: string) {
   return createClient(
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     const path = `${auth.userId}/${sessionId}/hairstyle-${styleName.toLowerCase().replace(/\s+/g, "-")}.${ext}`;
 
     const bytes = Buffer.from(base64, "base64");
-    const { error: upErr } = await supabase.storage.from("photos_v2").upload(path, bytes, { contentType: mimeType, upsert: true });
+    const { error: upErr } = await replaceImage(supabase, path, bytes, mimeType);
     if (upErr) throw upErr;
 
     const { data: signed } = await supabase.storage.from("photos_v2").createSignedUrl(path, 60 * 60 * 24 * 7);

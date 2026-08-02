@@ -127,5 +127,11 @@ export interface ColourAnalysis {
   // exists. Absent on analyses created before this feature, so treat as
   // optional. Panel order is not guaranteed to match `colours`, so never
   // label panels positionally, show the swatch list separately.
-  drapings?: { storagePath: string; colours: Array<{ label: string; hex: string }> };
+  /**
+   * The generated colour grid. `generations` counts how many have been produced
+   * for this scan and is what the spend ceiling in lib/v2/generationBudget.ts
+   * is checked against; rows generated before that counter existed are treated
+   * as one.
+   */
+  drapings?: { storagePath: string; colours: Array<{ label: string; hex: string }>; generations?: number };
 }

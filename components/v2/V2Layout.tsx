@@ -30,7 +30,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
     display: "none",
     flexDirection: "column",
     justifyContent: "space-between",
-    background: "var(--primary)",
+    background: "var(--panel)",
     padding: "5.6rem 6.4rem",
     position: "sticky",
     top: 0,

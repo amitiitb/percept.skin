@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { IconPhoto } from "@/components/ui/icons";
 
 interface FrameDef {
   id: string; name: string; file: string;
@@ -115,9 +116,10 @@ export default function LiveEyewearTryOn({ frame }: { frame: FrameDef }) {
       {status === "active" && (
         <button
           onClick={() => { const a = document.createElement("a"); a.href = canvasRef.current?.toDataURL("image/jpeg",0.92) ?? ""; a.download = `glowmetry-live-${frame.id}.jpg`; a.click(); }}
-          style={{ marginTop: "1.2rem", height: "4.8rem", padding: "0 2.8rem", background: "var(--primary)", color: "#fff", border: "none", borderRadius: "9999px", fontSize: "1.5rem", fontWeight: 600, cursor: "pointer" }}
+          style={{ marginTop: "1.2rem", height: "4.8rem", padding: "0 2.8rem", background: "var(--btn-fill)", color: "var(--btn-fill-ink)", border: "none", borderRadius: "9999px", fontSize: "1.5rem", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.8rem" }}
         >
-          📷 Capture
+          <IconPhoto size={1.6} />
+          Capture
         </button>
       )}
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>

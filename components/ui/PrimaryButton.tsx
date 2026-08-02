@@ -7,7 +7,9 @@ interface Props {
   onClick?: () => void;
   disabled?: boolean;
   loading?: boolean;
-  variant?: "primary" | "outline" | "ghost";
+  /** `onDark` is the filled variant for use on the primary-coloured cards,
+   *  where `primary` renders dark-on-dark and reads as an outline button. */
+  variant?: "primary" | "outline" | "ghost" | "onDark";
   size?: "sm" | "md" | "lg";
   type?: "button" | "submit";
   fullWidth?: boolean;
@@ -19,16 +21,22 @@ const SIZE: Record<string, CSSProperties> = {
   lg: { height: "6.4rem", padding: "0 4rem",   fontSize: "1.9rem" },
 };
 
+// Both filled variants pin their own text colour instead of reading a theme
+// token. `primary` is white on the dark panel and `onDark` is dark on white,
+// and those pairings must hold in either theme — using var(--primary) for the
+// type would flip it to near-white in dark mode and print white on white.
 const VARIANT: Record<string, CSSProperties> = {
-  primary: { background: "var(--primary)", color: "#fff",          borderColor: "var(--primary)"  },
+  primary: { background: "var(--btn-fill)", color: "var(--btn-fill-ink)", borderColor: "var(--btn-fill)" },
   outline: { background: "transparent",   color: "var(--primary)", borderColor: "var(--line-strong)" },
   ghost:   { background: "transparent",   color: "var(--secondary)", borderColor: "transparent"   },
+  onDark:  { background: "#fff",          color: "#003934",        borderColor: "#fff"            },
 };
 
 const HOVER: Record<string, CSSProperties> = {
-  primary: { background: "#0A4F49" },
+  primary: { background: "var(--btn-fill-hover)" },
   outline: { background: "var(--wash)", borderColor: "var(--primary)" },
   ghost:   { background: "var(--wash)", color: "var(--primary)" },
+  onDark:  { background: "#DDE9E6", borderColor: "#DDE9E6" },
 };
 
 export function PrimaryButton({

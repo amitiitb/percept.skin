@@ -30,7 +30,7 @@ export default function NotFound() {
         <Link href="/start" style={{
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           height: "5.2rem", padding: "0 3.2rem", borderRadius: "9999px",
-          background: "var(--primary)", color: "#fff",
+          background: "var(--btn-fill)", color: "var(--btn-fill-ink)",
           fontSize: "1.5rem", fontWeight: 500, textDecoration: "none",
         }}>
           Go to homepage

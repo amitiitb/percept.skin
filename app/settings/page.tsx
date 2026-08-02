@@ -172,7 +172,7 @@ export default function V2SettingsPage() {
           transition={{ duration: 0.4 }}
           style={{
             display: "flex", alignItems: "center", gap: "1.8rem", padding: "2.8rem",
-            background: "var(--primary)", borderRadius: "1.8rem", marginBottom: "3.2rem",
+            background: "var(--panel)", borderRadius: "1.8rem", marginBottom: "3.2rem",
             position: "relative", overflow: "hidden",
           }}
         >

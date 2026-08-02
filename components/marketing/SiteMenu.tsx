@@ -7,6 +7,7 @@ interface MenuLink {
 }
 
 const LINKS: MenuLink[] = [
+  { label: "What you get", href: "#what-you-get" },
   { label: "Why Glowmetry", href: "#why" },
   { label: "Experts", href: "#experts" },
   { label: "Pricing", href: "#pricing" },
@@ -37,7 +38,7 @@ export function SiteMenu({ open, onClose }: Props) {
           transition={{ duration: 0.25 }}
           style={{
             position: "fixed", inset: 0, zIndex: 100,
-            background: "rgba(232,231,229,0.98)", backdropFilter: "blur(12px)",
+            background: "var(--header-bg)", backdropFilter: "blur(18px)",
             display: "flex", flexDirection: "column",
           }}
         >
@@ -98,8 +99,17 @@ export function SiteMenu({ open, onClose }: Props) {
                 letterSpacing: "0.12em", background: "rgba(26,158,143,0.1)", color: "var(--rose)",
                 padding: "0.4rem 1.2rem", borderRadius: "9999px",
               }}>
-                Start
+                Free
               </span>
+            </a>
+
+            {/* On a phone the hamburger is the only nav, so the account route
+                has to live here too — not just in the desktop header bar. */}
+            <a
+              href="/auth/login"
+              style={{ marginTop: "2rem", width: "fit-content", fontSize: "1.7rem", fontWeight: 500, color: "var(--secondary)" }}
+            >
+              Already have an account? <span style={{ color: "var(--primary)", fontWeight: 700 }}>Log in</span>
             </a>
           </div>
 

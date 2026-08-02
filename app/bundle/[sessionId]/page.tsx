@@ -4,6 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { MODULES, BUNDLE_PRICE, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, BUNDLE_DISCOUNT_PCT, DOCTOR_CONSULTATION_PRICE, priceFor, type ModuleId } from "@/lib/v2/reportModules";
+import { IconCheck } from "@/components/ui/icons";
 
 // Real backend stages written by app/api/analyse/route.ts — not decoration.
 // Order matters: it's also the step-counter denominator (index + 1 of 4).
@@ -408,7 +409,7 @@ export default function V2BundlePage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             style={{
-              position: "fixed", inset: 0, zIndex: 200, background: "var(--primary)",
+              position: "fixed", inset: 0, zIndex: 200, background: "var(--panel)",
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               padding: "3.2rem", overflow: "hidden",
             }}
@@ -552,7 +553,7 @@ export default function V2BundlePage() {
                   <motion.div
                     layoutId="planPill"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    style={{ position: "absolute", inset: "0.2rem", background: "var(--primary)", borderRadius: "1.2rem", zIndex: -1 }}
+                    style={{ position: "absolute", inset: "0.2rem", background: "var(--panel)", borderRadius: "1.2rem", zIndex: -1 }}
                   />
                 )}
                 <span style={{ fontSize: "1.3rem", fontWeight: 600, color: active ? "#fff" : "var(--secondary)", lineHeight: 1.2, transition: "color 0.2s" }}>{tile.label}</span>
@@ -575,7 +576,7 @@ export default function V2BundlePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           style={{
-            position: "relative", background: "var(--primary)", borderRadius: "2rem", padding: "3.2rem",
+            position: "relative", background: "var(--panel)", borderRadius: "2rem", padding: "3.2rem",
             border: isBundle ? "2px solid var(--rose)" : "2px solid transparent",
             overflow: "hidden", marginBottom: "1.2rem",
           }}
@@ -637,7 +638,7 @@ export default function V2BundlePage() {
             <div style={{ display: "flex", alignItems: "baseline", gap: "1.2rem" }}>
               {isBundle && <span style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.4)", textDecoration: "line-through" }}>${INDIVIDUAL_TOTAL}</span>}
               <span style={{ fontSize: "3.6rem", fontWeight: 300, color: "#fff" }}>${price}</span>
-              {isBundle && <span style={{ fontSize: "1.3rem", color: "var(--rose)", fontWeight: 600 }}>✓ Bundle applied</span>}
+              {isBundle && <span style={{ fontSize: "1.3rem", color: "var(--rose)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}><IconCheck size={1.4} strokeWidth={2.4} /> Bundle applied</span>}
             </div>
           </div>
         </motion.div>
@@ -659,13 +660,13 @@ export default function V2BundlePage() {
             style={{
               width: "6.4rem", height: "6.4rem", borderRadius: "50%", flexShrink: 0, cursor: "pointer",
               border: `2px solid ${purchasePath === "combo" ? "var(--primary)" : "var(--line-strong)"}`,
-              background: purchasePath === "combo" ? "var(--primary)" : "var(--surface)",
-              color: purchasePath === "combo" ? "#fff" : "var(--primary)",
+              background: purchasePath === "combo" ? "var(--btn-fill)" : "var(--surface)",
+              color: purchasePath === "combo" ? "var(--btn-fill-ink)" : "var(--primary)",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: "3.2rem", fontWeight: 300, lineHeight: 1, transition: "background 0.15s, color 0.15s, border-color 0.15s",
             }}
           >
-            {purchasePath === "combo" ? "✓" : "+"}
+            {purchasePath === "combo" ? <IconCheck size={1.6} strokeWidth={2.6} /> : "+"}
           </motion.button>
           <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "var(--primary)" }}>
             {purchasePath === "combo" ? "Consultation added" : `Add Consultation · $${DOCTOR_CONSULTATION_PRICE}`}

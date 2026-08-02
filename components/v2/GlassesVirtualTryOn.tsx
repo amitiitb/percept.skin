@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState, useCallback, CSSProperties } from "react";
 import Image from "next/image";
 import LiveEyewearTryOn from "./LiveEyewearTryOn";
+import { IconSparkle, IconPhoto, IconLiveCamera } from "@/components/ui/icons";
 
 interface FrameDef {
   id: string;
@@ -66,7 +67,10 @@ function detectFaceShape(lm: { x: number; y: number }[]): string {
   return "Oval";
 }
 
-interface Props { photoUrl: string; seasonalColour?: string | null; }
+// photoUrl is nullable: the free report reaches this tab before any usable
+// front capture exists, and the render below already falls back to the live
+// camera in that case. Typing it non-null only hid that from callers.
+interface Props { photoUrl: string | null; seasonalColour?: string | null; }
 
 export default function GlassesVirtualTryOn({ photoUrl, seasonalColour }: Props) {
   const canvasRef  = useRef<HTMLCanvasElement>(null);
@@ -120,6 +124,11 @@ export default function GlassesVirtualTryOn({ photoUrl, seasonalColour }: Props)
     async function init() {
       try {
         setStatus("loading");
+        // No photo means photo mode has nothing to detect against. Bail to the
+        // "no photo" state rather than firing an image load at an empty src,
+        // which resolves as an error and reports a face-detection failure the
+        // user cannot act on.
+        if (!photoUrl) { if (!cancelled) setStatus("noface"); return; }
         const photo = new window.Image();
         photo.crossOrigin = "anonymous";
         await new Promise<void>((res,rej) => { photo.onload=()=>res(); photo.onerror=rej; photo.src=photoUrl; });
@@ -170,7 +179,7 @@ export default function GlassesVirtualTryOn({ photoUrl, seasonalColour }: Props)
     display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem",
     padding: "1.2rem 1.6rem",
     border: `1px solid ${active ? "var(--primary)" : rec ? "var(--accent-muted)" : "var(--line)"}`,
-    background: active ? "var(--primary)" : "var(--canvas)",
+    background: active ? "var(--btn-fill)" : "var(--canvas)",
     borderRadius: "0.6rem",
     cursor: "pointer",
     transition: "all 0.15s",
@@ -184,12 +193,14 @@ export default function GlassesVirtualTryOn({ photoUrl, seasonalColour }: Props)
         {(["photo","live"] as const).map(m => (
           <button key={m} onClick={() => setMode(m)} style={{
             height: "4rem", padding: "0 2rem",
-            background: mode===m ? "var(--primary)" : "var(--wash)",
-            color: mode===m ? "#fff" : "var(--secondary)",
+            background: mode===m ? "var(--btn-fill)" : "var(--wash)",
+            color: mode===m ? "var(--btn-fill-ink)" : "var(--secondary)",
             border: `1px solid ${mode===m ? "var(--primary)" : "var(--line)"}`,
             borderRadius: "9999px", fontSize: "1.4rem", fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+            display: "inline-flex", alignItems: "center", gap: "0.8rem",
           }}>
-            {m === "photo" ? "📷 Photo" : "🎥 Live Camera"}
+            {m === "photo" ? <IconPhoto size={1.6} /> : <IconLiveCamera size={1.6} />}
+            {m === "photo" ? "Photo" : "Live Camera"}
           </button>
         ))}
       </div>
@@ -238,7 +249,7 @@ export default function GlassesVirtualTryOn({ photoUrl, seasonalColour }: Props)
               return (
                 <button key={f.id} onClick={() => setFrameIdx(i)}
                   style={{ ...btnStyle(active, isRec), flexShrink: 0, scrollSnapAlign: "start", minWidth: "10rem" }}>
-                  {isRec && <span style={{ position: "absolute", top: "-0.6rem", right: "-0.6rem", width: "1.6rem", height: "1.6rem", borderRadius: "50%", background: "var(--accent-muted)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem" }}>✦</span>}
+                  {isRec && <span style={{ position: "absolute", top: "-0.6rem", right: "-0.6rem", width: "1.6rem", height: "1.6rem", borderRadius: "50%", background: "var(--accent-muted)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}><IconSparkle size={1} strokeWidth={2.6} /></span>}
                   <Image
                     src={f.file}
                     alt={f.name}

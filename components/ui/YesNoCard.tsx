@@ -19,7 +19,7 @@ export function YesNoCard({ value, onChange, placeholder = "Type here" }: Props)
     textAlign: "left" as const,
     padding: "2rem 2.4rem",
     border: `1px solid ${active ? "var(--primary)" : "var(--line)"}`,
-    background: active ? "var(--primary)" : "var(--canvas)",
+    background: active ? "var(--btn-fill)" : "var(--canvas)",
     borderRadius: "0.6rem",
     cursor: "pointer",
     transition: "border-color 0.15s, background 0.15s",

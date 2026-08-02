@@ -5,6 +5,10 @@ import { createClient } from "@/lib/supabase/client";
 import { useFunnelV2Store } from "@/store/funnelV2";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { CAPTURE_STEPS, TOTAL_STEPS, isPhaseTransition } from "@/lib/v2/captureSteps";
+import {
+  createFrameAnalyser, createCues, blockerFor, BLOCKER_MESSAGES, BLOCKER_SPEECH,
+  STABLE_TICKS, COUNTDOWN_TICKS, type AutoCaptureBlocker,
+} from "@/lib/v2/autoCapture";
 import { runQualityChecks, ISSUE_MESSAGES, type QualityIssue } from "@/lib/v2/qualityChecks";
 import { compressImage } from "@/lib/v2/imageCompress";
 import { logV2 } from "@/lib/v2/log";
@@ -126,6 +130,21 @@ export default function V2CapturePage() {
   const [faceLocked, setFaceLocked] = useState(false);
   const faceLockedRef = useRef(false);
 
+  // Hands-free capture. Default on, because the shutter button is the part of
+  // this screen users struggle with, and on the crown step it cannot be seen
+  // or reached at all.
+  const [autoCapture, setAutoCapture] = useState(true);
+  const [blocker, setBlocker] = useState<AutoCaptureBlocker | null>("moving");
+  const [countdown, setCountdown] = useState<number | null>(null);
+  // Rear camera for the crown shot: the screen faces away either way, and the
+  // back camera is the sharper sensor on essentially every phone.
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const analyserRef = useRef<ReturnType<typeof createFrameAnalyser> | null>(null);
+  const cuesRef = useRef<ReturnType<typeof createCues> | null>(null);
+  const autoRafRef = useRef<number>(0);
+  const captureRef = useRef<() => void>(() => {});
+  const spokenRef = useRef<string>("");
+
   useEffect(() => {
     if (!step) { router.replace("/dashboard"); return; }
     setStepIndex(index);
@@ -135,7 +154,7 @@ export default function V2CapturePage() {
     if (showPhaseTransition || captured) return;
     let cancelled = false;
     navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
     }).then((stream) => {
       if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
       streamRef.current = stream;
@@ -146,7 +165,7 @@ export default function V2CapturePage() {
       cancelled = true;
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [showPhaseTransition, captured]);
+  }, [showPhaseTransition, captured, facingMode]);
 
   // Live face-mesh overlay — face steps only, live camera view only.
   useEffect(() => {
@@ -254,6 +273,93 @@ export default function V2CapturePage() {
     };
   }, [showPhaseTransition, captured, cameraError, step]);
 
+  // Hands-free capture loop. Runs at ~10Hz off the live video, independent of
+  // the MediaPipe overlay so it still works on hair steps where no face exists.
+  useEffect(() => {
+    if (!autoCapture || showPhaseTransition || captured || cameraError || !step) return;
+
+    analyserRef.current ??= createFrameAnalyser();
+    cuesRef.current ??= createCues();
+    const analyser = analyserRef.current;
+    const cues = cuesRef.current;
+    analyser.reset();
+    cues.unlock();
+
+    // The crown and hairline shots are taken with the screen pointing away, so
+    // guidance there has to be spoken rather than shown.
+    const eyesFree = step.phase === "hair";
+    const needsFace = step.phase === "face";
+
+    let stable = 0;
+    let counting = 0;
+    let lastTick = 0;
+    let done = false;
+
+    function tick(ts: number) {
+      if (done) return;
+      autoRafRef.current = requestAnimationFrame(tick);
+      if (ts - lastTick < 100) return; // ~10Hz
+      lastTick = ts;
+
+      const video = videoRef.current;
+      if (!video) return;
+      const stats = analyser.analyse(video);
+      if (!stats) return;
+
+      const reason = blockerFor(stats, needsFace, faceLockedRef.current);
+      setBlocker(reason);
+
+      if (reason) {
+        // Any interruption cancels an in-flight countdown outright: resuming a
+        // half-finished count after the user moved would fire on a bad frame.
+        if (counting > 0) { counting = 0; setCountdown(null); }
+        stable = 0;
+        if (eyesFree && spokenRef.current !== reason) {
+          spokenRef.current = reason;
+          cues.speak(BLOCKER_SPEECH[reason]);
+        }
+        return;
+      }
+      spokenRef.current = "";
+
+      if (stable < STABLE_TICKS) {
+        stable += 1;
+        if (stable === STABLE_TICKS) {
+          counting = COUNTDOWN_TICKS;
+          if (eyesFree) cues.speak("Hold it");
+        }
+        return;
+      }
+
+      counting -= 1;
+      const secondsLeft = Math.max(1, Math.ceil(counting / 10));
+      setCountdown(secondsLeft);
+      // One tone per whole second remaining, rising as it closes.
+      if (counting % 10 === 0 && counting > 0) {
+        cues.beep(660 + (3 - secondsLeft) * 120, 80);
+        cues.buzz(30);
+      }
+
+      if (counting <= 0) {
+        done = true;
+        setCountdown(null);
+        cues.shutter();
+        cues.buzz([40, 60, 40]);
+        if (eyesFree) cues.speak("Captured");
+        captureRef.current();
+      }
+    }
+
+    autoRafRef.current = requestAnimationFrame(tick);
+    return () => {
+      done = true;
+      cancelAnimationFrame(autoRafRef.current);
+      setCountdown(null);
+      spokenRef.current = "";
+      cuesRef.current?.stopSpeech();
+    };
+  }, [autoCapture, showPhaseTransition, captured, cameraError, step, facingMode]);
+
   const ensureSession = useCallback(async (): Promise<string> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
@@ -285,7 +391,7 @@ export default function V2CapturePage() {
     setChecking(false);
   }
 
-  function handleCapture() {
+  const handleCapture = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
@@ -293,14 +399,24 @@ export default function V2CapturePage() {
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    // Mirror for a natural selfie-style capture
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    // Mirror the front camera for a natural selfie-style capture. The rear
+    // camera is not mirrored on screen, so mirroring it here would flip the
+    // saved photo relative to what the user was looking at.
+    if (facingMode === "user") {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(video, 0, 0);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
     setCaptured(dataUrl);
     checkFrame(dataUrl);
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facingMode]);
+
+  // The auto loop fires through a ref so it does not need re-creating every
+  // time handleCapture's identity changes. Written in an effect, not during
+  // render: mutating a ref while rendering is not a safe read/write point.
+  useEffect(() => { captureRef.current = handleCapture; }, [handleCapture]);
 
   function handleGalleryFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -364,7 +480,7 @@ export default function V2CapturePage() {
 
   if (showPhaseTransition) {
     return (
-      <div style={{ minHeight: "100dvh", background: "var(--primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem", textAlign: "center" }}>
+      <div style={{ minHeight: "100dvh", background: "var(--panel)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem", textAlign: "center" }}>
         <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1.6rem" }}>Face done!</p>
         <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4rem)", fontWeight: 400, color: "#fff", marginBottom: "1.6rem" }}>Now hair &amp; scalp</h1>
         <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.7)", marginBottom: "4rem" }}>About a minute more.</p>
@@ -403,7 +519,7 @@ export default function V2CapturePage() {
           ) : cameraError ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#fff", padding: "2rem", textAlign: "center", fontSize: "1.4rem" }}>{cameraError}</div>
           ) : (
-            <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }} />
+            <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: facingMode === "user" ? "scaleX(-1)" : "none" }} />
           )}
           {!captured && !cameraError && step.phase === "face" && (
             <canvas
@@ -452,6 +568,37 @@ export default function V2CapturePage() {
               )}
             </>
           )}
+          {/* Auto-capture overlay: a large countdown and a single line of
+              guidance. On hair steps the same information is spoken, since the
+              screen is pointing away from the user. */}
+          {!captured && !cameraError && autoCapture && (
+            <>
+              {countdown !== null && (
+                <div aria-hidden style={{
+                  position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                  pointerEvents: "none",
+                }}>
+                  <div style={{
+                    width: "10rem", height: "10rem", borderRadius: "50%", background: "rgba(0,0,0,0.45)",
+                    border: "3px solid rgba(120,220,255,0.95)", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "4.8rem", fontWeight: 300, color: "#fff",
+                  }}>
+                    {countdown}
+                  </div>
+                </div>
+              )}
+              <div role="status" aria-live="polite" style={{
+                position: "absolute", bottom: "3%", left: "50%", transform: "translateX(-50%)",
+                background: "rgba(0,0,0,0.55)", borderRadius: "9999px", padding: "0.7rem 1.6rem",
+                maxWidth: "88%", textAlign: "center",
+              }}>
+                <span style={{ fontSize: "1.3rem", color: "#fff", fontWeight: 500 }}>
+                  {countdown !== null ? "Hold it" : blocker ? BLOCKER_MESSAGES[blocker] : "Ready"}
+                </span>
+              </div>
+            </>
+          )}
+
           {/* Hair-phase framing guides — a face-shaped oval made no sense for
               these shots (crown looks down at a round scalp, hairline is a
               horizontal band, parting is a thin close-up line), so each hair
@@ -499,7 +646,46 @@ export default function V2CapturePage() {
             </div>
           ) : (
             <>
-              <button onClick={handleCapture} aria-label="Capture photo" style={{ width: "7.2rem", height: "7.2rem", borderRadius: "50%", background: "var(--primary)", border: "4px solid var(--canvas)", boxShadow: "0 0 0 2px var(--primary)", cursor: "pointer" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "1.2rem", marginBottom: "0.4rem", flexWrap: "wrap", justifyContent: "center" }}>
+                <button
+                  onClick={() => { cuesRef.current?.unlock(); setAutoCapture((v) => !v); }}
+                  aria-pressed={autoCapture}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.7rem 1.4rem",
+                    borderRadius: "9999px", cursor: "pointer", fontSize: "1.3rem", fontWeight: 600,
+                    border: `1px solid ${autoCapture ? "var(--primary)" : "var(--line)"}`,
+                    background: autoCapture ? "var(--btn-fill)" : "var(--surface)",
+                    color: autoCapture ? "var(--btn-fill-ink)" : "var(--secondary)",
+                  }}
+                >
+                  <span aria-hidden>{autoCapture ? "◉" : "○"}</span>
+                  Auto capture {autoCapture ? "on" : "off"}
+                </button>
+                {/* Only offered on hair steps: the crown shot is taken with the
+                    phone overhead, where the rear camera is both sharper and
+                    the one actually pointing at the scalp. */}
+                {step.phase === "hair" && (
+                  <button
+                    onClick={() => setFacingMode((m) => (m === "user" ? "environment" : "user"))}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: "0.6rem", padding: "0.7rem 1.4rem",
+                      borderRadius: "9999px", cursor: "pointer", fontSize: "1.3rem", fontWeight: 600,
+                      border: "1px solid var(--line)", background: "var(--surface)", color: "var(--secondary)",
+                    }}
+                  >
+                    <span aria-hidden>⟲</span>
+                    {facingMode === "user" ? "Use back camera" : "Use front camera"}
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={handleCapture}
+                aria-label="Capture photo now"
+                style={{ width: "7.2rem", height: "7.2rem", borderRadius: "50%", background: "var(--primary)", border: "4px solid var(--canvas)", boxShadow: "0 0 0 2px var(--primary)", cursor: "pointer" }}
+              />
+              <p style={{ fontSize: "1.2rem", color: "var(--muted)", margin: "0.2rem 0 0", textAlign: "center" }}>
+                {autoCapture ? "Frames itself and shoots when you hold still. Tap to override." : "Tap the button to capture."}
+              </p>
               <button onClick={() => fileInputRef.current?.click()} style={{ background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: "0.6rem" }}>
                 Upload from gallery →
               </button>

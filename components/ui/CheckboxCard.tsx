@@ -14,7 +14,7 @@ export function CheckboxCard({ label, sub, checked, onToggle }: Props) {
     textAlign: "left",
     padding: "1.8rem 2.4rem",
     border: `1px solid ${checked ? "var(--primary)" : "var(--line)"}`,
-    background: checked ? "var(--primary)" : "var(--canvas)",
+    background: checked ? "var(--btn-fill)" : "var(--canvas)",
     borderRadius: "0.6rem",
     cursor: "pointer",
     transition: "border-color 0.15s, background 0.15s",

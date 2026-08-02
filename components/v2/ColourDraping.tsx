@@ -497,7 +497,7 @@ export default function ColourDraping({
             </p>
             <div style={{ borderRadius: "1rem", overflow: "hidden", border: "1px solid var(--line)" }}>
               <DrapedPhoto img={img} colour={c.hex} anchor={anchor} enhance={enhance} width={360} height={450} />
-              <figcaption style={{ background: "var(--primary)", color: "rgba(255,255,255,0.92)", fontSize: "1.3rem", fontStyle: "italic", textAlign: "center", padding: "0.9rem 1.2rem" }}>
+              <figcaption style={{ background: "var(--panel)", color: "rgba(255,255,255,0.92)", fontSize: "1.3rem", fontStyle: "italic", textAlign: "center", padding: "0.9rem 1.2rem" }}>
                 {captionFor(i)}
               </figcaption>
             </div>

@@ -3,6 +3,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function LoginPage() {
   return (
@@ -52,6 +53,7 @@ function LoginForm() {
 
   return (
     <div style={{
+      position: "relative",
       minHeight: "100dvh",
       background: "var(--canvas)",
       display: "flex",
@@ -60,6 +62,7 @@ function LoginForm() {
       justifyContent: "center",
       padding: "3.2rem 2.4rem",
     }}>
+      <div style={{ position: "absolute", top: "2rem", right: "2rem" }}><ThemeToggle compact /></div>
       <a href="/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
         Glow<span style={{ color: "var(--rose)" }}>metry</span>
       </a>
@@ -103,8 +106,8 @@ function LoginForm() {
             style={{
               marginTop: "0.8rem",
               height: "6rem",
-              background: loading ? "var(--secondary)" : "var(--primary)",
-              color: "#fff",
+              background: loading ? "var(--secondary)" : "var(--btn-fill)",
+              color: "var(--btn-fill-ink)",
               border: "none",
               borderRadius: "9999px",
               fontSize: "1.8rem",
@@ -163,7 +166,7 @@ function Field({ label, type, value, onChange, placeholder, autoComplete }: {
         onBlur={() => setFocused(false)}
         style={{
           width: "100%", height: "5.6rem", padding: "0 2rem",
-          fontSize: "1.6rem", color: "var(--primary)", background: "#fff",
+          fontSize: "1.6rem", color: "var(--primary)", background: "var(--surface)",
           border: `1px solid ${focused ? "var(--primary)" : "var(--line)"}`,
           borderRadius: "1.2rem", outline: "none",
           transition: "border-color 0.15s", boxSizing: "border-box",

@@ -15,7 +15,7 @@ export function RadioCard({ label, sub, selected, onSelect, badge }: Props) {
     textAlign: "left",
     padding: "2rem 2.4rem",
     border: `1px solid ${selected ? "var(--primary)" : "var(--line)"}`,
-    background: selected ? "var(--primary)" : "var(--canvas)",
+    background: selected ? "var(--btn-fill)" : "var(--canvas)",
     borderRadius: "0.6rem",
     cursor: "pointer",
     transition: "border-color 0.15s, background 0.15s",

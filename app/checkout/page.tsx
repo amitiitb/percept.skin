@@ -92,7 +92,7 @@ function V2CheckoutInner() {
       <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2rem", padding: "4rem", textAlign: "center" }}>
         <p style={{ fontSize: "2.4rem", color: "var(--primary)" }}>You&apos;re Premium 🎉</p>
         <p style={{ fontSize: "1.6rem", color: "var(--secondary)" }}>Your full report is unlocked.</p>
-        <button onClick={() => router.push("/dashboard")} style={{ marginTop: "1.2rem", background: "var(--primary)", color: "#fff", border: "none", borderRadius: "9999px", padding: "1.6rem 3.2rem", fontSize: "1.6rem", cursor: "pointer" }}>
+        <button onClick={() => router.push("/dashboard")} style={{ marginTop: "1.2rem", background: "var(--btn-fill)", color: "var(--btn-fill-ink)", border: "none", borderRadius: "9999px", padding: "1.6rem 3.2rem", fontSize: "1.6rem", cursor: "pointer" }}>
           Go to dashboard →
         </button>
       </div>

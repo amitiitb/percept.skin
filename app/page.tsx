@@ -4,6 +4,10 @@ import Image from "next/image";
 import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
+import { HeaderAuth } from "@/components/marketing/HeaderAuth";
+import { WhatYouGet } from "@/components/marketing/WhatYouGet";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { IconCheck, IconClose } from "@/components/ui/icons";
 import { MODULES, BUNDLE_PRICE, BUNDLE_DISCOUNT_PCT, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 
 const GOLD = "#D9A62E";
@@ -72,7 +76,7 @@ function MarqueeGroup({ duplicate }: { duplicate?: boolean }) {
 
 function MarqueeStrip() {
   return (
-    <div className="glowmetry-marquee" aria-hidden style={{ overflow: "hidden", background: "var(--primary)" }}>
+    <div className="glowmetry-marquee" aria-hidden style={{ overflow: "hidden", background: "var(--panel)" }}>
       <div className="glowmetry-marquee-track" style={{ display: "flex", width: "max-content", padding: "1.4rem 0" }}>
         <MarqueeGroup />
         {/* Duplicated once so the CSS animation can loop seamlessly at -50%
@@ -336,14 +340,16 @@ export default function LandingPage() {
         <div style={{
           maxWidth: "128rem", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "1.2rem 1.2rem 1.2rem 2.4rem", borderRadius: "9999px", border: "1px solid var(--line)",
-          background: "rgba(232,231,229,0.82)", backdropFilter: "blur(10px)",
+          background: "var(--header-bg)", backdropFilter: "blur(10px)",
         }}>
           <a href="/" style={{ fontSize: "1.8rem", fontWeight: 600, color: "var(--primary)", letterSpacing: "-0.02em" }}>
             Glow<span style={{ color: "var(--rose)" }}>metry</span>
           </a>
-          <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
+            <HeaderAuth />
+            <ThemeToggle compact />
             <a href="/splash" style={{ display: "none" }} className="site-header-cta">
-              <PrimaryButton size="sm" fullWidth={false}>Start your scan</PrimaryButton>
+              <PrimaryButton size="sm" fullWidth={false}>Start free</PrimaryButton>
             </a>
             <button
               onClick={() => setMenuOpen(true)}
@@ -432,6 +438,8 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <WhatYouGet />
+
       {/* ── Why Glowmetry ── */}
       <section id="why" style={{ padding: "8rem 3.2rem", background: "var(--surface)", position: "relative" }}>
         <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
@@ -466,7 +474,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Why it matters (research) ── */}
-      <section style={{ padding: "8rem 3.2rem", background: "var(--primary)", position: "relative", overflow: "hidden" }}>
+      <section style={{ padding: "8rem 3.2rem", background: "var(--panel)", position: "relative", overflow: "hidden" }}>
         <div aria-hidden style={{ position: "absolute", top: "-25%", right: "-10%", width: "48rem", height: "48rem", borderRadius: "50%", background: `radial-gradient(circle, ${GOLD} 0%, transparent 70%)`, opacity: 0.12, filter: "blur(60px)" }} />
         <div style={{ maxWidth: "108rem", margin: "0 auto", position: "relative" }}>
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
@@ -523,7 +531,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Pricing ── */}
-      <section id="pricing" style={{ padding: "8rem 3.2rem", background: "var(--primary)", position: "relative", overflow: "hidden" }}>
+      <section id="pricing" style={{ padding: "8rem 3.2rem", background: "var(--panel)", position: "relative", overflow: "hidden" }}>
         <div aria-hidden style={{ position: "absolute", top: "-20%", left: "50%", transform: "translateX(-50%)", width: "80rem", height: "80rem", borderRadius: "50%", background: `radial-gradient(circle, ${GOLD} 0%, transparent 65%)`, opacity: 0.16, filter: "blur(40px)", pointerEvents: "none" }} />
         <motion.div
           initial={{ opacity: 0, y: 28 }}
@@ -549,7 +557,7 @@ export default function LandingPage() {
             {/* Old way — light card floating on the dark section for maximum contrast */}
             <div style={{ background: "var(--surface)", borderRadius: "1.6rem", padding: "3.2rem" }}>
               <p style={{ display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
-                <span style={{ color: CORAL }}>✕</span> The old way
+                <span aria-hidden style={{ color: CORAL, display: "flex" }}><IconClose size={1.4} strokeWidth={2.4} /></span> The old way
               </p>
               {OLD_WAY.map((item) => (
                 <div key={item.label} style={{ display: "flex", justifyContent: "space-between", padding: "1.2rem 0", borderBottom: "1px solid var(--line)" }}>
@@ -578,7 +586,7 @@ export default function LandingPage() {
                 transition={{ duration: 2.6, repeat: Infinity, repeatDelay: 2.2, ease: "easeInOut" }}
                 style={{ position: "absolute", top: 0, bottom: 0, width: "30%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)", pointerEvents: "none" }}
               />
-              <div style={{ position: "absolute", top: "1.6rem", right: "-3.2rem", transform: "rotate(45deg)", background: "var(--primary)", color: GOLD, fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.08em", padding: "0.5rem 4rem", textTransform: "uppercase" }}>
+              <div style={{ position: "absolute", top: "1.6rem", right: "-3.2rem", transform: "rotate(45deg)", background: "var(--panel)", color: GOLD, fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.08em", padding: "0.5rem 4rem", textTransform: "uppercase" }}>
                 50% off
               </div>
               <p style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
@@ -587,7 +595,7 @@ export default function LandingPage() {
               {MODULES.map((m) => (
                 <div key={m.id} style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(0,57,52,0.15)" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500 }}>
-                    <span style={{ fontWeight: 700 }}>✓</span> {m.label}
+                    <span aria-hidden style={{ display: "flex" }}><IconCheck size={1.5} strokeWidth={2.4} /></span> {m.label}
                   </span>
                 </div>
               ))}
@@ -679,7 +687,7 @@ export default function LandingPage() {
         <WaveDivider fill="var(--primary)" variant={1} />
       </section>
 
-      <footer style={{ background: "var(--primary)", padding: "6.4rem 3.2rem 2.4rem" }}>
+      <footer style={{ background: "var(--panel)", padding: "6.4rem 3.2rem 2.4rem" }}>
         <div style={{ maxWidth: "128rem", margin: "0 auto" }}>
           <div className="glowmetry-footer-grid" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: "4rem", paddingBottom: "4rem", borderBottom: "1px solid rgba(255,255,255,0.14)" }}>
             <div className="glowmetry-footer-brand">
@@ -733,6 +741,9 @@ export default function LandingPage() {
       <style>{`
         #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
         @media (min-width: 640px) { .site-header-cta { display: inline-block !important; } }
+        /* Below this the hamburger carries the login link instead, so the bar
+           stays three controls wide and never wraps. */
+        @media (min-width: 520px) { .site-header-login { display: inline-flex !important; } }
         .glowmetry-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .glowmetry-carousel::-webkit-scrollbar { display: none; }
         @media (max-width: 900px) {

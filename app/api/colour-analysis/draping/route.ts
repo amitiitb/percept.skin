@@ -5,6 +5,8 @@ import { generateColourGrid, COLOUR_OCCASIONS } from "@/lib/v2/gemini";
 import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
+import { replaceImage } from "@/lib/v2/storageUpload";
+import { MAX_GENERATIONS, budgetExhaustedMessage } from "@/lib/v2/generationBudget";
 import type { ColourAnalysis, ColourSwatch } from "@/lib/v2/types";
 
 // How many palette colours are fed into the single composite grid. One
@@ -23,6 +25,8 @@ export interface DrapingResult {
   storagePath: string;
   colours: Array<{ label: string; hex: string }>;
   url?: string;
+  /** Regenerations left for this scan after the one just produced. */
+  remaining?: number;
 }
 
 export async function POST(req: NextRequest) {
@@ -54,6 +58,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Run your colour analysis first, then generate the previews" }, { status: 409 });
   }
 
+  // Unlike the hairstyle and frame grids there is no row per generation here,
+  // so the count rides along in the stored analysis. A grid saved before this
+  // counter existed has no `generations` field and counts as one.
+  const used = analysis.drapings ? (analysis.drapings.generations ?? 1) : 0;
+  if (used >= MAX_GENERATIONS) {
+    return NextResponse.json({ error: budgetExhaustedMessage("colour"), remaining: 0 }, { status: 429 });
+  }
+
   const picks: ColourSwatch[] = (analysis.best_colours ?? []).slice(0, BEST_COUNT);
   if (picks.length === 0) {
     return NextResponse.json({ error: "No colours available to preview" }, { status: 409 });
@@ -64,8 +76,7 @@ export async function POST(req: NextRequest) {
     const ext = mimeType.includes("png") ? "png" : "jpg";
     const path = `${auth.userId}/${sessionId}/colour-grid.${ext}`;
 
-    const { error: upErr } = await supabase.storage.from("photos_v2")
-      .upload(path, Buffer.from(base64, "base64"), { contentType: mimeType, upsert: true });
+    const { error: upErr } = await replaceImage(supabase, path, Buffer.from(base64, "base64"), mimeType);
     if (upErr) throw upErr;
     const { data: signed } = await supabase.storage.from("photos_v2").createSignedUrl(path, 60 * 60 * 24 * 7);
 
@@ -74,11 +85,11 @@ export async function POST(req: NextRequest) {
     // Persist alongside the analysis so revisiting the report does not pay to
     // regenerate. Path only, never the signed URL, since those expire.
     await supabase.from("colour_analysis_v2")
-      .update({ data: { ...analysis, drapings: { storagePath: path, colours } } })
+      .update({ data: { ...analysis, drapings: { storagePath: path, colours, generations: used + 1 } } })
       .eq("session_id", sessionId).eq("user_id", auth.userId);
 
     logV2.info("v2_colour_grid_generated", { user_id: auth.userId, session_id: sessionId, colours: colours.length });
-    return NextResponse.json({ storagePath: path, colours, occasions: COLOUR_OCCASIONS, url: signed?.signedUrl } as DrapingResult);
+    return NextResponse.json({ storagePath: path, colours, occasions: COLOUR_OCCASIONS, url: signed?.signedUrl, remaining: MAX_GENERATIONS - used - 1 } as DrapingResult);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logV2.error("v2_colour_draping_failed", { user_id: auth.userId, session_id: sessionId, message });

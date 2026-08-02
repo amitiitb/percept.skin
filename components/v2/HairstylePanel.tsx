@@ -2,18 +2,23 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { IconRefresh } from "@/components/ui/icons";
 
 interface Props {
   sessionId: string;
   photo: string | null;
   isPremium: boolean;
   onRequirePremium: () => void;
+  /** Storage path of a grid generated on an earlier visit, if any. */
+  initialPath?: string | null;
+  /** Regenerations left for this scan, from the stored generation count. */
+  initialRemaining?: number;
 }
 
 // One generated grid instead of a style-picker that billed a separate
 // generation per tap. Same reasoning as the colour grid: cheaper, one wait
 // instead of five, and every panel is lit and framed identically.
-const OCCASION_LABELS = ["Office", "Wedding / formal", "Everyday casual", "Evening party", "Short & low-maintenance"];
+const OCCASION_LABELS = ["Office", "Wedding / formal", "Everyday casual", "Evening party", "Short & low-maintenance", "Textured everyday"];
 
 // Short, practical guidance. Deliberately brief: the report already carries
 // the scored hair metrics and their reference material, so this is the
@@ -27,11 +32,15 @@ const CARE_TIPS: Array<{ heading: string; body: string }> = [
   { heading: "Trim", body: "Every eight to twelve weeks. Split ends travel upward and cannot be repaired once they start." },
 ];
 
-export default function HairstylePanel({ sessionId, photo, isPremium, onRequirePremium }: Props) {
+export default function HairstylePanel({ sessionId, photo, isPremium, onRequirePremium, initialPath, initialRemaining = 0 }: Props) {
   const supabase = createClient();
   const [url, setUrl] = useState<string | null>(null);
-  const [occasions, setOccasions] = useState<string[]>([]);
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
+  // Regenerations left for this scan. The route is the authority and returns an
+  // updated figure with every generation; this only decides whether the button
+  // is worth showing.
+  const [remaining, setRemaining] = useState(initialRemaining);
+
   const [error, setError] = useState("");
 
   async function generate() {
@@ -48,7 +57,8 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Could not generate your hairstyle previews");
-      setUrl(body.url); setOccasions(body.occasions ?? []);
+      setUrl(body.url);
+      if (typeof body.remaining === "number") setRemaining(body.remaining);
       setState("idle");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -56,15 +66,26 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
     }
   }
 
+  // A grid generated on an earlier visit is stored, so re-sign it rather than
+  // paying for the same image again. Without this the panel billed a fresh
+  // generation on every report view, and once the report gained tabs, on every
+  // switch back to this tab. Signed URLs expire, so only the path is persisted.
+  const [resolved, setResolved] = useState(false);
+  if (initialPath && !resolved && !url) {
+    setResolved(true);
+    supabase.storage.from("photos_v2").createSignedUrl(initialPath, 60 * 60 * 24 * 7)
+      .then(({ data }) => { if (data?.signedUrl) setUrl(data.signedUrl); });
+  }
+
   // Already paid for, so it should not need a second click to unlock.
   // Ref guard prevents React's dev double-mount billing two generations.
   const kicked = useRef(false);
   useEffect(() => {
-    if (kicked.current || url || !photo || !isPremium) return;
+    if (kicked.current || url || initialPath || !photo || !isPremium) return;
     kicked.current = true;
     generate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photo, isPremium]);
+  }, [photo, isPremium, initialPath]);
 
   return (
     <div style={{ marginTop: "4rem", paddingTop: "4rem", borderTop: "1px solid var(--line)" }}>
@@ -74,17 +95,37 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
       </p>
 
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <div style={{ marginBottom: "3.2rem" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt="Hairstyle previews on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(13rem, 1fr))", gap: "0.8rem", marginTop: "1.4rem" }}>
-            {(occasions.length ? occasions : OCCASION_LABELS).map((o, i) => (
-              <p key={i} style={{ fontSize: "1.25rem", color: "var(--secondary)", margin: 0, lineHeight: 1.4 }}>
-                <span style={{ color: "var(--rose)", fontWeight: 700 }}>{i + 1}.</span> {OCCASION_LABELS[i] ?? o}
-              </p>
+          <div style={{ marginTop: "1.4rem" }}>
+          <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>Generated to cover</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+            {OCCASION_LABELS.map((o, i) => (
+              <span key={i} style={{ fontSize: "1.25rem", color: "var(--primary)", background: "var(--wash)", borderRadius: "9999px", padding: "0.5rem 1.2rem" }}>
+                {o.charAt(0).toUpperCase() + o.slice(1)}
+              </span>
             ))}
           </div>
+        </div>
+          {remaining > 0 && (
+            <div style={{ marginTop: "1.6rem" }}>
+              <button
+                type="button"
+                onClick={generate}
+                disabled={state === "loading"}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.7rem", padding: "0.8rem 1.6rem",
+                  borderRadius: "9999px", border: "1px solid var(--line)", background: "var(--surface)",
+                  cursor: state === "loading" ? "default" : "pointer", fontSize: "1.3rem", fontWeight: 600,
+                  color: "var(--primary)", opacity: state === "loading" ? 0.6 : 1,
+                }}
+              >
+                <IconRefresh size={1.5} strokeWidth={2} />
+                {state === "loading" ? "Generating a new set…" : `Try a different set (${remaining} left)`}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div style={{ textAlign: "center", padding: "3.2rem 0", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.2rem", marginBottom: "3.2rem" }}>

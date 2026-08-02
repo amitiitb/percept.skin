@@ -27,7 +27,7 @@ export function LockedCard({ title, description, onUnlock, children }: Props) {
           </div>
         )}
       </div>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1.2rem", padding: "2rem", background: "linear-gradient(180deg, rgba(250,249,246,0.2), rgba(250,249,246,0.85))" }}>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1.2rem", padding: "2rem", background: "linear-gradient(180deg, var(--scrim-top), var(--scrim-bottom))" }}>
         <p style={{ fontSize: "1.6rem", fontWeight: 500, color: "var(--primary)", textAlign: "center", margin: 0 }}>{title}</p>
         <p style={{ fontSize: "1.4rem", color: "var(--secondary)", textAlign: "center", margin: 0, maxWidth: "32rem" }}>{description}</p>
         <PrimaryButton fullWidth={false} onClick={onUnlock}>Unlock full report →</PrimaryButton>

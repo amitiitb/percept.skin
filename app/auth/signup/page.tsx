@@ -3,6 +3,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { IconLock } from "@/components/ui/icons";
 
 export default function SignupPage() {
   return (
@@ -84,6 +86,7 @@ function SignupForm() {
 
   return (
     <div style={{
+      position: "relative",
       minHeight: "100dvh",
       background: "var(--canvas)",
       display: "flex",
@@ -92,6 +95,7 @@ function SignupForm() {
       justifyContent: "center",
       padding: "3.2rem 2.4rem",
     }}>
+      <div style={{ position: "absolute", top: "2rem", right: "2rem" }}><ThemeToggle compact /></div>
       {/* Logo */}
       <a href="/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
         Glow<span style={{ color: "var(--rose)" }}>metry</span>
@@ -163,8 +167,8 @@ function SignupForm() {
             style={{
               marginTop: "0.8rem",
               height: "6rem",
-              background: loading ? "var(--secondary)" : "var(--primary)",
-              color: "#fff",
+              background: loading ? "var(--secondary)" : "var(--btn-fill)",
+              color: "var(--btn-fill-ink)",
               border: "none",
               borderRadius: "9999px",
               fontSize: "1.8rem",
@@ -194,7 +198,7 @@ function SignupForm() {
         </p>
 
         <p style={{ marginTop: "2rem", fontSize: "1.2rem", color: "var(--muted)", textAlign: "center" }}>
-          🔒 Your data is encrypted and never shared.
+          <IconLock size={1.4} /> Your data is encrypted and never shared.
         </p>
       </motion.div>
     </div>
@@ -234,7 +238,7 @@ function Field({
           padding: "0 2rem",
           fontSize: "1.6rem",
           color: "var(--primary)",
-          background: "#fff",
+          background: "var(--surface)",
           border: `1px solid ${focused ? "var(--primary)" : "var(--line)"}`,
           borderRadius: "1.2rem",
           outline: "none",

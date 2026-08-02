@@ -28,8 +28,8 @@ function Chip({ selected, onClick, children }: { selected: boolean; onClick: () 
     <button type="button" onClick={onClick} style={{
       padding: "1rem 1.8rem", borderRadius: "9999px", fontSize: "1.4rem", fontWeight: 500,
       border: `1px solid ${selected ? "var(--primary)" : "var(--line)"}`,
-      background: selected ? "var(--primary)" : "var(--canvas)",
-      color: selected ? "#fff" : "var(--secondary)",
+      background: selected ? "var(--btn-fill)" : "var(--canvas)",
+      color: selected ? "var(--btn-fill-ink)" : "var(--secondary)",
       cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
     }}>
       {children}
@@ -172,7 +172,7 @@ export default function V2ProfileSetupPage() {
           onClick={() => setConsent((v) => !v)}
           style={{ display: "flex", gap: "1.2rem", cursor: "pointer", background: "none", border: "none", padding: 0, textAlign: "left" }}
         >
-          <span aria-hidden style={{ flexShrink: 0, marginTop: "0.2rem", width: "2rem", height: "2rem", borderRadius: "0.4rem", border: `2px solid ${consent ? "var(--primary)" : "var(--line-strong)"}`, background: consent ? "var(--primary)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span aria-hidden style={{ flexShrink: 0, marginTop: "0.2rem", width: "2rem", height: "2rem", borderRadius: "0.4rem", border: `2px solid ${consent ? "var(--btn-fill)" : "var(--line-strong)"}`, background: consent ? "var(--btn-fill)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {consent && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           </span>
           <span style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55 }}>
