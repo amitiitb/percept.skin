@@ -449,7 +449,17 @@ export default function V2CapturePage() {
       const compressed = await compressImage(blob);
       const path = `${user.id}/${sessionId}/${step.photoType}.jpg`;
 
-      const { error: upErr } = await supabase.storage.from("photos_v2").upload(path, compressed, { contentType: "image/jpeg", upsert: true });
+      // Not upsert: true. Overwriting an existing object is an UPDATE on
+      // storage.objects, and the photos_v2 bucket only has select/insert/delete
+      // policies (see lib/v2/storageUpload.ts's replaceImage, which every
+      // generation route uses for the same reason). Retaking a photo, or
+      // revisiting a step already shot, re-uploads to the same path and hit
+      // "new row violates row-level security policy" here — surfaced to the
+      // user as the generic "Upload failed" message. Delete-then-insert stays
+      // inside the policies that exist; ignore "not found" on the delete,
+      // that's just the normal first-time-through-this-step case.
+      await supabase.storage.from("photos_v2").remove([path]);
+      const { error: upErr } = await supabase.storage.from("photos_v2").upload(path, compressed, { contentType: "image/jpeg" });
       if (upErr) throw upErr;
 
       const { error: rowErr } = await supabase.from("analysis_photos_v2").upsert({
@@ -470,9 +480,19 @@ export default function V2CapturePage() {
         router.push(`/capture/${index + 1}`);
       }
     } catch (e) {
-      logV2.error("v2_photo_save_failed", { message: e instanceof Error ? e.message : String(e) });
+      // logV2.error is a client-side no-op (lib/v2/log.ts only persists to
+      // Supabase from the server) — a failure here left no trace anywhere,
+      // which is exactly how the RLS bug above went unnoticed until a user
+      // hit it live. The real message is shown below so a screenshot alone
+      // is enough to diagnose the next one.
+      const message = e instanceof Error ? e.message : String(e);
+      logV2.error("v2_photo_save_failed", { message });
       setSaving(false);
-      setSaveError("Upload failed. Check your connection and retry.");
+      setSaveError(
+        /row-level security|permission/i.test(message)
+          ? "Couldn't save that photo. Please retry — if it keeps happening, contact support."
+          : `Upload failed: ${message || "check your connection and retry."}`
+      );
     }
   }
 
