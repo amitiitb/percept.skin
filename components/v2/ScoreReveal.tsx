@@ -9,7 +9,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 // number, which undersold the one screen the whole flow builds toward.
 // Ring + count-up give it an actual reveal. Respects prefers-reduced-motion
 // by jumping straight to the final value instead of animating.
-export function ScoreReveal({ score }: { score: number }) {
+export function ScoreReveal({ score, ringColor = "var(--primary)" }: { score: number; ringColor?: string }) {
   const [display, setDisplay] = useState(0);
   const progress = useMotionValue(0);
   const dashOffset = useTransform(progress, (v) => CIRCUMFERENCE - (v / 100) * CIRCUMFERENCE);
@@ -37,7 +37,7 @@ export function ScoreReveal({ score }: { score: number }) {
       <svg width="100%" height="100%" viewBox="0 0 200 200" style={{ transform: "rotate(-90deg)" }}>
         <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--line)" strokeWidth="8" />
         <motion.circle
-          cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--primary)" strokeWidth="8"
+          cx="100" cy="100" r={RADIUS} fill="none" stroke={ringColor} strokeWidth="8"
           strokeLinecap="round" strokeDasharray={CIRCUMFERENCE} style={{ strokeDashoffset: dashOffset }}
         />
       </svg>

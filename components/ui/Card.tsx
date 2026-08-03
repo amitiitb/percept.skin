@@ -10,7 +10,7 @@ export function Card({ children, eyebrow }: { children: React.ReactNode; eyebrow
       style={{ marginBottom: "2.8rem" }}
     >
       {eyebrow && (
-        <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", paddingLeft: "0.4rem" }}>
+        <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", paddingLeft: "0.4rem" }}>
           {eyebrow}
         </p>
       )}

@@ -77,7 +77,7 @@ function Card({ children, eyebrow }: { children: React.ReactNode; eyebrow?: stri
       style={{ marginBottom: "2.8rem" }}
     >
       {eyebrow && (
-        <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", paddingLeft: "0.4rem" }}>
+        <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", paddingLeft: "0.4rem" }}>
           {eyebrow}
         </p>
       )}
@@ -176,11 +176,12 @@ export default function V2SettingsPage() {
             position: "relative", overflow: "hidden",
           }}
         >
-          <div aria-hidden style={{ position: "absolute", top: "-40%", right: "-15%", width: "20rem", height: "20rem", borderRadius: "50%", background: "var(--rose)", opacity: 0.18, filter: "blur(50px)" }} />
+          <div aria-hidden style={{ position: "absolute", top: "-45%", right: "-10%", width: "26rem", height: "26rem", borderRadius: "50%", background: "#D9A62E", opacity: 0.22, filter: "blur(60px)" }} />
+          <div aria-hidden style={{ position: "absolute", bottom: "-50%", left: "10%", width: "16rem", height: "16rem", borderRadius: "50%", background: "var(--rose)", opacity: 0.16, filter: "blur(50px)" }} />
           <span style={{
             position: "relative", flexShrink: 0, width: "6.4rem", height: "6.4rem", borderRadius: "50%",
-            background: "var(--rose)", color: "#fff", fontSize: "2.4rem", fontWeight: 600,
-            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "linear-gradient(135deg, var(--rose) 0%, #D9A62E 130%)", color: "#fff", fontSize: "2.4rem", fontWeight: 600,
+            display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0.8rem 2.4rem -0.8rem rgba(217,166,46,0.6)",
           }}>
             {initial}
           </span>

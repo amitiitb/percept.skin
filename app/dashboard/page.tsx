@@ -1,11 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useFunnelV2Store } from "@/store/funnelV2";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { DashboardEmptyState } from "@/components/v2/DashboardEmptyState";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { ScoreReveal } from "@/components/v2/ScoreReveal";
+import { Logo } from "@/components/ui/Logo";
+
+const GOLD = "#D9A62E";
+
+const TIPS = [
+  "Retake your scan every 2-3 weeks — that's the smallest gap where real change actually shows up.",
+  "Same lighting and angle each time makes your trend line mean something. Guided capture handles both for you.",
+  "A metric moving a few points either way is normal. Look at the trend across scans, not one number alone.",
+];
 
 interface LatestSession {
   id: string;
@@ -55,12 +66,22 @@ export default function V2DashboardPage() {
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
         <div className="v2-dash-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
           <div>
-            <h1 className="v2-dash-greeting" style={{ fontSize: "3.6rem", fontWeight: 400, color: "var(--primary)", margin: "0 0 0.8rem" }}>
+            <Logo height="2rem" className="v2-dash-logo" />
+            <h1 className="v2-dash-greeting" style={{ fontSize: "3.6rem", fontWeight: 400, color: "var(--primary)", margin: "0.8rem 0 0" }}>
               Hey{name ? `, ${name.split(" ")[0]}` : ""}
             </h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", flexShrink: 0 }}>
           <ThemeToggle />
+          <button
+            onClick={() => router.push("/")}
+            aria-label="Visit percept.skin"
+            style={{ width: "4.8rem", height: "4.8rem", flexShrink: 0, borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+          >
+            <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 11.5L12 4l9 7.5M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9" />
+            </svg>
+          </button>
           <button
             onClick={() => router.push("/settings")}
             aria-label="Settings"
@@ -86,32 +107,61 @@ export default function V2DashboardPage() {
         {!latest ? (
           <DashboardEmptyState onStart={startNewAnalysis} />
         ) : (
-          <div className="v2-dash-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
-            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}>
-              <p style={{ fontSize: "1.3rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.2rem" }}>Latest Percept Score</p>
+          <div className="v2-dash-grid" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "2rem" }}>
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ position: "relative", overflow: "hidden", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.8rem", padding: "3.2rem" }}
+            >
+              <div aria-hidden style={{ position: "absolute", top: "-30%", right: "-15%", width: "24rem", height: "24rem", borderRadius: "50%", background: GOLD, opacity: 0.14, filter: "blur(60px)", pointerEvents: "none" }} />
+              <p style={{ position: "relative", fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Latest Percept Score</p>
               {latest.status === "complete" ? (
-                <>
-                  <strong style={{ fontSize: "6.4rem", fontWeight: 300, color: "var(--primary)" }}>{latest.overall_score}</strong>
+                <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+                  <ScoreReveal score={latest.overall_score ?? 0} ringColor={GOLD} />
                   {latest.skin_age !== null && (
-                    <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginTop: "0.8rem" }}>Skin age estimate: {latest.skin_age}</p>
+                    <span style={{ marginTop: "1.2rem", fontSize: "1.3rem", fontWeight: 600, color: "var(--primary)", background: "rgba(217,166,46,0.14)", borderRadius: "9999px", padding: "0.6rem 1.6rem" }}>
+                      Skin age estimate: {latest.skin_age}
+                    </span>
                   )}
-                  <div style={{ marginTop: "2rem", display: "flex", gap: "1.2rem", flexWrap: "wrap" }}>
+                  <div style={{ marginTop: "2.4rem", display: "flex", gap: "1.2rem", flexWrap: "wrap", justifyContent: "center" }}>
                     <PrimaryButton variant="outline" fullWidth={false} onClick={() => router.push(`/report/${latest.id}`)}>View report →</PrimaryButton>
                     <PrimaryButton fullWidth={false} onClick={() => router.push(`/perceptgpt?session=${latest.id}`)}>Ask PerceptGPT →</PrimaryButton>
                   </div>
-                </>
+                </div>
               ) : (
-                <p style={{ fontSize: "1.7rem", color: "var(--secondary)" }}>Your last scan is still processing.</p>
+                <p style={{ position: "relative", fontSize: "1.7rem", color: "var(--secondary)" }}>Your last scan is still processing.</p>
               )}
-            </div>
+            </motion.div>
 
-            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}>
-              <p style={{ fontSize: "1.3rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.2rem" }}>Scan history</p>
-              <strong style={{ fontSize: "3.2rem", fontWeight: 400, color: "var(--primary)" }}>{sessionCount}</strong>
-              <span style={{ fontSize: "1.5rem", color: "var(--secondary)" }}> {sessionCount === 1 ? "analysis" : "analyses"}</span>
-              <div style={{ marginTop: "2rem" }}>
-                <PrimaryButton variant="outline" fullWidth={false} onClick={() => router.push("/history")}>View all →</PrimaryButton>
-              </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.05 }}
+                style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.8rem", padding: "3.2rem" }}
+              >
+                <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.2rem" }}>Scan history</p>
+                <strong style={{ fontSize: "3.2rem", fontWeight: 400, color: "var(--primary)" }}>{sessionCount}</strong>
+                <span style={{ fontSize: "1.5rem", color: "var(--secondary)" }}> {sessionCount === 1 ? "analysis" : "analyses"}</span>
+                <div style={{ marginTop: "2rem" }}>
+                  <PrimaryButton variant="outline" fullWidth={false} onClick={() => router.push("/history")}>View all →</PrimaryButton>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                style={{ display: "flex", gap: "1.4rem", background: "var(--panel)", borderRadius: "1.8rem", padding: "2.4rem" }}
+              >
+                <span aria-hidden style={{ flexShrink: 0, width: "3.2rem", height: "3.2rem", borderRadius: "1rem", background: "rgba(232,96,79,0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 2v2m0 16v2M4.2 4.2l1.4 1.4m12.8 12.8l1.4 1.4M2 12h2m16 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 100 8 4 4 0 000-8z" /></svg>
+                </span>
+                <p style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55 }}>
+                  {TIPS[sessionCount % TIPS.length]}
+                </p>
+              </motion.div>
             </div>
           </div>
         )}
