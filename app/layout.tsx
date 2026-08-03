@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { ReactLenis } from "@/utils/lenis";
 
@@ -66,6 +67,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-ELGVCD5CYZ"
+        strategy="afterInteractive"
+      />
+      <Script id="ga4" strategy="afterInteractive">
+        {`window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-ELGVCD5CYZ');`}
+      </Script>
       <ReactLenis root>
         <body className="antialiased">
           {children}

@@ -803,13 +803,16 @@ export default function V2ReportPage() {
     return (
       <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
         <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
-          <button
-            onClick={() => router.push("/dashboard")}
-            style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0, marginBottom: "3.2rem" }}
-          >
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-            Dashboard
-          </button>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
+            <button
+              onClick={() => router.push("/dashboard")}
+              style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0 }}
+            >
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              Dashboard
+            </button>
+            <PrimaryButton size="sm" fullWidth={false} onClick={() => router.push(`/perceptgpt?session=${sessionId}`)}>Ask PerceptGPT →</PrimaryButton>
+          </div>
 
           <div className="v2-hero-grid" style={{ display: "grid", gridTemplateColumns: photo ? "26rem 1fr" : "1fr", gap: "4rem", alignItems: "center", marginBottom: "3.2rem" }}>
             {photo && (
@@ -1027,13 +1030,16 @@ export default function V2ReportPage() {
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
 
-        <button
-          onClick={() => router.push("/dashboard")}
-          style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0, marginBottom: "3.2rem" }}
-        >
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-          Dashboard
-        </button>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
+          <button
+            onClick={() => router.push("/dashboard")}
+            style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0 }}
+          >
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            Dashboard
+          </button>
+          <PrimaryButton size="sm" fullWidth={false} onClick={() => router.push(`/perceptgpt?session=${sessionId}`)}>Ask PerceptGPT →</PrimaryButton>
+        </div>
 
         {/* Hero — portrait + Percept Score side by side (Design review Decision #12,
             extended with the user's own photo so the payoff moment feels like a

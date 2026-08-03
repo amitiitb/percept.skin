@@ -95,8 +95,9 @@ export default function V2DashboardPage() {
                   {latest.skin_age !== null && (
                     <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginTop: "0.8rem" }}>Skin age estimate: {latest.skin_age}</p>
                   )}
-                  <div style={{ marginTop: "2rem" }}>
+                  <div style={{ marginTop: "2rem", display: "flex", gap: "1.2rem", flexWrap: "wrap" }}>
                     <PrimaryButton variant="outline" fullWidth={false} onClick={() => router.push(`/report/${latest.id}`)}>View report →</PrimaryButton>
+                    <PrimaryButton fullWidth={false} onClick={() => router.push(`/perceptgpt?session=${latest.id}`)}>Ask PerceptGPT →</PrimaryButton>
                   </div>
                 </>
               ) : (

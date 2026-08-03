@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         "/onboard", "/concerns", "/photo-prep", "/capture", "/details",
         "/processing", "/results", "/plan",
-        "/auth/", "/dashboard", "/my-reports", "/profile", "/api/",
+        "/auth/", "/dashboard", "/my-reports", "/profile", "/perceptgpt", "/api/",
       ],
     },
     sitemap: `${BASE}/sitemap.xml`,
