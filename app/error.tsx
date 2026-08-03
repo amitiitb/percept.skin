@@ -41,7 +41,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           Try again
         </button>
         <a
-          href="/start"
+          href="/"
           style={{
             display: "inline-flex", alignItems: "center", justifyContent: "center",
             height: "5.2rem", padding: "0 3.2rem", borderRadius: "9999px",

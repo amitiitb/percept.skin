@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Percept | AI Skin Analysis",
     short_name: "Percept",
     description: "Personalised AI skin analysis and dermatologist-backed plans.",
-    start_url: "/start",
+    start_url: "/",
     display: "standalone",
     background_color: "#E8E7E5",
     theme_color: "#E8E7E5",

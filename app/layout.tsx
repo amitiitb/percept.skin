@@ -16,10 +16,13 @@ export const metadata: Metadata = {
   },
   description,
   applicationName: "Percept",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "/splash",
+    url: "/",
     siteName: "Percept",
     title: "Percept | See Your Skin More Clearly",
     description,
@@ -51,8 +54,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // design. Scoped to <html>, so a real mismatch anywhere else still warns.
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Fontshare serves the CSS from api.fontshare.com but the @font-face
+            src urls it returns point at cdn.fontshare.com — preconnect both
+            so the render-blocking stylesheet's actual font fetch isn't cold. */}
+        <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
         {/* Satoshi via Fontshare's CDN API, self-hosting the font file needs ITF's written consent */}
         <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://percept.skin/#organization",
+                  name: "Percept",
+                  url: "https://percept.skin/",
+                  logo: "https://percept.skin/brand/percept-logo.png",
+                  email: "support@percept.skin",
+                  description,
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://percept.skin/#website",
+                  name: "Percept",
+                  url: "https://percept.skin/",
+                  publisher: { "@id": "https://percept.skin/#organization" },
+                },
+              ],
+            }),
+          }}
+        />
         {/* Stamps the theme before first paint. Without it a dark-mode visitor
             gets a full frame of beige on every navigation, which is worse than
             no dark mode at all. A stored choice wins over the OS preference.

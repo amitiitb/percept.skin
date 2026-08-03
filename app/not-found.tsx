@@ -28,7 +28,7 @@ export default function NotFound() {
       </p>
 
       <div style={{ display: "flex", gap: "1.6rem", flexWrap: "wrap", justifyContent: "center" }}>
-        <Link href="/start" style={{
+        <Link href="/" style={{
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           height: "5.2rem", padding: "0 3.2rem", borderRadius: "9999px",
           background: "var(--btn-fill)", color: "var(--btn-fill-ink)",

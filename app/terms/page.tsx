@@ -1,3 +1,13 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "The terms governing your use of Percept's AI skin, face, and hair analysis service.",
+  alternates: { canonical: "/terms" },
+  openGraph: { url: "/terms", title: "Terms of Service | Percept" },
+  robots: { index: true, follow: true },
+};
+
 export default function TermsPage() {
   return (
     <div
@@ -9,7 +19,7 @@ export default function TermsPage() {
     >
       <div style={{ maxWidth: "112rem", margin: "0 auto" }}>
         <a
-          href="/start"
+          href="/"
           style={{
             display: "inline-flex",
             alignItems: "center",

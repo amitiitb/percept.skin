@@ -1,3 +1,13 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: "How Percept collects, uses, and protects your photos and personal data.",
+  alternates: { canonical: "/privacy" },
+  openGraph: { url: "/privacy", title: "Privacy Policy | Percept" },
+  robots: { index: true, follow: true },
+};
+
 export default function PrivacyPage() {
   return (
     <div
@@ -9,7 +19,7 @@ export default function PrivacyPage() {
     >
       <div style={{ maxWidth: "112rem", margin: "0 auto" }}>
         <a
-          href="/start"
+          href="/"
           style={{
             display: "inline-flex",
             alignItems: "center",
