@@ -344,14 +344,11 @@ export default function LandingPage() {
           background: "var(--header-bg)", backdropFilter: "blur(10px)",
         }}>
           <a href="/" style={{ display: "block" }}>
-            <Logo height="3.6rem" />
+            <Logo height="4.2rem" />
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
             <HeaderAuth />
             <ThemeToggle compact />
-            <a href="/splash" style={{ display: "none" }} className="site-header-cta">
-              <PrimaryButton size="sm" fullWidth={false}>Start free</PrimaryButton>
-            </a>
             <button
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
@@ -378,7 +375,7 @@ export default function LandingPage() {
               A guided photo scan, understood by AI. No lab visit, no appointment, just a clear, specific report you can act on and track over time.
             </p>
             <div style={{ display: "flex", gap: "1.2rem", flexWrap: "nowrap" }}>
-              <a href="/splash"><PrimaryButton size="sm" fullWidth={false}>Start scan →</PrimaryButton></a>
+              <a href="/splash"><PrimaryButton size="sm" fullWidth={false}>Start free →</PrimaryButton></a>
               <a href="#why"><PrimaryButton size="sm" variant="outline" fullWidth={false}>Why Percept</PrimaryButton></a>
             </div>
           </motion.div>
@@ -739,7 +736,6 @@ export default function LandingPage() {
 
       <style>{`
         #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
-        @media (min-width: 640px) { .site-header-cta { display: inline-block !important; } }
         /* Below this the hamburger carries the login link instead, so the bar
            stays three controls wide and never wraps. */
         @media (min-width: 520px) { .site-header-login { display: inline-flex !important; } }

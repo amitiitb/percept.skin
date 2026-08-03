@@ -78,7 +78,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
               </svg>
             </button>
           ) : <div style={{ width: "4.4rem" }} />}
-          <Logo height="3.6rem" />
+          <Logo height="4.2rem" />
           <div style={{ width: "4.4rem" }} />
         </div>
 

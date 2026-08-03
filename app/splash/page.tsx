@@ -27,7 +27,7 @@ export default function V2SplashPage() {
         transition={{ duration: 0.6 }}
         style={{ position: "relative", textAlign: "center" }}
       >
-        <Logo height="clamp(4.8rem, 10vw, 7.2rem)" />
+        <Logo height="clamp(5.4rem, 11vw, 8rem)" />
         <p style={{ fontSize: "1.8rem", color: "var(--secondary)", marginTop: "1.6rem", maxWidth: "40rem" }}>
           Understand your skin. Elevate your beauty.
         </p>
