@@ -19,7 +19,7 @@ import { IconSun, IconMoon } from "@/components/ui/icons";
 
 export type Theme = "light" | "dark";
 
-const STORAGE_KEY = "glowmetry-theme";
+const STORAGE_KEY = "percept-theme";
 
 export function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;

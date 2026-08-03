@@ -3,6 +3,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export default function LoginPage() {
@@ -63,8 +64,8 @@ function LoginForm() {
       padding: "3.2rem 2.4rem",
     }}>
       <div style={{ position: "absolute", top: "2rem", right: "2rem" }}><ThemeToggle compact /></div>
-      <a href="/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
-        Glow<span style={{ color: "var(--rose)" }}>metry</span>
+      <a href="/splash" style={{ display: "block", marginBottom: "4.8rem" }}>
+        <Logo height="3rem" />
       </a>
 
       <motion.div

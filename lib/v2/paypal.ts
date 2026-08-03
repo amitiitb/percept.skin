@@ -7,7 +7,7 @@
 // - Register a webhook subscription in the PayPal dashboard against the
 //   live domain and set PAYPAL_WEBHOOK_ID (verifyWebhookSignature below is
 //   ready; nothing is registered yet, so nothing calls this endpoint today)
-// - Confirm PayPal supports recurring billing for Glowmetry's actual business
+// - Confirm PayPal supports recurring billing for Percept's actual business
 //   entity/country (flagged in the eng review — the existing /plan page implies
 //   an India-based entity, and PayPal restricts India-domestic recurring billing)
 
@@ -53,7 +53,7 @@ export async function createOrder(planId: PlanId, userId: string): Promise<{ ord
       // a client-supplied planId a second time.
       purchase_units: [{
         amount: { currency_code: "USD", value: plan.price },
-        description: `Glowmetry Premium: ${plan.label}`,
+        description: `Percept Premium: ${plan.label}`,
         custom_id: `${userId}:${planId}`,
       }],
     }),

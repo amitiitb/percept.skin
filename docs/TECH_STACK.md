@@ -1,4 +1,4 @@
-# Glowmetry — Tech Stack
+# Percept — Tech Stack
 
 Status: reflects `package.json` and actual usage in the codebase as of 2026-07-28.
 

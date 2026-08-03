@@ -1,7 +1,7 @@
-# GlowMetry — Master Reference Prompt
+# Percept — Master Reference Prompt
 
 > **Reference product:** Dr.Skin by Sapat (analysis.drskin.ai)
-> **GlowMetry is:** A web-first AI skin analysis funnel that captures user data + face photos, runs skin condition detection, and converts to a paid dermatologist report or consultation.
+> **Percept is:** A web-first AI skin analysis funnel that captures user data + face photos, runs skin condition detection, and converts to a paid dermatologist report or consultation.
 
 ---
 
@@ -310,9 +310,9 @@ Paywall → Purchase        (target: 15–25% of paywall views)
 
 ---
 
-## GlowMetry Differentiators vs Dr.Skin
+## Percept Differentiators vs Dr.Skin
 
-| Feature | Dr.Skin | GlowMetry |
+| Feature | Dr.Skin | Percept |
 |---|---|---|
 | Platform | Web (mobile) | PWA — installable |
 | AI model | Proprietary | Claude vision (transparent) |

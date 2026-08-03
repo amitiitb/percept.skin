@@ -1,4 +1,4 @@
-# Glowmetry — User Messaging Reference
+# Percept — User Messaging Reference
 
 Every message, email, notification, and error the user can actually see, and the exact condition that triggers it. Written from the live code as of 2026-07-28. See `ARCHITECTURE.md` for the systems behind these; this doc is the messaging layer only.
 
@@ -12,8 +12,8 @@ Two channels: our own Resend-sent emails (custom HTML templates), and Supabase's
 
 | Trigger | Subject | Sent from | Fire-and-forget? |
 |---|---|---|---|
-| Signup completes (`POST /api/auth/signup` succeeds) | "Welcome to Glowmetry" | `app/api/auth/signup/route.ts` | Yes — never blocks the signup response |
-| Report purchase capture succeeds (`POST /api/report-purchase/capture`) | "Your Glowmetry report is ready" | `app/api/report-purchase/capture/route.ts` | Yes — never blocks the capture response |
+| Signup completes (`POST /api/auth/signup` succeeds) | "Welcome to Percept" | `app/api/auth/signup/route.ts` | Yes — never blocks the signup response |
+| Report purchase capture succeeds (`POST /api/report-purchase/capture`) | "Your Percept report is ready" | `app/api/report-purchase/capture/route.ts` | Yes — never blocks the capture response |
 
 **Report-ready email content varies by whether consultation was bundled in the same purchase:**
 - Combined purchase (report + consultation together): "Your dermatologist consultation is included, our team will reach out within 24 hours with a real plan."

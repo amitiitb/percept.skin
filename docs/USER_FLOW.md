@@ -1,4 +1,4 @@
-# GlowMetry — User Flow & Feature Spec
+# Percept — User Flow & Feature Spec
 
 > Status doc: how the flow **should** work, what exists today, and the gaps.
 > Last reviewed: 13 Jul 2026

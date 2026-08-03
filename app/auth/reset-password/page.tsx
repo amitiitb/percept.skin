@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { Logo } from "@/components/ui/Logo";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -47,8 +48,8 @@ export default function ResetPasswordPage() {
       alignItems: "center", justifyContent: "center",
       padding: "3.2rem 2.4rem",
     }}>
-      <a href="/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
-        Glow<span style={{ color: "var(--rose)" }}>metry</span>
+      <a href="/splash" style={{ display: "block", marginBottom: "4.8rem" }}>
+        <Logo height="3rem" />
       </a>
 
       <motion.div

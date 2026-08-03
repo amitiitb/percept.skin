@@ -1,10 +1,10 @@
-# Glowmetry — Product Requirements Document
+# Percept — Product Requirements Document
 
-Status: reflects the live product as of 2026-07-28 (glowmetry.superapp.digital). Written from the shipped codebase, not a forward-looking spec — see "Not yet built" for gaps.
+Status: reflects the live product as of 2026-07-28 (percept.superapp.digital). Written from the shipped codebase, not a forward-looking spec — see "Not yet built" for gaps.
 
 ## 1. What it is
 
-Glowmetry is an AI-powered skin, face, and hair/scalp analysis app. A user takes 7 guided selfie-style photos; Claude Sonnet analyses them and returns a "Glow Score," an estimated skin age, and 20+ individually scored metrics across three domains, plus a personalized morning/evening/weekly routine. Optional add-ons: AI colour analysis (seasonal palette), AI-generated hairstyle previews, AI/live eyewear frame try-on, and a paid follow-up with a real dermatologist.
+Percept is an AI-powered skin, face, and hair/scalp analysis app. A user takes 7 guided selfie-style photos; Claude Sonnet analyses them and returns a "Glow Score," an estimated skin age, and 20+ individually scored metrics across three domains, plus a personalized morning/evening/weekly routine. Optional add-ons: AI colour analysis (seasonal palette), AI-generated hairstyle previews, AI/live eyewear frame try-on, and a paid follow-up with a real dermatologist.
 
 Non-clinical framing throughout: cosmetic/wellness observations and estimates, never a medical diagnosis.
 

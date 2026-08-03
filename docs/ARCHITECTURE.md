@@ -1,4 +1,4 @@
-# Glowmetry — Architecture
+# Percept — Architecture
 
 Status: reflects the shipped codebase as of 2026-07-28. See `TECH_STACK.md` for tooling choices and `PRD.md` for product scope.
 

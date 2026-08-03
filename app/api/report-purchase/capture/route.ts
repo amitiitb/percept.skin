@@ -23,7 +23,7 @@ function buildReportReadyEmail(sessionId: string, consultationIncluded: boolean)
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Your Glowmetry report is ready</title>
+<title>Your Percept report is ready</title>
 <style>
   body { margin:0; padding:0; background:#E8E7E5; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#003934; }
   .wrap { max-width:560px; margin:0 auto; padding:48px 24px; }
@@ -39,17 +39,17 @@ function buildReportReadyEmail(sessionId: string, consultationIncluded: boolean)
 </head>
 <body>
 <div class="wrap">
-  <div class="logo">Glow<span>metry</span></div>
+  <div class="logo">Percept</div>
   <div class="card">
     <h1>Your report is ready.</h1>
-    <p>Your Glow Score and full breakdown are ready to view now.</p>
+    <p>Your Percept Score and full breakdown are ready to view now.</p>
     <a href="${process.env.NEXT_PUBLIC_SITE_URL}/report/${sessionId}" class="btn">View my report →</a>
     <div class="upsell">
       ${upsellHtml}
     </div>
   </div>
   <div class="footer">
-    © 2026 Glowmetry · AI-powered skin analysis
+    © 2026 Percept · AI-powered skin analysis
   </div>
 </div>
 </body>
@@ -139,9 +139,9 @@ export async function POST(req: NextRequest) {
       const email = data.user?.email;
       if (!email) return;
       return resend.emails.send({
-        from: "Glowmetry <noreply@superapp.digital>",
+        from: "Percept <noreply@superapp.digital>",
         to: email,
-        subject: "Your Glowmetry report is ready",
+        subject: "Your Percept report is ready",
         html: buildReportReadyEmail(sessionId, includeConsultation),
       });
     }).catch(() => { /* non-fatal */ });

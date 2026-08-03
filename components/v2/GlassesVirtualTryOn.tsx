@@ -173,7 +173,7 @@ export default function GlassesVirtualTryOn({ photoUrl, seasonalColour }: Props)
 
   useEffect(() => { if (status === "ready") redraw(); }, [status, redraw]);
 
-  const download = () => { const canvas = canvasRef.current; if (!canvas) return; const a = document.createElement("a"); a.href=canvas.toDataURL("image/jpeg",0.92); a.download=`glowmetry-${frame.id}.jpg`; a.click(); };
+  const download = () => { const canvas = canvasRef.current; if (!canvas) return; const a = document.createElement("a"); a.href=canvas.toDataURL("image/jpeg",0.92); a.download=`percept-${frame.id}.jpg`; a.click(); };
 
   const btnStyle = (active: boolean, rec: boolean): CSSProperties => ({
     display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem",
@@ -208,7 +208,7 @@ export default function GlassesVirtualTryOn({ photoUrl, seasonalColour }: Props)
       {/* Canvas / live */}
       {mode === "live" ? (
         <LiveEyewearTryOn frame={frame} />
-      ) : photoUrl && !photoUrl.includes("glowmetry-scan-portrait") ? (
+      ) : photoUrl && !photoUrl.includes("percept-scan-portrait") ? (
         <div style={{ position: "relative", borderRadius: "0.6rem", overflow: "hidden", background: "#111", lineHeight: 0 }}>
           <canvas ref={canvasRef} style={{ width: "100%", display: "block" }} />
           {(status === "loading" || status === "noface" || status === "error") && (

@@ -151,13 +151,13 @@ export default function V2ReportPrintPage() {
     <div style={{ maxWidth: "74rem", margin: "0 auto", padding: "4rem 2rem", fontFamily: "system-ui, sans-serif", color: "#1a2320" }}>
 
       <header style={{ marginBottom: "2.4rem" }}>
-        <h1 style={{ fontSize: "2.4rem", margin: "0 0 0.3rem", color: "#003934" }}>Glowmetry Report</h1>
-        <p style={{ color: "#666", margin: 0 }}>{name || "Glowmetry user"} · {new Date(session.created_at).toLocaleDateString()}</p>
+        <h1 style={{ fontSize: "2.4rem", margin: "0 0 0.3rem", color: "#003934" }}>Percept Report</h1>
+        <p style={{ color: "#666", margin: 0 }}>{name || "Percept user"} · {new Date(session.created_at).toLocaleDateString()}</p>
       </header>
 
       <div style={{ display: "flex", alignItems: "baseline", gap: "1.4rem", marginBottom: "2.6rem" }}>
         <strong style={{ fontSize: "4rem", color: "#003934", lineHeight: 1 }}>{session.overall_score}</strong>
-        <span style={{ fontSize: "1.3rem", color: "#666" }}>/ 100 Glow Score</span>
+        <span style={{ fontSize: "1.3rem", color: "#666" }}>/ 100 Percept Score</span>
         {session.skin_age !== null && <span style={{ fontSize: "1.3rem", color: "#666" }}>· Estimated skin age {session.skin_age}</span>}
       </div>
 
@@ -278,7 +278,7 @@ export default function V2ReportPrintPage() {
       )}
 
       <p style={{ fontSize: "1rem", color: "#888", marginTop: "2.4rem", lineHeight: 1.5 }}>
-        Generated previews are illustrative. Glowmetry offers cosmetic and wellness insights, not a medical diagnosis. Consult a qualified dermatologist for any concerning visible change.
+        Generated previews are illustrative. Percept offers cosmetic and wellness insights, not a medical diagnosis. Consult a qualified dermatologist for any concerning visible change.
       </p>
 
       <style>{`

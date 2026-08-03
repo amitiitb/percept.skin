@@ -74,7 +74,7 @@ export const useFunnelV2Store = create<FunnelV2State & FunnelV2Actions>()(
       }),
     }),
     {
-      name: "glowmetry-v2-funnel", // deliberately separate key from the legacy "glowmetry-funnel"
+      name: "percept-v2-funnel", // deliberately separate key from the legacy "percept-funnel"
       storage: createJSONStorage(() =>
         typeof window !== "undefined" ? localStorage : ({ getItem: () => null, setItem: () => {}, removeItem: () => {}, length: 0, clear: () => {}, key: () => null } as unknown as Storage)
       ),

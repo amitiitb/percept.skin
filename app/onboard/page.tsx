@@ -9,7 +9,7 @@ const SCREENS = [
   {
     eyebrow: "Personal beauty analysis",
     title: "Guided photographs, understood by AI",
-    body: "Glowmetry analyzes your skin, face, hair, and scalp using a short guided photo session. No lab visit, no waiting.",
+    body: "Percept analyzes your skin, face, hair, and scalp using a short guided photo session. No lab visit, no waiting.",
   },
   {
     eyebrow: "Detailed personal insights",
@@ -33,7 +33,7 @@ function SampleReportPreview() {
       <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "0.8rem" }}>Sample report</p>
       <div style={{ display: "flex", alignItems: "baseline", gap: "1.2rem", marginBottom: "0.6rem" }}>
         <strong style={{ fontSize: "4.4rem", fontWeight: 300, color: "var(--primary)", lineHeight: 1 }}>78</strong>
-        <span style={{ fontSize: "1.6rem", color: "var(--secondary)" }}>Glow Score · Good</span>
+        <span style={{ fontSize: "1.6rem", color: "var(--secondary)" }}>Percept Score · Good</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1.2rem" }}>
         {["Skin texture", "Hydration", "Hair density", "Scalp visibility"].map((m) => (
@@ -133,7 +133,7 @@ export default function V2OnboardPage() {
 
       <div style={{ padding: "1.2rem 2.4rem 2rem", maxWidth: "72rem", margin: "0 auto", width: "100%" }}>
         <p style={{ fontSize: "1.2rem", color: "var(--muted)", lineHeight: 1.5, marginBottom: "1.2rem", textAlign: "center" }}>
-          Glowmetry offers cosmetic and wellness insights and is not a substitute for professional medical advice.
+          Percept offers cosmetic and wellness insights and is not a substitute for professional medical advice.
         </p>
         {/* CTA always gets full width — a long label like "Get Started →" was
             wrapping to two lines when squeezed into a 50/50 split with Back. */}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="600" viewBox="0 0 1600 600">
+  <title>Percept Logo</title>
+  <desc>Clean two-tone wordmark logo for Percept.</desc>
+  <g aria-label="percept" font-family="Inter, Helvetica Neue, Arial, sans-serif"
+     font-size="290" font-weight="600" letter-spacing="-14">
+    <text x="170" y="390" fill="#123F3B">per</text>
+    <text x="635" y="390" fill="#22B8A7">cept</text>
+  </g>
+</svg>

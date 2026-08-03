@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { Logo } from "@/components/ui/Logo";
 
 export default function V2SplashPage() {
   const router = useRouter();
@@ -26,9 +27,7 @@ export default function V2SplashPage() {
         transition={{ duration: 0.6 }}
         style={{ position: "relative", textAlign: "center" }}
       >
-        <h1 style={{ fontSize: "clamp(3.2rem, 8vw, 5.6rem)", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.03em", margin: 0 }}>
-          Glow<span style={{ color: "var(--rose)" }}>metry</span>
-        </h1>
+        <Logo height="clamp(3.6rem, 8vw, 5.6rem)" />
         <p style={{ fontSize: "1.8rem", color: "var(--secondary)", marginTop: "1.6rem", maxWidth: "40rem" }}>
           Understand your skin. Elevate your beauty.
         </p>

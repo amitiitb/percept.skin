@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://glowmetry.com";
+const BASE = process.env.NEXT_PUBLIC_SITE_URL || "https://percept.skin";
 
 export default function robots(): MetadataRoute.Robots {
   return {

@@ -3,6 +3,7 @@ import { ReactNode, CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Logo } from "@/components/ui/Logo";
 
 interface Props {
   children: ReactNode;
@@ -49,12 +50,8 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
           style={{ objectFit: "cover", objectPosition: "center" }}
         />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(43,53,48,0.94) 0%, rgba(43,53,48,0.55) 55%, rgba(43,53,48,0.25) 100%)" }} />
-        <a href="/splash" style={{
-          position: "relative", zIndex: 1,
-          fontSize: "2.2rem", fontWeight: 600, color: "#fff", letterSpacing: "-0.02em",
-          textDecoration: "none",
-        }}>
-          Glow<span style={{ color: "var(--rose)" }}>metry</span>
+        <a href="/splash" style={{ position: "relative", zIndex: 1, textDecoration: "none" }}>
+          <img src="/brand/percept-logo-dark.svg" alt="Percept" style={{ display: "block", height: "3rem", width: "auto" }} />
         </a>
         <motion.div key={headline} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.42 }} style={{ position: "relative", zIndex: 1 }}>
           <h2 style={{ fontSize: "4.4rem", fontWeight: 500, color: "#fff", lineHeight: 1.08, letterSpacing: "-0.025em", marginBottom: "1.6rem" }}>
@@ -81,9 +78,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
               </svg>
             </button>
           ) : <div style={{ width: "4.4rem" }} />}
-          <span style={{ fontSize: "1.8rem", fontWeight: 700, color: "var(--primary)", letterSpacing: "-0.02em" }}>
-            Glow<span style={{ color: "var(--rose)" }}>metry</span>
-          </span>
+          <Logo height="2.6rem" />
           <div style={{ width: "4.4rem" }} />
         </div>
 

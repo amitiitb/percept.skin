@@ -1,5 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
+import { Logo } from "@/components/ui/Logo";
 
 interface MenuLink {
   label: string;
@@ -8,7 +9,7 @@ interface MenuLink {
 
 const LINKS: MenuLink[] = [
   { label: "What you get", href: "#what-you-get" },
-  { label: "Why Glowmetry", href: "#why" },
+  { label: "Why Percept", href: "#why" },
   { label: "Experts", href: "#experts" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
@@ -20,7 +21,7 @@ interface Props {
 }
 
 // Full-screen nav overlay — breadcrumb, stacked link list, CTA-with-badge,
-// footer credit. Layout pattern only; palette/type are Glowmetry's own
+// footer credit. Layout pattern only; palette/type are Percept's own
 // tokens (app/globals.css), not the reference site's.
 export function SiteMenu({ open, onClose }: Props) {
   function go(href: string) {
@@ -49,8 +50,8 @@ export function SiteMenu({ open, onClose }: Props) {
           }} />
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "2.4rem 3.2rem" }}>
-            <a href="/" style={{ fontSize: "2rem", fontWeight: 600, color: "var(--primary)", letterSpacing: "-0.02em" }}>
-              Glow<span style={{ color: "var(--rose)" }}>metry</span>
+            <a href="/" style={{ display: "block" }}>
+              <Logo height="2.8rem" />
             </a>
             <button
               onClick={onClose}
@@ -114,7 +115,7 @@ export function SiteMenu({ open, onClose }: Props) {
           </div>
 
           <p style={{ textAlign: "center", fontSize: "1.2rem", color: "var(--muted)", padding: "2.4rem" }}>
-            © 2026 Glowmetry
+            © 2026 Percept
           </p>
         </motion.div>
       )}

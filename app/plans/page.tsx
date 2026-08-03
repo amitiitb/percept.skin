@@ -13,7 +13,7 @@ const FREE_FEATURES = [
   "Saved report history",
 ];
 const PREMIUM_FEATURES = [
-  "Everything in Free", "Glow Score trend across all your scans",
+  "Everything in Free", "Percept Score trend across all your scans",
   "Metric-by-metric progress comparison, scan over scan",
 ];
 
@@ -48,7 +48,7 @@ export default function V2PlansPage() {
           </div>
 
           <div style={{ background: "var(--panel)", borderRadius: "1.6rem", padding: "3.2rem", color: "#fff" }}>
-            <h2 style={{ fontSize: "2rem", marginBottom: "0.4rem" }}>Glowmetry Premium</h2>
+            <h2 style={{ fontSize: "2rem", marginBottom: "0.4rem" }}>Percept Premium</h2>
             <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.7)", marginBottom: "2rem" }}>Everything, unlocked</p>
             {PREMIUM_FEATURES.map((f) => (
               <p key={f} style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.9)", marginBottom: "1rem" }}>· {f}</p>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/ui/Logo";
 
 export default function NotFound() {
   return (
@@ -12,9 +13,9 @@ export default function NotFound() {
       padding: "3.2rem 2.4rem",
       textAlign: "center",
     }}>
-      <span style={{ fontSize: "2.2rem", fontWeight: 600, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
-        Glow<span style={{ color: "var(--rose)" }}>metry</span>
-      </span>
+      <div style={{ marginBottom: "4.8rem" }}>
+        <Logo height="3rem" />
+      </div>
 
       <p style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
         404 | Page not found

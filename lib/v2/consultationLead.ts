@@ -44,7 +44,7 @@ export async function sendConsultationLead(input: LeadInput): Promise<void> {
     const reportLink = sessionId ? `${site}/report/${sessionId}` : "No scan attached (standalone consultation)";
 
     await resend.emails.send({
-      from: "Glowmetry <noreply@superapp.digital>",
+      from: "Percept <noreply@superapp.digital>",
       to: LEAD_INBOX,
       replyTo: email !== "unknown" ? email : undefined,
       subject: `New consultation lead: ${name}`,

@@ -827,7 +827,7 @@ export default function V2ReportPage() {
                 Free preview
               </span>
               <div style={{ margin: photo ? 0 : "0 auto" }}><ScoreReveal score={score} /></div>
-              <p style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", marginTop: "1.4rem" }}>{verdictFor(score)} · Glow Score</p>
+              <p style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", marginTop: "1.4rem" }}>{verdictFor(score)} · Percept Score</p>
               {session.skin_age !== null && (
                 <div style={{ display: "inline-flex", alignItems: "baseline", gap: "0.8rem", marginTop: "1.4rem", background: "var(--wash)", borderRadius: "9999px", padding: "0.8rem 1.8rem" }}>
                   <span style={{ fontSize: "1.3rem", color: "var(--secondary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Skin age</span>
@@ -1035,7 +1035,7 @@ export default function V2ReportPage() {
           Dashboard
         </button>
 
-        {/* Hero — portrait + Glow Score side by side (Design review Decision #12,
+        {/* Hero — portrait + Percept Score side by side (Design review Decision #12,
             extended with the user's own photo so the payoff moment feels like a
             personal consultation, not a bare number) */}
         <div className="v2-hero-grid" style={{ display: "grid", gridTemplateColumns: photo ? "30rem 1fr" : "1fr", gap: "4.8rem", alignItems: "center", marginBottom: "3.2rem" }}>
@@ -1049,7 +1049,7 @@ export default function V2ReportPage() {
             <div style={{ margin: photo ? "0" : "0 auto" }}>
               <ScoreReveal score={score} />
             </div>
-            <p style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Glow Score</p>
+            <p style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Percept Score</p>
             {session.skin_age !== null && (
               <div style={{ display: "inline-flex", alignItems: "baseline", gap: "0.8rem", marginTop: "1.4rem", background: "var(--wash)", borderRadius: "9999px", padding: "0.8rem 1.8rem" }}>
                 <span style={{ fontSize: "1.3rem", color: "var(--secondary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Skin age</span>

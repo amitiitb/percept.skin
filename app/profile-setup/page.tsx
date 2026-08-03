@@ -144,7 +144,7 @@ export default function V2ProfileSetupPage() {
             <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Primary concerns</label>
             <span style={{ fontSize: "1.1rem", color: "var(--muted)" }}>Swipe for more →</span>
           </div>
-          <div className="glowmetry-concerns-scroll" style={{
+          <div className="percept-concerns-scroll" style={{
             display: "flex", flexDirection: "column", rowGap: "1rem", marginTop: "1rem",
             overflowX: "auto", width: "100%", scrollSnapType: "x proximity",
             paddingBottom: "0.4rem", paddingRight: "2rem",
@@ -176,7 +176,7 @@ export default function V2ProfileSetupPage() {
             {consent && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           </span>
           <span style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55 }}>
-            I consent to Glowmetry processing my uploaded photographs to generate my analysis. Photos are never used to train AI models without separate explicit consent.
+            I consent to Percept processing my uploaded photographs to generate my analysis. Photos are never used to train AI models without separate explicit consent.
           </span>
         </button>
 
@@ -187,8 +187,8 @@ export default function V2ProfileSetupPage() {
         </PrimaryButton>
       </div>
       <style jsx global>{`
-        .glowmetry-concerns-scroll { scrollbar-width: none; -ms-overflow-style: none; }
-        .glowmetry-concerns-scroll::-webkit-scrollbar { display: none; }
+        .percept-concerns-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+        .percept-concerns-scroll::-webkit-scrollbar { display: none; }
       `}</style>
     </V2Layout>
   );

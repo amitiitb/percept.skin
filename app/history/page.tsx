@@ -41,7 +41,7 @@ export default function V2HistoryPage() {
         <h1 style={{ fontSize: "3.2rem", fontWeight: 400, color: "var(--primary)", marginBottom: "0.8rem" }}>Scan history</h1>
         {delta !== null && (
           <p style={{ fontSize: "1.6rem", color: delta >= 0 ? "#4C8C5F" : "#C8503A", marginBottom: "2rem" }}>
-            {delta >= 0 ? "+" : ""}{delta} Glow Score since your first scan
+            {delta >= 0 ? "+" : ""}{delta} Percept Score since your first scan
           </p>
         )}
         <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginBottom: "3.2rem" }}>

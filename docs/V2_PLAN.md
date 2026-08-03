@@ -1,4 +1,4 @@
-# Glowmetry V2 — Phase 1 Build Plan
+# Percept V2 — Phase 1 Build Plan
 
 Status: REVIEWED (HOLD SCOPE) — ready for /plan-eng-review before implementation.
 Generated: 2026-07-22 via /plan-ceo-review.
@@ -60,7 +60,7 @@ no persisted profile              non-clinical AI copy,                 AI schem
                          └─────────────────────────────────────────┘
                                           (no shared code/state)
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                                  Glowmetry V2                              │
+│                                  Percept V2                              │
 │                                                                            │
 │  /v2/splash → /v2/onboard(1-3) → /v2/auth → /v2/profile-setup            │
 │       → /v2/dashboard → /v2/scan-prep → /v2/capture(1..15)               │
@@ -364,7 +364,7 @@ Deeper architecture/test/performance pass on top of the CEO review. Decisions lo
 
 ### TODOS.md updates (new, from this eng review)
 
-6. **Verify PayPal viability for your actual business entity/country before production** (P1, blocks real launch, new from outside voice) — confirm PayPal supports recurring billing for wherever Glowmetry is legally billing from; if not, the PayPal integration shell can be re-pointed at Razorpay (already used by the old `/plan` page) with minimal UI change. Effort: human ~1 day research / CC ~1-2 hrs to swap providers if needed.
+6. **Verify PayPal viability for your actual business entity/country before production** (P1, blocks real launch, new from outside voice) — confirm PayPal supports recurring billing for wherever Percept is legally billing from; if not, the PayPal integration shell can be re-pointed at Razorpay (already used by the old `/plan` page) with minimal UI change. Effort: human ~1 day research / CC ~1-2 hrs to swap providers if needed.
 7. **Before/after AI-accuracy test for client-side compression** (P1, blocks trusting T-compress) — compare AI analysis output on compressed vs. original photos to confirm color-based metrics (skin tone, undertone) don't shift. Effort: human ~half day / CC ~30 min.
 
 ### Updated Implementation Tasks (supersedes/extends T1-T2 from CEO review)

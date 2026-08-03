@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
 export const alt =
-  "Glowmetry | personalised AI skin analysis and practical improvement plans";
+  "Percept | personalised AI skin analysis and practical improvement plans";
 
 export const size = {
   width: 1200,
@@ -110,7 +110,7 @@ export default async function OpenGraphImage() {
                 letterSpacing: "-1.8px",
               }}
             >
-              glowmetry
+              percept
             </div>
           </div>
 

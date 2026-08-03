@@ -109,7 +109,7 @@ function V2CheckoutInner() {
         Plans
       </button>
       <p style={{ fontSize: "1.4rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>Billing summary</p>
-      <h1 style={{ fontSize: "2.8rem", color: "var(--primary)", marginBottom: "0.8rem" }}>Glowmetry Premium: {plan.label}</h1>
+      <h1 style={{ fontSize: "2.8rem", color: "var(--primary)", marginBottom: "0.8rem" }}>Percept Premium: {plan.label}</h1>
       <p style={{ fontSize: "1.8rem", color: "var(--secondary)", marginBottom: "0.8rem" }}>${plan.price} billed every {plan.period} (sandbox)</p>
       <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginBottom: "4rem" }}>Cancel anytime · no hidden fees · you&apos;ll see this exact charge on PayPal&apos;s confirmation screen before it completes</p>
 

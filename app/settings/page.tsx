@@ -213,7 +213,7 @@ export default function V2SettingsPage() {
           <SettingsRow icon={ICON.folder} tint="rgba(26,158,143,0.12)" label="Scan reports" sublabel="Every report you've unlocked" onClick={() => router.push("/history")} />
           <SettingsRow icon={ICON.shield} tint="rgba(232,96,79,0.1)" label="Privacy Policy" href="/privacy" external />
           <SettingsRow icon={ICON.doc} tint="rgba(232,96,79,0.1)" label="Terms of Service" href="/terms" external />
-          <SettingsRow icon={ICON.mail} tint="rgba(217,166,46,0.14)" label="Contact support" href="mailto:support@glowmetry.com" />
+          <SettingsRow icon={ICON.mail} tint="rgba(217,166,46,0.14)" label="Contact support" href="mailto:support@percept.skin" />
         </Card>
 
         <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} style={{ marginBottom: "2.8rem" }}>

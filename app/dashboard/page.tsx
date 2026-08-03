@@ -88,7 +88,7 @@ export default function V2DashboardPage() {
         ) : (
           <div className="v2-dash-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
             <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}>
-              <p style={{ fontSize: "1.3rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.2rem" }}>Latest Glow Score</p>
+              <p style={{ fontSize: "1.3rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.2rem" }}>Latest Percept Score</p>
               {latest.status === "complete" ? (
                 <>
                   <strong style={{ fontSize: "6.4rem", fontWeight: 300, color: "var(--primary)" }}>{latest.overall_score}</strong>

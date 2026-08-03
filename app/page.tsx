@@ -7,6 +7,7 @@ import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { HeaderAuth } from "@/components/marketing/HeaderAuth";
 import { WhatYouGet } from "@/components/marketing/WhatYouGet";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Logo } from "@/components/ui/Logo";
 import { IconCheck, IconClose } from "@/components/ui/icons";
 import { MODULES, BUNDLE_PRICE, BUNDLE_DISCOUNT_PCT, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 
@@ -39,7 +40,7 @@ function WaveDivider({ fill, variant = 0, flip = false }: { fill: string; varian
 function Carousel({ children }: { children: ReactNode }) {
   return (
     <div
-      className="glowmetry-carousel"
+      className="percept-carousel"
       style={{ display: "flex", gap: "1.6rem", overflowX: "auto", scrollSnapType: "x mandatory", paddingBottom: "0.8rem", WebkitOverflowScrolling: "touch" }}
     >
       {children}
@@ -63,7 +64,7 @@ const MARQUEE_ITEMS = [
 
 function MarqueeGroup({ duplicate }: { duplicate?: boolean }) {
   return (
-    <div className={duplicate ? "glowmetry-marquee-dup" : undefined} style={{ display: "flex", flexShrink: 0 }}>
+    <div className={duplicate ? "percept-marquee-dup" : undefined} style={{ display: "flex", flexShrink: 0 }}>
       {MARQUEE_ITEMS.map((item, i) => (
         <span key={i} style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", fontSize: "1.4rem", fontWeight: 600, color: "#fff", padding: "0 2.4rem" }}>
           {item}
@@ -76,8 +77,8 @@ function MarqueeGroup({ duplicate }: { duplicate?: boolean }) {
 
 function MarqueeStrip() {
   return (
-    <div className="glowmetry-marquee" aria-hidden style={{ overflow: "hidden", background: "var(--panel)" }}>
-      <div className="glowmetry-marquee-track" style={{ display: "flex", width: "max-content", padding: "1.4rem 0" }}>
+    <div className="percept-marquee" aria-hidden style={{ overflow: "hidden", background: "var(--panel)" }}>
+      <div className="percept-marquee-track" style={{ display: "flex", width: "max-content", padding: "1.4rem 0" }}>
         <MarqueeGroup />
         {/* Duplicated once so the CSS animation can loop seamlessly at -50%
             instead of snapping back to 0. Hidden under reduced motion so a
@@ -120,7 +121,7 @@ function ResearchSlider() {
 
           {slide.kind === "bars" && (
             <>
-              <div className="glowmetry-research-tags" style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "0.8rem", marginBottom: "3.6rem" }}>
+              <div className="percept-research-tags" style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "0.8rem", marginBottom: "3.6rem" }}>
                 {slide.tags.map((tag) => (
                   <span key={tag} style={{ fontSize: "1.2rem", fontWeight: 600, color: "rgba(255,255,255,0.85)", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "9999px", padding: "0.6rem 1.4rem" }}>
                     {tag}
@@ -198,7 +199,7 @@ function ResearchSlider() {
 
 // Illustrative anchor comparison (typical U.S. session pricing, not verified
 // quotes) — same pattern iMorph uses: separate specialist visits vs. one
-// Glowmetry payment. Disclaimed below the comparison, not presented as fact.
+// Percept payment. Disclaimed below the comparison, not presented as fact.
 const OLD_WAY = [
   { label: "Skin consultation", price: 120 },
   { label: "Colour / draping session", price: 150 },
@@ -269,7 +270,7 @@ const WHY_ITEMS = [
 const FAQS = [
   {
     q: "Is this a medical diagnosis?",
-    a: "No. Glowmetry gives cosmetic and wellness insights, not a medical or dermatological diagnosis. For a real diagnosis, see the Experts section below or consult a licensed professional directly.",
+    a: "No. Percept gives cosmetic and wellness insights, not a medical or dermatological diagnosis. For a real diagnosis, see the Experts section below or consult a licensed professional directly.",
   },
   {
     q: "What happens to my photos?",
@@ -287,7 +288,7 @@ const FAQS = [
 
 // Counts up to the real bundle price once the pricing section scrolls into
 // view — the payoff moment of the pricing section, same reveal pattern as
-// the report page's Glow Score ring. Jumps straight to the value for
+// the report page's Percept Score ring. Jumps straight to the value for
 // prefers-reduced-motion instead of animating.
 function AnimatedPrice({ value }: { value: number }) {
   const [display, setDisplay] = useState(0);
@@ -342,8 +343,8 @@ export default function LandingPage() {
           padding: "1.2rem 1.2rem 1.2rem 2.4rem", borderRadius: "9999px", border: "1px solid var(--line)",
           background: "var(--header-bg)", backdropFilter: "blur(10px)",
         }}>
-          <a href="/" style={{ fontSize: "1.8rem", fontWeight: 600, color: "var(--primary)", letterSpacing: "-0.02em" }}>
-            Glow<span style={{ color: "var(--rose)" }}>metry</span>
+          <a href="/" style={{ display: "block" }}>
+            <Logo height="2.6rem" />
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
             <HeaderAuth />
@@ -365,7 +366,7 @@ export default function LandingPage() {
       {/* ── Hero ── */}
       <section style={{ position: "relative", overflow: "hidden", padding: "6.4rem 3.2rem 8rem" }}>
         <div aria-hidden style={{ position: "absolute", top: "-20%", left: "10%", width: "56rem", height: "56rem", borderRadius: "50%", background: "radial-gradient(circle, var(--rose) 0%, transparent 70%)", opacity: 0.06, filter: "blur(60px)", pointerEvents: "none" }} />
-        <div className="glowmetry-hero-grid" style={{ position: "relative", maxWidth: "120rem", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "5.6rem", alignItems: "center" }}>
+        <div className="percept-hero-grid" style={{ position: "relative", maxWidth: "120rem", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "5.6rem", alignItems: "center" }}>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
               Personal beauty analysis
@@ -378,7 +379,7 @@ export default function LandingPage() {
             </p>
             <div style={{ display: "flex", gap: "1.2rem", flexWrap: "nowrap" }}>
               <a href="/splash"><PrimaryButton size="sm" fullWidth={false}>Start scan →</PrimaryButton></a>
-              <a href="#why"><PrimaryButton size="sm" variant="outline" fullWidth={false}>Why Glow</PrimaryButton></a>
+              <a href="#why"><PrimaryButton size="sm" variant="outline" fullWidth={false}>Why Percept</PrimaryButton></a>
             </div>
           </motion.div>
 
@@ -402,7 +403,7 @@ export default function LandingPage() {
 
       {/* ── Report preview — the actual product, not a promised outcome ── */}
       <section style={{ padding: "8rem 3.2rem", position: "relative" }}>
-        <div className="glowmetry-hero-grid" style={{ maxWidth: "108rem", margin: "0 auto", display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "5.6rem", alignItems: "center" }}>
+        <div className="percept-hero-grid" style={{ maxWidth: "108rem", margin: "0 auto", display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "5.6rem", alignItems: "center" }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -412,7 +413,7 @@ export default function LandingPage() {
           >
             <Image
               src="/assets/report-preview-mockup.png"
-              alt="Glowmetry skin report screen showing an overall score and individual metrics"
+              alt="Percept skin report screen showing an overall score and individual metrics"
               fill
               sizes="(max-width: 900px) 80vw, 36rem"
               style={{ objectFit: "contain" }}
@@ -440,13 +441,13 @@ export default function LandingPage() {
 
       <WhatYouGet />
 
-      {/* ── Why Glowmetry ── */}
+      {/* ── Why Percept ── */}
       <section id="why" style={{ padding: "8rem 3.2rem", background: "var(--surface)", position: "relative" }}>
         <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
           <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
-            Why Glowmetry
+            Why Percept
           </p>
-          <h2 className="glowmetry-why-heading" style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "4.8rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
+          <h2 className="percept-why-heading" style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "4.8rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
             Specific insight, not a guess
           </h2>
           <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
@@ -487,7 +488,7 @@ export default function LandingPage() {
 
       {/* ── Experts ── */}
       <section id="experts" style={{ padding: "8rem 3.2rem", position: "relative" }}>
-        <div style={{ maxWidth: "88rem", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "4.8rem", alignItems: "center" }} className="glowmetry-experts-grid">
+        <div style={{ maxWidth: "88rem", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "4.8rem", alignItems: "center" }} className="percept-experts-grid">
           <div>
             <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
               Experts
@@ -496,7 +497,7 @@ export default function LandingPage() {
               AI gives you the read. A dermatologist gives you the plan.
             </h2>
             <p style={{ fontSize: "1.7rem", color: "var(--secondary)", lineHeight: 1.6, marginBottom: "2.8rem" }}>
-              Your Glowmetry report is a starting point. When you want a real medical opinion, a certified dermatologist reviews your case and follows up directly. No AI in the loop, a real person, usually within 24 hours.
+              Your Percept report is a starting point. When you want a real medical opinion, a certified dermatologist reviews your case and follows up directly. No AI in the loop, a real person, usually within 24 hours.
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem", marginBottom: "3.2rem" }}>
               {["Your report reviewed by a licensed dermatologist", "Written notes on your specific concerns", "Direct follow-up, usually within 24 hours"].map((item) => (
@@ -553,7 +554,7 @@ export default function LandingPage() {
             One payment. Every module covered. No subscription, right now.
           </p>
 
-          <div className="glowmetry-pricing-compare" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginBottom: "2rem" }}>
+          <div className="percept-pricing-compare" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginBottom: "2rem" }}>
             {/* Old way — light card floating on the dark section for maximum contrast */}
             <div style={{ background: "var(--surface)", borderRadius: "1.6rem", padding: "3.2rem" }}>
               <p style={{ display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
@@ -571,7 +572,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Glowmetry bundle — inverted to solid gold so it's unmissable against
+            {/* Percept bundle — inverted to solid gold so it's unmissable against
                 the dark section and the muted "old way" card beside it */}
             <motion.div
               whileHover={{ y: -6 }}
@@ -590,7 +591,7 @@ export default function LandingPage() {
                 50% off
               </div>
               <p style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
-                ⭐ Glowmetry bundle
+                ⭐ Percept bundle
               </p>
               {MODULES.map((m) => (
                 <div key={m.id} style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(0,57,52,0.15)" }}>
@@ -606,7 +607,7 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          <div className="glowmetry-cta-banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem", flexWrap: "wrap", background: GOLD, borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "1.2rem", minWidth: 0 }}>
+          <div className="percept-cta-banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem", flexWrap: "wrap", background: GOLD, borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "1.2rem", minWidth: 0 }}>
             <div style={{ minWidth: 0 }}>
               <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>You save</p>
               <p style={{ fontSize: "3.2rem", fontWeight: 800, color: "var(--primary)", lineHeight: 1 }}>${OLD_WAY_TOTAL - BUNDLE_PRICE}+</p>
@@ -628,7 +629,7 @@ export default function LandingPage() {
             style={{ background: CORAL, borderRadius: "1.6rem", padding: "3.2rem", marginBottom: "1.2rem", position: "relative", overflow: "hidden" }}
           >
             <div aria-hidden style={{ position: "absolute", top: "-40%", left: "-10%", width: "32rem", height: "32rem", borderRadius: "50%", background: "rgba(255,255,255,0.18)", filter: "blur(40px)" }} />
-            <div className="glowmetry-complete-package" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2.8rem", flexWrap: "wrap" }}>
+            <div className="percept-complete-package" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2.8rem", flexWrap: "wrap" }}>
               <div style={{ minWidth: 0 }}>
                 <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", opacity: 0.85 }}>
                   Go all the way: complete package
@@ -689,11 +690,9 @@ export default function LandingPage() {
 
       <footer style={{ background: "var(--panel)", padding: "6.4rem 3.2rem 2.4rem" }}>
         <div style={{ maxWidth: "128rem", margin: "0 auto" }}>
-          <div className="glowmetry-footer-grid" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: "4rem", paddingBottom: "4rem", borderBottom: "1px solid rgba(255,255,255,0.14)" }}>
-            <div className="glowmetry-footer-brand">
-              <span style={{ fontSize: "1.8rem", fontWeight: 600, letterSpacing: "0.02em", color: "#fff" }}>
-                Glow<span style={{ color: "var(--rose)" }}>metry</span>
-              </span>
+          <div className="percept-footer-grid" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: "4rem", paddingBottom: "4rem", borderBottom: "1px solid rgba(255,255,255,0.14)" }}>
+            <div className="percept-footer-brand">
+              <img src="/brand/percept-logo-dark.svg" alt="Percept" style={{ display: "block", height: "2.6rem", width: "auto" }} />
               <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginTop: "1.6rem", maxWidth: "32rem" }}>
                 A guided photo scan, understood by AI. Skin, face, and hair insight in a few minutes, no lab visit.
               </p>
@@ -702,7 +701,7 @@ export default function LandingPage() {
             <div>
               <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Product</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-                <a href="#why" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Why Glowmetry</a>
+                <a href="#why" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Why Percept</a>
                 <a href="#experts" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Experts</a>
                 <a href="#pricing" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Pricing</a>
                 <a href="#faq" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>FAQ</a>
@@ -710,7 +709,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="glowmetry-footer-legalsupport" style={{ display: "flex", gap: "4rem" }}>
+            <div className="percept-footer-legalsupport" style={{ display: "flex", gap: "4rem" }}>
               <div>
                 <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Legal</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
@@ -722,7 +721,7 @@ export default function LandingPage() {
               <div>
                 <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.6rem" }}>Support</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-                  <a href="mailto:support@glowmetry.com" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>support@glowmetry.com</a>
+                  <a href="mailto:support@percept.skin" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>support@percept.skin</a>
                   <a href="#faq" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Help & FAQ</a>
                 </div>
               </div>
@@ -730,7 +729,7 @@ export default function LandingPage() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", paddingTop: "2.4rem" }}>
-            <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.5)" }}>© 2026 Glowmetry</p>
+            <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.5)" }}>© 2026 Percept</p>
             <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.5)", maxWidth: "48rem", textAlign: "right" }}>
               Cosmetic and wellness insights, not a substitute for professional medical advice.
             </p>
@@ -744,51 +743,51 @@ export default function LandingPage() {
         /* Below this the hamburger carries the login link instead, so the bar
            stays three controls wide and never wraps. */
         @media (min-width: 520px) { .site-header-login { display: inline-flex !important; } }
-        .glowmetry-carousel { scrollbar-width: none; -ms-overflow-style: none; }
-        .glowmetry-carousel::-webkit-scrollbar { display: none; }
+        .percept-carousel { scrollbar-width: none; -ms-overflow-style: none; }
+        .percept-carousel::-webkit-scrollbar { display: none; }
         @media (max-width: 900px) {
-          .glowmetry-hero-grid { grid-template-columns: 1fr !important; }
-          .glowmetry-experts-grid { grid-template-columns: 1fr !important; }
-          .glowmetry-footer-grid { grid-template-columns: 1fr 1fr !important; row-gap: 3.2rem !important; }
-          .glowmetry-footer-brand { grid-column: 1 / -1 !important; }
+          .percept-hero-grid { grid-template-columns: 1fr !important; }
+          .percept-experts-grid { grid-template-columns: 1fr !important; }
+          .percept-footer-grid { grid-template-columns: 1fr 1fr !important; row-gap: 3.2rem !important; }
+          .percept-footer-brand { grid-column: 1 / -1 !important; }
         }
         @media (max-width: 700px) {
           #why { padding-top: 5.6rem !important; padding-bottom: 5.6rem !important; }
-          .glowmetry-why-heading { margin-bottom: 3.2rem !important; }
+          .percept-why-heading { margin-bottom: 3.2rem !important; }
         }
         @media (max-width: 520px) {
-          .glowmetry-footer-legalsupport { flex-direction: column !important; gap: 2.4rem !important; }
+          .percept-footer-legalsupport { flex-direction: column !important; gap: 2.4rem !important; }
         }
         @media (max-width: 700px) {
-          .glowmetry-pricing-compare { grid-template-columns: 1fr !important; }
+          .percept-pricing-compare { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 640px) {
-          .glowmetry-research-tags { gap: 0.6rem !important; }
+          .percept-research-tags { gap: 0.6rem !important; }
         }
-        .glowmetry-marquee-track { animation: glowmetry-marquee-scroll 32s linear infinite; }
+        .percept-marquee-track { animation: percept-marquee-scroll 32s linear infinite; }
         /* Real-mouse-hover only — on touch devices ":hover" can stick after a
            tap (no true hover state), which permanently paused the marquee on
            mobile. Gating on (hover: hover) keeps the pause-on-hover a
            desktop-only nicety. */
         @media (hover: hover) and (pointer: fine) {
-          .glowmetry-marquee:hover .glowmetry-marquee-track { animation-play-state: paused; }
+          .percept-marquee:hover .percept-marquee-track { animation-play-state: paused; }
         }
-        @keyframes glowmetry-marquee-scroll {
+        @keyframes percept-marquee-scroll {
           from { transform: translateX(0); }
           to { transform: translateX(-50%); }
         }
         @media (prefers-reduced-motion: reduce) {
-          .glowmetry-marquee-track { animation: none !important; }
-          .glowmetry-marquee { overflow-x: auto !important; }
-          .glowmetry-marquee-dup { display: none !important; }
+          .percept-marquee-track { animation: none !important; }
+          .percept-marquee { overflow-x: auto !important; }
+          .percept-marquee-dup { display: none !important; }
         }
         @media (max-width: 600px) {
-          .glowmetry-cta-banner { flex-direction: column !important; align-items: stretch !important; }
-          .glowmetry-cta-banner > a { width: 100% !important; flex-shrink: 1 !important; }
-          .glowmetry-cta-banner button { width: 100% !important; white-space: normal !important; }
-          .glowmetry-complete-package { flex-direction: column !important; align-items: stretch !important; }
-          .glowmetry-complete-package > div:last-child { text-align: left !important; }
-          .glowmetry-complete-package a { width: 100% !important; }
+          .percept-cta-banner { flex-direction: column !important; align-items: stretch !important; }
+          .percept-cta-banner > a { width: 100% !important; flex-shrink: 1 !important; }
+          .percept-cta-banner button { width: 100% !important; white-space: normal !important; }
+          .percept-complete-package { flex-direction: column !important; align-items: stretch !important; }
+          .percept-complete-package > div:last-child { text-align: left !important; }
+          .percept-complete-package a { width: 100% !important; }
         }
       `}</style>
     </div>

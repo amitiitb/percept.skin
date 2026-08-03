@@ -1,4 +1,4 @@
-# Supabase Setup — Glowmetry
+# Supabase Setup — Percept
 
 ## 1. Create project
 Go to supabase.com → New project → choose region closest to India (ap-south-1).
@@ -13,7 +13,7 @@ This creates: `profiles`, `sessions`, `photos`, `reports` tables + RLS + storage
 Dashboard → Authentication → Providers → Anonymous → Enable.
 
 ## 4. Add env vars
-Create `glowmetry/.env.local`:
+Create `percept/.env.local`:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://your-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key

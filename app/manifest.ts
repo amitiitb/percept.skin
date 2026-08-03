@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Glowmetry | AI Skin Analysis",
-    short_name: "Glowmetry",
+    name: "Percept | AI Skin Analysis",
+    short_name: "Percept",
     description: "Personalised AI skin analysis and dermatologist-backed plans.",
     start_url: "/start",
     display: "standalone",

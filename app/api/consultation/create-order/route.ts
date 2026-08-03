@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const customId = `${auth.userId}|${sessionId ?? "-"}|${contactPhone ?? "-"}`;
 
   try {
-    const { orderId } = await createCustomOrder(DOCTOR_CONSULTATION_PRICE, "Glowmetry: Doctor Consultation", customId);
+    const { orderId } = await createCustomOrder(DOCTOR_CONSULTATION_PRICE, "Percept: Doctor Consultation", customId);
     logV2.info("v2_consultation_order_created", { user_id: auth.userId, session_id: sessionId, order_id: orderId });
     return NextResponse.json({ orderId });
   } catch (err) {

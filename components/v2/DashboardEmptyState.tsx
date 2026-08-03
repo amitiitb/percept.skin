@@ -302,7 +302,7 @@ export function DashboardEmptyState({ onStart }: { onStart: () => void }) {
         <div style={{ position: "relative" }}>
           <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--rose)", letterSpacing: "0.14em", margin: "0 0 1rem" }}>NO ANALYSES YET</p>
           <h2 style={{ fontSize: "clamp(2.2rem, 6vw, 2.8rem)", fontWeight: 400, color: "#fff", lineHeight: 1.25, margin: "0 0 1.8rem", textWrap: "balance" }}>
-            Your first Glow Score is a few minutes away
+            Your first Percept Score is a few minutes away
           </h2>
           <PrimaryButton fullWidth variant="onDark" onClick={onStart}>Start your first scan →</PrimaryButton>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem 1.6rem", marginTop: "1.6rem" }}>

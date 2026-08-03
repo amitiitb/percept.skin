@@ -72,7 +72,7 @@ export interface RecommendationSet {
 
 // Structured AI output — Section 23 of the product spec. Non-clinical, cosmetic/wellness framing only.
 export interface AnalysisResultV2 {
-  overallScore: number; // Glow Score, 0-100
+  overallScore: number; // Percept Score, 0-100
   skinAgeEstimate: number;
   imageQuality: "good" | "fair" | "poor";
   skinMetrics: AnalysisMetric[];

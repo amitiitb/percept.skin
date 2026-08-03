@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { Logo } from "@/components/ui/Logo";
 
 export default function CallbackPage() {
   const router = useRouter();
@@ -67,8 +68,8 @@ export default function CallbackPage() {
       justifyContent: "center",
       gap: "2rem",
     }}>
-      <a href="/splash" style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", letterSpacing: "-0.02em" }}>
-        Glow<span style={{ color: "var(--rose)" }}>metry</span>
+      <a href="/splash" style={{ display: "block" }}>
+        <Logo height="3rem" />
       </a>
       <motion.div
         animate={{ rotate: 360 }}

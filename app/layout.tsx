@@ -7,25 +7,25 @@ const description =
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://glowmetry.com",
+    process.env.NEXT_PUBLIC_SITE_URL || "https://percept.skin",
   ),
   title: {
-    default: "Glowmetry | See Your Skin More Clearly",
-    template: "%s | Glowmetry",
+    default: "Percept | See Your Skin More Clearly",
+    template: "%s | Percept",
   },
   description,
-  applicationName: "Glowmetry",
+  applicationName: "Percept",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/splash",
-    siteName: "Glowmetry",
-    title: "Glowmetry | See Your Skin More Clearly",
+    siteName: "Percept",
+    title: "Percept | See Your Skin More Clearly",
     description,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Glowmetry | See Your Skin More Clearly",
+    title: "Percept | See Your Skin More Clearly",
     description,
   },
 };
@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             beige address bar until they touched the toggle. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('glowmetry-theme');var t=(s==='dark'||s==='light')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++)m[i].remove();var n=document.createElement('meta');n.name='theme-color';n.content=t==='dark'?'#08201D':'#E8E7E5';document.head.appendChild(n);}catch(e){document.documentElement.dataset.theme='light';}})();`,
+            __html: `(function(){try{var s=localStorage.getItem('percept-theme');var t=(s==='dark'||s==='light')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++)m[i].remove();var n=document.createElement('meta');n.name='theme-color';n.content=t==='dark'?'#08201D':'#E8E7E5';document.head.appendChild(n);}catch(e){document.documentElement.dataset.theme='light';}})();`,
           }}
         />
       </head>

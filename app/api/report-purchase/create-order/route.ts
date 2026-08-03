@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   const customId = `${auth.userId}|${sessionId}|${modules.join(",")}|${includeConsultation ? "1" : "0"}|${contactPhone ?? "-"}`;
 
   try {
-    const description = `Glowmetry Report: ${modules.length === MODULES.length ? "Complete Bundle" : modules.join(", ")}${includeConsultation ? " + Doctor Consultation" : ""}`;
+    const description = `Percept Report: ${modules.length === MODULES.length ? "Complete Bundle" : modules.join(", ")}${includeConsultation ? " + Doctor Consultation" : ""}`;
     const { orderId } = await createCustomOrder(amount, description, customId);
     logV2.info("v2_report_purchase_order_created", { user_id: auth.userId, session_id: sessionId, modules: modules.join(","), amount, include_consultation: !!includeConsultation, order_id: orderId });
     return NextResponse.json({ orderId });

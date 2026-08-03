@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { Logo } from "@/components/ui/Logo";
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -17,9 +18,9 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       padding: "3.2rem 2.4rem",
       textAlign: "center",
     }}>
-      <span style={{ fontSize: "2.2rem", fontWeight: 600, color: "var(--primary, #003934)", letterSpacing: "-0.02em", marginBottom: "4.8rem" }}>
-        Glow<span style={{ color: "var(--rose, #1A9E8F)" }}>metry</span>
-      </span>
+      <div style={{ marginBottom: "4.8rem" }}>
+        <Logo height="3rem" />
+      </div>
 
       <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4rem)", fontWeight: 600, color: "var(--primary, #003934)", lineHeight: 1.1, letterSpacing: "-0.025em", marginBottom: "1.6rem" }}>
         Something went wrong.
