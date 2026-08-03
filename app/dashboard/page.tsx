@@ -124,9 +124,11 @@ export default function V2DashboardPage() {
                       Skin age estimate: {latest.skin_age}
                     </span>
                   )}
-                  <div style={{ marginTop: "2.4rem", display: "flex", gap: "1.2rem", flexWrap: "wrap", justifyContent: "center" }}>
+                  {/* PerceptGPT's own entry point is the floating button below —
+                      having it here too collided with that fixed-position
+                      button on mobile, and duplicated the same destination. */}
+                  <div style={{ marginTop: "2.4rem" }}>
                     <PrimaryButton variant="outline" fullWidth={false} onClick={() => router.push(`/report/${latest.id}`)}>View report →</PrimaryButton>
-                    <PrimaryButton fullWidth={false} onClick={() => router.push(`/perceptgpt?session=${latest.id}`)}>Ask PerceptGPT →</PrimaryButton>
                   </div>
                 </div>
               ) : (
@@ -166,12 +168,48 @@ export default function V2DashboardPage() {
           </div>
         )}
       </div>
+      {/* Floating entry point to PerceptGPT — the embedded "Ask PerceptGPT"
+          button inside the score card is easy to miss on a long page, so
+          this stays visible (and animated) regardless of scroll position.
+          Only shown once there's a completed scan to chat about — matches
+          the gating on the button above and on /perceptgpt itself. */}
+      {latest?.status === "complete" && (
+        <motion.button
+          onClick={() => router.push(`/perceptgpt?session=${latest.id}`)}
+          aria-label="Ask PerceptGPT"
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.5 }}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
+          style={{
+            position: "fixed", bottom: "2.4rem", right: "2.4rem", zIndex: 40,
+            width: "6.4rem", height: "6.4rem", borderRadius: "50%", border: "none",
+            background: "var(--rose)", color: "#fff", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 0.8rem 2.4rem -0.4rem rgba(26,158,143,0.5)",
+          }}
+        >
+          <motion.span
+            aria-hidden
+            animate={{ scale: [1, 1.7, 1.7], opacity: [0.55, 0, 0] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
+            style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "var(--rose)" }}
+          />
+          <svg style={{ position: "relative" }} width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a8.5 8.5 0 01-8.5 8.5c-1.35 0-2.62-.32-3.73-.9L3 21l1.46-4.38A8.46 8.46 0 013.5 12 8.5 8.5 0 0112 3.5 8.5 8.5 0 0121 12z" />
+          </svg>
+        </motion.button>
+      )}
       <style>{`
         @media (max-width: 800px) { .v2-dash-grid { grid-template-columns: 1fr !important; } }
         /* 6rem of top padding plus the greeting left roughly a third of a phone
            screen empty before any content began. */
         @media (max-width: 640px) {
-          .v2-dash-page { padding: 3.2rem 2rem 4rem !important; }
+          /* Extra bottom clearance: the floating PerceptGPT button is fixed
+             to the viewport, and without this the score card's own CTA row
+             ends up sitting right underneath it on first load. */
+          .v2-dash-page { padding: 3.2rem 2rem 11rem !important; }
           .v2-dash-greeting { font-size: 2.8rem !important; }
           .v2-dash-header { margin-bottom: 2.4rem !important; }
         }
