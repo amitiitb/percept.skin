@@ -68,7 +68,9 @@ function MarqueeGroup({ duplicate }: { duplicate?: boolean }) {
       {MARQUEE_ITEMS.map((item, i) => (
         <span key={i} style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", fontSize: "1.4rem", fontWeight: 600, color: "#fff", padding: "0 2.4rem" }}>
           {item}
-          <span style={{ marginLeft: "2.4rem", color: GOLD }}>●</span>
+          <span style={{ marginLeft: "2.4rem", color: GOLD, display: "flex", alignItems: "center" }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2z" /></svg>
+          </span>
         </span>
       ))}
     </div>
@@ -447,23 +449,32 @@ export default function LandingPage() {
           <h2 className="percept-why-heading" style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "4.8rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
             Specific insight, not a guess
           </h2>
-          <div style={{ maxWidth: "72rem", margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(28rem, 1fr))", gap: "3.2rem", maxWidth: "108rem", margin: "0 auto" }}>
             {WHY_ITEMS.map((item, i) => (
               <motion.div
                 key={item.line}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
                 style={{
-                  display: "flex", alignItems: "center", gap: "1.6rem", padding: "1.8rem 0",
-                  borderBottom: i < WHY_ITEMS.length - 1 ? "1px solid var(--line)" : "none",
+                  display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+                  background: "var(--canvas)", padding: "4.8rem 3.2rem", borderRadius: "2.4rem",
+                  boxShadow: "0 1.2rem 3.2rem -0.8rem rgba(0,0,0,0.06)", border: "1px solid var(--line)"
                 }}
               >
-                <span style={{ width: "3.2rem", height: "3.2rem", flexShrink: 0, borderRadius: "50%", background: ACCENTS[i % ACCENTS.length], display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth="2">{item.icon}</svg>
-                </span>
-                <p style={{ fontSize: "1.7rem", color: "var(--primary)", lineHeight: 1.4, margin: 0 }}>{item.line}</p>
+                <div style={{
+                  width: "8rem", height: "8rem", borderRadius: "2rem",
+                  background: `linear-gradient(135deg, ${ACCENTS[i % ACCENTS.length]} 0%, transparent 100%)`,
+                  display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "3.2rem",
+                  boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.4), 0 1.6rem 3.2rem -1.2rem ${ACCENTS[i % ACCENTS.length]}`,
+                  position: "relative", overflow: "hidden"
+                }}>
+                  <div style={{ position: "absolute", inset: "1px", borderRadius: "1.9rem", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke={ACCENTS[i % ACCENTS.length]} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{item.icon}</svg>
+                  </div>
+                </div>
+                <p style={{ fontSize: "1.8rem", color: "var(--primary)", lineHeight: 1.5, margin: 0, fontWeight: 500 }}>{item.line}</p>
               </motion.div>
             ))}
           </div>
@@ -510,7 +521,7 @@ export default function LandingPage() {
           </div>
           <div style={{ position: "relative", borderRadius: "1.6rem", overflow: "hidden", aspectRatio: "4/5" }}>
             <Image
-              src="/assets/dermatologist-dermatoscope.png"
+              src="/images/expert_dermatologist.png"
               alt="Dermatologist examining skin with a dermatoscope"
               fill
               sizes="(max-width: 900px) 100vw, 40vw"
