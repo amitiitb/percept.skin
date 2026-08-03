@@ -9,7 +9,7 @@ import { WhatYouGet } from "@/components/marketing/WhatYouGet";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
 import { IconCheck, IconClose } from "@/components/ui/icons";
-import { MODULES, BUNDLE_PRICE, BUNDLE_DISCOUNT_PCT, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
+import { MODULES, BUNDLE_PRICE, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 import { FAQS } from "@/lib/v2/homeFaqs";
 
 const GOLD = "#D9A62E";
@@ -45,49 +45,6 @@ function Carousel({ children }: { children: ReactNode }) {
       style={{ display: "flex", gap: "1.6rem", overflowX: "auto", scrollSnapType: "x mandatory", paddingBottom: "0.8rem", WebkitOverflowScrolling: "touch" }}
     >
       {children}
-    </div>
-  );
-}
-
-// Pricing/feature highlights, always visible, no interaction needed to see
-// all of them, unlike the hero which only fits one message at a time.
-const MARQUEE_ITEMS = [
-  `Best value, everything for $${BUNDLE_PRICE}`,
-  `Bundle all ${MODULES.length} modules, save ${BUNDLE_DISCOUNT_PCT}%`,
-  `Individual modules from just $${MODULES[0].price}`,
-  "Know your skin in minutes",
-  "Talk to a real dermatologist",
-  "Which colours suit you? Find out",
-  "See yourself in new frames before you buy",
-  "Live frame try-on, right in your browser",
-  "AI hairstyle suggestions, see it on you",
-];
-
-function MarqueeGroup({ duplicate }: { duplicate?: boolean }) {
-  return (
-    <div className={duplicate ? "percept-marquee-dup" : undefined} style={{ display: "flex", flexShrink: 0 }}>
-      {MARQUEE_ITEMS.map((item, i) => (
-        <span key={i} style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", fontSize: "1.4rem", fontWeight: 600, color: "#fff", padding: "0 2.4rem" }}>
-          {item}
-          <span style={{ marginLeft: "2.4rem", color: GOLD, display: "flex", alignItems: "center" }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2z" /></svg>
-          </span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function MarqueeStrip() {
-  return (
-    <div className="percept-marquee" aria-hidden style={{ overflow: "hidden", background: "var(--panel)" }}>
-      <div className="percept-marquee-track" style={{ display: "flex", width: "max-content", padding: "1.4rem 0" }}>
-        <MarqueeGroup />
-        {/* Duplicated once so the CSS animation can loop seamlessly at -50%
-            instead of snapping back to 0. Hidden under reduced motion so a
-            manually-scrolled static strip shows the list once, not twice. */}
-        <MarqueeGroup duplicate />
-      </div>
     </div>
   );
 }
@@ -379,8 +336,6 @@ export function HomeClient() {
           </motion.div>
         </div>
       </section>
-
-      <MarqueeStrip />
 
       {/* ── Report preview — the actual product, not a promised outcome ── */}
       <section style={{ padding: "8rem 3.2rem", position: "relative" }}>
@@ -752,23 +707,6 @@ export function HomeClient() {
         }
         @media (max-width: 640px) {
           .percept-research-tags { gap: 0.6rem !important; }
-        }
-        .percept-marquee-track { animation: percept-marquee-scroll 32s linear infinite; }
-        /* Real-mouse-hover only — on touch devices ":hover" can stick after a
-           tap (no true hover state), which permanently paused the marquee on
-           mobile. Gating on (hover: hover) keeps the pause-on-hover a
-           desktop-only nicety. */
-        @media (hover: hover) and (pointer: fine) {
-          .percept-marquee:hover .percept-marquee-track { animation-play-state: paused; }
-        }
-        @keyframes percept-marquee-scroll {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .percept-marquee-track { animation: none !important; }
-          .percept-marquee { overflow-x: auto !important; }
-          .percept-marquee-dup { display: none !important; }
         }
         @media (max-width: 600px) {
           .percept-cta-banner { flex-direction: column !important; align-items: stretch !important; }
