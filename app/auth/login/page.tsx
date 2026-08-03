@@ -65,7 +65,7 @@ function LoginForm() {
     }}>
       <div style={{ position: "absolute", top: "2rem", right: "2rem" }}><ThemeToggle compact /></div>
       <a href="/splash" style={{ display: "block", marginBottom: "4.8rem" }}>
-        <Logo height="3rem" />
+        <Logo height="4rem" />
       </a>
 
       <motion.div

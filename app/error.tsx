@@ -19,7 +19,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       textAlign: "center",
     }}>
       <div style={{ marginBottom: "4.8rem" }}>
-        <Logo height="3rem" />
+        <Logo height="4rem" />
       </div>
 
       <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 4rem)", fontWeight: 600, color: "var(--primary, #003934)", lineHeight: 1.1, letterSpacing: "-0.025em", marginBottom: "1.6rem" }}>

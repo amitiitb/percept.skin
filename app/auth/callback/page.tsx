@@ -69,7 +69,7 @@ export default function CallbackPage() {
       gap: "2rem",
     }}>
       <a href="/splash" style={{ display: "block" }}>
-        <Logo height="3rem" />
+        <Logo height="4rem" />
       </a>
       <motion.div
         animate={{ rotate: 360 }}

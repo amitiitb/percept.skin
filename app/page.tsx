@@ -344,7 +344,7 @@ export default function LandingPage() {
           background: "var(--header-bg)", backdropFilter: "blur(10px)",
         }}>
           <a href="/" style={{ display: "block" }}>
-            <Logo height="2.6rem" />
+            <Logo height="3.6rem" />
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
             <HeaderAuth />
@@ -692,7 +692,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: "128rem", margin: "0 auto" }}>
           <div className="percept-footer-grid" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: "4rem", paddingBottom: "4rem", borderBottom: "1px solid rgba(255,255,255,0.14)" }}>
             <div className="percept-footer-brand">
-              <img src="/brand/percept-logo-dark.svg" alt="Percept" style={{ display: "block", height: "2.6rem", width: "auto" }} />
+              <img src="/brand/percept-logo-dark.svg" alt="Percept" style={{ display: "block", height: "3.6rem", width: "auto" }} />
               <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginTop: "1.6rem", maxWidth: "32rem" }}>
                 A guided photo scan, understood by AI. Skin, face, and hair insight in a few minutes, no lab visit.
               </p>

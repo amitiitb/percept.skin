@@ -51,7 +51,7 @@ export function SiteMenu({ open, onClose }: Props) {
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "2.4rem 3.2rem" }}>
             <a href="/" style={{ display: "block" }}>
-              <Logo height="2.8rem" />
+              <Logo height="3.6rem" />
             </a>
             <button
               onClick={onClose}

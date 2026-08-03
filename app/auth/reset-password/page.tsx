@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
       padding: "3.2rem 2.4rem",
     }}>
       <a href="/splash" style={{ display: "block", marginBottom: "4.8rem" }}>
-        <Logo height="3rem" />
+        <Logo height="4rem" />
       </a>
 
       <motion.div

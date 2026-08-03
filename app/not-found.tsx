@@ -14,7 +14,7 @@ export default function NotFound() {
       textAlign: "center",
     }}>
       <div style={{ marginBottom: "4.8rem" }}>
-        <Logo height="3rem" />
+        <Logo height="4rem" />
       </div>
 
       <p style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
