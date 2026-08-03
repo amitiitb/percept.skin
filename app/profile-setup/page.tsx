@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useFunnelV2Store } from "@/store/funnelV2";
 import { V2Layout } from "@/components/v2/V2Layout";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { Card } from "@/components/ui/Card";
 import type { SkinConcern, SkinType } from "@/lib/v2/types";
 
 const SKIN_TYPES: { value: SkinType; label: string }[] = [
@@ -100,77 +101,95 @@ export default function V2ProfileSetupPage() {
 
   return (
     <V2Layout headline="A few quick details" sub="This helps personalise your report. Nothing here is shared or sold." progress={20} showBack={false}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "3.2rem", maxWidth: "64rem", width: "100%", minWidth: 0 }}>
-        <div>
-          <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Name</label>
-          <input
-            value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            placeholder="Your name"
-            style={{ width: "100%", marginTop: "0.8rem", background: "transparent", border: "none", borderBottom: "1px solid var(--line)", padding: "1rem 0", fontSize: "1.8rem", color: "var(--primary)", outline: "none" }}
-          />
-        </div>
+      <div style={{ width: "100%", maxWidth: "64rem" }}>
+        <p style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1rem" }}>
+          Your profile
+        </p>
+        <h1 style={{ fontSize: "clamp(2.6rem, 5vw, 3.6rem)", fontWeight: 400, color: "var(--primary)", marginBottom: "0.8rem" }}>
+          A few quick details
+        </h1>
+        <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "3.2rem" }}>
+          This helps personalise your report. Nothing here is shared or sold.
+        </p>
 
-        <div>
-          <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Age range</label>
-          <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
-            {["under18", "18-24", "25-34", "35-44", "45-54", "55+"].map((r) => (
-              <Chip key={r} selected={form.ageRange === r} onClick={() => setForm((f) => ({ ...f, ageRange: r }))}>{r}</Chip>
-            ))}
+        <Card eyebrow="Personal info">
+          <div style={{ display: "flex", flexDirection: "column", gap: "2.4rem" }}>
+            <div>
+              <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Name</label>
+              <input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Your name"
+                style={{ width: "100%", marginTop: "0.8rem", background: "transparent", border: "none", borderBottom: "1px solid var(--line)", padding: "1rem 0", fontSize: "1.8rem", color: "var(--primary)", outline: "none" }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Age range</label>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
+                {["under18", "18-24", "25-34", "35-44", "45-54", "55+"].map((r) => (
+                  <Chip key={r} selected={form.ageRange === r} onClick={() => setForm((f) => ({ ...f, ageRange: r }))}>{r}</Chip>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Country</label>
+              <input
+                value={form.country}
+                onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+                placeholder="United States"
+                style={{ width: "100%", marginTop: "0.8rem", background: "transparent", border: "none", borderBottom: "1px solid var(--line)", padding: "1rem 0", fontSize: "1.8rem", color: "var(--primary)", outline: "none" }}
+              />
+            </div>
           </div>
-        </div>
+        </Card>
 
-        <div>
-          <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Country</label>
-          <input
-            value={form.country}
-            onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-            placeholder="United States"
-            style={{ width: "100%", marginTop: "0.8rem", background: "transparent", border: "none", borderBottom: "1px solid var(--line)", padding: "1rem 0", fontSize: "1.8rem", color: "var(--primary)", outline: "none" }}
-          />
-        </div>
+        <Card eyebrow="Skin profile">
+          <div style={{ display: "flex", flexDirection: "column", gap: "2.4rem" }}>
+            <div>
+              <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Skin type</label>
+              <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
+                {SKIN_TYPES.map((s) => (
+                  <Chip key={s.value} selected={form.skinType === s.value} onClick={() => setForm((f) => ({ ...f, skinType: s.value }))}>{s.label}</Chip>
+                ))}
+              </div>
+            </div>
 
-        <div>
-          <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Skin type</label>
-          <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
-            {SKIN_TYPES.map((s) => (
-              <Chip key={s.value} selected={form.skinType === s.value} onClick={() => setForm((f) => ({ ...f, skinType: s.value }))}>{s.label}</Chip>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Primary concerns</label>
-            <span style={{ fontSize: "1.1rem", color: "var(--muted)" }}>Swipe for more →</span>
-          </div>
-          <div className="percept-concerns-scroll" style={{
-            display: "flex", flexDirection: "column", rowGap: "1rem", marginTop: "1rem",
-            overflowX: "auto", width: "100%", scrollSnapType: "x proximity",
-            paddingBottom: "0.4rem", paddingRight: "2rem",
-          }}>
-            {[0, 1].map((row) => (
-              // Two independent flex rows instead of a CSS-grid column-flow —
-              // grid would size each column to its widest stacked item (a
-              // short chip under a long one), leaving a big dead gap before
-              // the next column. Plain flex rows size each chip on its own.
-              <div key={row} style={{ display: "flex", gap: "1rem" }}>
-                {CONCERNS.filter((_, i) => i % 2 === row).map((c) => (
-                  <div key={c.value} style={{ scrollSnapAlign: "start", flexShrink: 0 }}>
-                    <Chip selected={form.skinConcerns.includes(c.value)} onClick={() => toggleConcern(c.value)}>{c.label}</Chip>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Primary concerns</label>
+                <span style={{ fontSize: "1.1rem", color: "var(--muted)" }}>Swipe for more →</span>
+              </div>
+              <div className="percept-concerns-scroll" style={{
+                display: "flex", flexDirection: "column", rowGap: "1rem", marginTop: "1rem",
+                overflowX: "auto", width: "100%", scrollSnapType: "x proximity",
+                paddingBottom: "0.4rem", paddingRight: "2rem",
+              }}>
+                {[0, 1].map((row) => (
+                  // Two independent flex rows instead of a CSS-grid column-flow —
+                  // grid would size each column to its widest stacked item (a
+                  // short chip under a long one), leaving a big dead gap before
+                  // the next column. Plain flex rows size each chip on its own.
+                  <div key={row} style={{ display: "flex", gap: "1rem" }}>
+                    {CONCERNS.filter((_, i) => i % 2 === row).map((c) => (
+                      <div key={c.value} style={{ scrollSnapAlign: "start", flexShrink: 0 }}>
+                        <Chip selected={form.skinConcerns.includes(c.value)} onClick={() => toggleConcern(c.value)}>{c.label}</Chip>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
-            ))}
+            </div>
           </div>
-        </div>
+        </Card>
 
         <button
           type="button"
           role="checkbox"
           aria-checked={consent}
           onClick={() => setConsent((v) => !v)}
-          style={{ display: "flex", gap: "1.2rem", cursor: "pointer", background: "none", border: "none", padding: 0, textAlign: "left" }}
+          style={{ display: "flex", gap: "1.2rem", cursor: "pointer", background: "none", border: "none", padding: 0, textAlign: "left", marginBottom: "3.2rem" }}
         >
           <span aria-hidden style={{ flexShrink: 0, marginTop: "0.2rem", width: "2rem", height: "2rem", borderRadius: "0.4rem", border: `2px solid ${consent ? "var(--btn-fill)" : "var(--line-strong)"}`, background: consent ? "var(--btn-fill)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {consent && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
@@ -180,7 +199,7 @@ export default function V2ProfileSetupPage() {
           </span>
         </button>
 
-        {error && <p style={{ color: "var(--rose)", fontSize: "1.4rem" }}>{error}</p>}
+        {error && <p style={{ color: "var(--rose)", fontSize: "1.4rem", marginBottom: "1.6rem" }}>{error}</p>}
 
         <PrimaryButton onClick={handleContinue} disabled={!valid} loading={saving}>
           Continue →

@@ -26,6 +26,12 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
     else if (backHref) router.push(backHref);
     else router.back();
   };
+  // Distinct from "back" (one step up the stack) — jumps straight to the
+  // dashboard regardless of how deep the current screen is, or whether
+  // showBack is even on. Without it, screens reached with showBack={false}
+  // (profile-setup, when opened from Settings rather than onboarding) were a
+  // dead end with no way out except an OS back-gesture.
+  const goHome = () => router.push("/dashboard");
 
   const panelL: CSSProperties = {
     display: "none",
@@ -79,7 +85,11 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
             </button>
           ) : <div style={{ width: "4.4rem" }} />}
           <Logo height="4.2rem" />
-          <div style={{ width: "4.4rem" }} />
+          <button onClick={goHome} aria-label="Go to dashboard" style={{ width: "4.4rem", height: "4.4rem", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "1px solid var(--line)", color: "var(--secondary)", background: "transparent", cursor: "pointer" }}>
+            <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 11.5L12 4l9 7.5M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9" />
+            </svg>
+          </button>
         </div>
 
         {progress !== undefined && (

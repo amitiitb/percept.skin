@@ -193,7 +193,7 @@ export default function V2SettingsPage() {
         </motion.div>
 
         <Card eyebrow="Account">
-          <SettingsRow icon={ICON.person} tint="rgba(26,158,143,0.12)" label="Edit profile" sublabel="Name, age range, photo" onClick={() => router.push("/profile-setup")} />
+          <SettingsRow icon={ICON.person} tint="rgba(26,158,143,0.12)" label="Edit profile" sublabel="Name, age range, country" onClick={() => router.push("/profile-setup")} />
           <SettingsRow icon={ICON.sliders} tint="rgba(217,166,46,0.14)" label="Skin & hair concerns" sublabel="Tune what your reports focus on" onClick={() => router.push("/profile-setup")} />
         </Card>
 
