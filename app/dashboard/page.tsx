@@ -64,10 +64,10 @@ export default function V2DashboardPage() {
   return (
     <div className="v2-dash-page" style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "6rem 3.2rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
-        <div className="v2-dash-header" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
+        <div className="v2-dash-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
           <div>
-            <Logo height="2rem" className="v2-dash-logo" />
-            <h1 className="v2-dash-greeting" style={{ fontSize: "3.6rem", fontWeight: 400, color: "var(--primary)", margin: "0.8rem 0 0" }}>
+            <Logo height="1.5rem" className="v2-dash-logo" />
+            <h1 className="v2-dash-greeting" style={{ fontSize: "3.6rem", fontWeight: 400, color: "var(--primary)", margin: "0.6rem 0 0" }}>
               Hey{name ? `, ${name.split(" ")[0]}` : ""}
             </h1>
           </div>
@@ -76,7 +76,7 @@ export default function V2DashboardPage() {
           <button
             onClick={() => router.push("/")}
             aria-label="Visit percept.skin"
-            style={{ width: "4.8rem", height: "4.8rem", flexShrink: 0, borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            style={{ width: "4.2rem", height: "4.2rem", flexShrink: 0, borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
           >
             <svg width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 11.5L12 4l9 7.5M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9" />
@@ -85,7 +85,7 @@ export default function V2DashboardPage() {
           <button
             onClick={() => router.push("/settings")}
             aria-label="Settings"
-            style={{ width: "4.8rem", height: "4.8rem", flexShrink: 0, borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            style={{ width: "4.2rem", height: "4.2rem", flexShrink: 0, borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
           >
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />

@@ -53,7 +53,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
     try { localStorage.setItem(STORAGE_KEY, next); } catch { /* private mode, theme just won't persist */ }
   }
 
-  const size = compact ? "3.8rem" : "4.4rem";
+  const size = compact ? "3.8rem" : "4.2rem";
 
   return (
     <button
