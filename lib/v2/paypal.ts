@@ -1,15 +1,21 @@
-// Thin PayPal REST wrapper — Sandbox only. Plain HTTP, no SDK dependency
+// Thin PayPal REST wrapper — live endpoint. Plain HTTP, no SDK dependency
 // (PayPal's Orders v2 API is REST; the client-side button uses PayPal's
-// hosted JS SDK via a script tag, not an npm package).
+// hosted JS SDK via a script tag, not an npm package — that script already
+// points at www.paypal.com, which auto-detects sandbox vs. live from
+// whichever client-id it's given, so no separate swap was needed there).
 //
-// TODO before production:
-// - Swap PAYPAL_API_BASE to the live endpoint and use production credentials
+// Still outstanding before this is fully production-ready:
+// - NEXT_PUBLIC_PAYPAL_CLIENT_ID and PAYPAL_SECRET must be the LIVE app's
+//   credentials (from a live REST app in the PayPal dashboard, not the
+//   sandbox app) in both .env.local and the Vercel project's env vars —
+//   this file only talks to whichever credentials it's given.
 // - Register a webhook subscription in the PayPal dashboard against the
 //   live domain and set PAYPAL_WEBHOOK_ID (verifyWebhookSignature below is
 //   ready; nothing is registered yet, so nothing calls this endpoint today)
-// - Confirm PayPal supports recurring billing for Percept's actual business
-//   entity/country (flagged in the eng review — the existing /plan page implies
-//   an India-based entity, and PayPal restricts India-domestic recurring billing)
+// - These "plans" are one-time /v2/checkout/orders captures, not PayPal
+//   Subscriptions, so India-domestic recurring-billing restrictions don't
+//   apply here — but confirm the live business entity/country is otherwise
+//   in good standing to receive checkout payments before relying on this.
 
 export type PlanId = "monthly" | "quarterly" | "annual";
 
@@ -19,7 +25,7 @@ export const PLANS: Record<PlanId, { label: string; price: string; period: strin
   annual: { label: "Annual", price: "79.99", period: "12 months" },
 };
 
-export const PAYPAL_API_BASE = "https://api-m.sandbox.paypal.com"; // TODO: swap for production
+export const PAYPAL_API_BASE = "https://api-m.paypal.com";
 
 export async function getAccessToken(): Promise<string> {
   // Client ID is intentionally public (NEXT_PUBLIC_ — same value the browser

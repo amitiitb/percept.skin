@@ -16,8 +16,9 @@
   --surface:       #EFEEEC;
   --wash:          #E1DFDB;
 
-  /* Text — dark forest-teal */
-  --primary:       #003934;
+  /* Text — forest-teal, lightened from the original near-black #003934
+     (still ~6.4:1 against --canvas, comfortably above the 4.5:1 AA floor). */
+  --primary:       #0C5C51;
   --body:          #0F3A35;
   --secondary:     #4D6560;
   --muted:         #8C9B97;
@@ -38,7 +39,7 @@
      white with white type on them. --panel is that background, tracked
      separately, and it stays dark in both themes so the #fff sitting on it
      keeps working. */
-  --panel:         #003934;
+  --panel:         #0C5C51;
   --panel-line:    rgba(255,255,255,0.14);
 
   /* The primary button is the one filled shape that has to out-contrast its
@@ -46,16 +47,16 @@
      mode that is the dark panel colour; in dark mode it inverts to a light
      pill, because a near-black button on a near-black page is not a call to
      action, it is an outline. */
-  --btn-fill:      #003934;
+  --btn-fill:      #0C5C51;
   --btn-fill-ink:  #FFFFFF;
-  --btn-fill-hover:#0A4F49;
+  --btn-fill-hover:#12786C;
 
   /* Translucent surfaces that used to be hardcoded to the beige canvas:
      the sticky header pill, and the fade over locked content. */
   --header-bg:     rgba(232,231,229,0.82);
   --scrim-top:     rgba(239,238,236,0.2);
   --scrim-bottom:  rgba(239,238,236,0.88);
-  --shadow-strong: rgba(0,57,52,0.28);
+  --shadow-strong: rgba(12,92,81,0.28);
 
   /* Spacing unit — 1px at the 1920px design size, scales with root font.
      Used as calc(64 * var(--multiplier)) etc. Was previously undefined,

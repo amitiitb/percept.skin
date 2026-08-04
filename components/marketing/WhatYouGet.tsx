@@ -69,7 +69,7 @@ const FEATURES: Feature[] = [
     access: "paid",
     accessNote: "Full report",
     accent: GOLD,
-    image: "/images/wyg-colour.png",
+    image: "/images/wyg-colour-v2.png",
   },
   {
     id: "hair",
@@ -85,7 +85,7 @@ const FEATURES: Feature[] = [
     access: "paid",
     accessNote: "Full report",
     accent: CORAL,
-    image: "/images/wyg-hair.png",
+    image: "/images/wyg-hair-v2.png",
   },
   {
     id: "frame",
@@ -101,7 +101,7 @@ const FEATURES: Feature[] = [
     access: "paid",
     accessNote: "Full report",
     accent: VIOLET,
-    image: "/images/wyg-frames.png",
+    image: "/images/wyg-frames-v3.png",
   },
   {
     id: "live",

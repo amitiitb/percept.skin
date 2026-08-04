@@ -16,6 +16,8 @@ const GOLD = "#D9A62E";
 const CORAL = "#E8604F";
 const ACCENTS = [GOLD, CORAL, "var(--rose)"];
 
+const HEADLINE_WORDS = "See your skin, face, and hair more clearly".split(" ");
+
 // Curved section boundary instead of a hard straight edge where two
 // contrasting section backgrounds meet. Three different curve shapes so
 // consecutive dividers don't look like the same asset repeated.
@@ -288,6 +290,14 @@ export function HomeClient() {
             <Logo height="clamp(2.6rem, 7vw, 4.2rem)" />
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
+            {/* Previously the only "Start free" CTA lived in the hero, so it
+                scrolled out of view immediately — someone reading further down
+                the page had no way to start without scrolling back up or
+                opening the menu. Sticky, so it's reachable from anywhere on
+                the page, on mobile and desktop alike. */}
+            <a href="/splash" className="site-header-cta">
+              <PrimaryButton size="sm" fullWidth={false}>Start free →</PrimaryButton>
+            </a>
             <HeaderAuth />
             <ThemeToggle compact />
             <button
@@ -310,7 +320,18 @@ export function HomeClient() {
               Personal beauty analysis
             </p>
             <h1 style={{ fontSize: "clamp(3.4rem, 5.5vw, 5.6rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.05, letterSpacing: "-0.02em", marginBottom: "2.4rem" }}>
-              See your skin, face, and hair more clearly
+              {HEADLINE_WORDS.map((word, i) => (
+                <span key={i} style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top" }}>
+                  <motion.span
+                    style={{ display: "inline-block" }}
+                    initial={{ y: "110%" }}
+                    animate={{ y: "0%" }}
+                    transition={{ duration: 0.6, delay: 0.15 + i * 0.07, ease: [0.24, 0.43, 0.15, 0.97] }}
+                  >
+                    {word}&nbsp;
+                  </motion.span>
+                </span>
+              ))}
             </h1>
             <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "48rem", marginBottom: "4rem" }}>
               A guided photo scan, understood by AI. No lab visit, no appointment, just a clear, specific report you can act on and track over time.
@@ -539,14 +560,14 @@ export function HomeClient() {
                 ⭐ Percept bundle
               </p>
               {MODULES.map((m) => (
-                <div key={m.id} style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(0,57,52,0.15)" }}>
+                <div key={m.id} style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(12, 92, 81,0.15)" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500 }}>
                     <span aria-hidden style={{ display: "flex" }}><IconCheck size={1.5} strokeWidth={2.4} /></span> {m.label}
                   </span>
                 </div>
               ))}
               <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingTop: "1.6rem" }}>
-                <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(0,57,52,0.6)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</span>
+                <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(12, 92, 81,0.6)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</span>
                 <span style={{ fontSize: "3.2rem", fontWeight: 800, color: "var(--primary)" }}>${BUNDLE_PRICE}</span>
               </div>
             </motion.div>

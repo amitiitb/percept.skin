@@ -571,7 +571,7 @@ function TabBar({ tabs, active, onChange, locked }: {
                   aria-hidden
                   style={{
                     position: "absolute", inset: 0, borderRadius: "9999px", background: "var(--panel)",
-                    boxShadow: "0 0.8rem 2rem -0.8rem rgba(0,57,52,0.55)",
+                    boxShadow: "0 0.8rem 2rem -0.8rem rgba(12, 92, 81,0.55)",
                   }}
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
@@ -600,6 +600,71 @@ const ROUTINE_META: Array<{ key: keyof RecommendationSet; label: string; Icon: (
   { key: "weekly", label: "Weekly", Icon: IconSparkle, gate: "skin" },
   { key: "hairScalp", label: "Hair & Scalp", Icon: IconStrands, gate: "hair" },
 ];
+
+// Tabbed instead of one card per block side by side — with only 2-3 blocks a
+// grid left one lonely half-width card (skin's 3 blocks on a 2-col grid) or
+// wasted width (hair's single block). A tab per block plus one centered
+// content panel reads as one routine with sections, not a scattered card wall.
+function RoutinePanel({ gate, recommendations }: { gate: "skin" | "hair"; recommendations: RecommendationSet | null }) {
+  const blocks = recommendations ? ROUTINE_META.filter((r) => r.gate === gate).filter((r) => recommendations[r.key]?.length) : [];
+  const [active, setActive] = useState(0);
+  if (blocks.length === 0) return null;
+  const current = blocks[Math.min(active, blocks.length - 1)];
+
+  return (
+    <div style={{ marginBottom: "3.2rem" }}>
+      <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.6rem", textAlign: "center" }}>
+        {gate === "skin" ? "Your Personalized Routine" : "Your Hair & Scalp Routine"}
+      </h2>
+      <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2.4rem", maxWidth: "60rem", textAlign: "center", marginLeft: "auto", marginRight: "auto" }}>
+        Based on what we saw in your photos and the concerns you shared.
+      </p>
+
+      {blocks.length > 1 && (
+        <div
+          role="tablist"
+          aria-label={`${gate === "skin" ? "Routine" : "Hair routine"} sections`}
+          style={{
+            display: "flex", gap: "0.4rem", background: "var(--wash)", borderRadius: "9999px",
+            padding: "0.5rem", border: "1px solid var(--line)", width: "fit-content", margin: "0 auto 2.4rem",
+          }}
+        >
+          {blocks.map((b, i) => {
+            const on = i === active;
+            return (
+              <button
+                key={b.key}
+                role="tab"
+                aria-selected={on}
+                onClick={() => setActive(i)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.8rem", padding: "1rem 2rem",
+                  borderRadius: "9999px", border: "none", background: on ? "var(--panel)" : "none",
+                  color: on ? "#fff" : "var(--secondary)", fontSize: "1.4rem", fontWeight: 700, cursor: "pointer",
+                  boxShadow: on ? "0 0.8rem 2rem -0.8rem rgba(12, 92, 81,0.55)" : "none", transition: "color 0.2s, background 0.2s",
+                }}
+              >
+                <span style={{ display: "flex", color: on ? "var(--rose)" : "var(--muted)" }}><b.Icon size={1.7} /></span>
+                {b.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem 3.2rem", maxWidth: "60rem", margin: "0 auto" }}>
+        <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+          {(recommendations?.[current.key] ?? []).map((s, i) => (
+            <li key={i} style={{ display: "flex", gap: "1rem", fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55, textAlign: "left" }}>
+              <span style={{ color: "var(--rose)", fontWeight: 600, flexShrink: 0 }}>{i + 1}.</span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+}
 
 export default function V2ReportPage() {
   const router = useRouter();
@@ -1054,40 +1119,6 @@ export default function V2ReportPage() {
   const filterableMetrics = activeTab === "skin" ? [...skinMetrics, ...faceMetrics]
     : activeTab === "hairstyle" ? hairMetrics : [];
 
-  function routineFor(gate: "skin" | "hair") {
-    if (!recommendations) return null;
-    const blocks = ROUTINE_META.filter((r) => r.gate === gate).filter((r) => recommendations[r.key]?.length);
-    if (blocks.length === 0) return null;
-    return (
-      <div style={{ marginBottom: "3.2rem" }}>
-        <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.6rem" }}>
-          {gate === "skin" ? "Your Personalized Routine" : "Your Hair & Scalp Routine"}
-        </h2>
-        <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2rem", maxWidth: "60rem" }}>
-          Based on what we saw in your photos and the concerns you shared.
-        </p>
-        <div className="v2-routine-grid" style={{ display: "grid", gridTemplateColumns: blocks.length > 1 ? "1fr 1fr" : "1fr", gap: "1.6rem" }}>
-          {blocks.map(({ key, label, Icon }) => (
-            <div key={key} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.8rem" }}>
-                <span style={{ display: "flex", color: "var(--rose)" }}><Icon size={2} /></span>
-                <h3 style={{ fontSize: "1.7rem", fontWeight: 500, color: "var(--primary)", margin: 0 }}>{label}</h3>
-              </div>
-              <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-                {(recommendations[key] ?? []).map((s, i) => (
-                  <li key={i} style={{ display: "flex", gap: "1rem", fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55 }}>
-                    <span style={{ color: "var(--rose)", fontWeight: 600, flexShrink: 0 }}>{i + 1}.</span>
-                    <span>{s}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
@@ -1108,7 +1139,7 @@ export default function V2ReportPage() {
             personal consultation, not a bare number) */}
         <div className="v2-hero-grid" style={{ display: "grid", gridTemplateColumns: photo ? "30rem 1fr" : "1fr", gap: "4.8rem", alignItems: "center", marginBottom: "3.2rem" }}>
           {photo && (
-            <div style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2rem", overflow: "hidden", boxShadow: "0 2.4rem 4.8rem -1.2rem rgba(0,57,52,0.28)" }}>
+            <div style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2rem", overflow: "hidden", boxShadow: "0 2.4rem 4.8rem -1.2rem rgba(12, 92, 81,0.28)" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photo} alt="Your guided-capture photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
@@ -1187,7 +1218,7 @@ export default function V2ReportPage() {
               {skinParts.map((p, i) => (
                 <Section key={p.id} index={i + 1} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
               ))}
-              <div style={{ marginTop: "3.2rem" }}>{routineFor("skin")}</div>
+              <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="skin" recommendations={recommendations} /></div>
             </div>
           )}
 
@@ -1196,7 +1227,7 @@ export default function V2ReportPage() {
               {hairParts.map((p, i) => (
                 <Section key={p.id} index={i + 1} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
               ))}
-              <div style={{ marginTop: "3.2rem" }}>{routineFor("hair")}</div>
+              <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="hair" recommendations={recommendations} /></div>
               <HairstylePanel
                 sessionId={sessionId}
                 photo={photo}
@@ -1263,7 +1294,6 @@ export default function V2ReportPage() {
            wrapping to two rows, so the sticky header stays one line tall. */
         .v2-tabbar [role="tablist"]::-webkit-scrollbar { display: none; }
         @media (max-width: 600px) {
-          .v2-routine-grid { grid-template-columns: 1fr !important; }
           /* Segments share the width equally and the decorative icons and long
              labels drop out, so all four fit the rail exactly. Previously the
              rail scrolled and clipped the last tab mid-word. */
