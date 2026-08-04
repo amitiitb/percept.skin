@@ -12,6 +12,7 @@ import {
 import { runQualityChecks, ISSUE_MESSAGES, type QualityIssue } from "@/lib/v2/qualityChecks";
 import { compressImage } from "@/lib/v2/imageCompress";
 import { logV2 } from "@/lib/v2/log";
+import { trackEvent } from "@/lib/analytics";
 
 // Live face-mesh overlay during capture — ported from the legacy capture flow
 // (app/(legacy)/capture/page.tsx), duplicated here rather than shared since
@@ -470,8 +471,10 @@ export default function V2CapturePage() {
 
       setPhoto(step.photoType, captured);
       logV2.info("v2_photo_captured", { session_id: sessionId, photo_type: step.photoType, issues: issues.join(",") });
+      trackEvent("capture_step_completed", { session_id: sessionId, step_index: index, photo_type: step.photoType });
 
       if (index + 1 >= TOTAL_STEPS) {
+        trackEvent("capture_flow_completed", { session_id: sessionId });
         // Bundle-first purchase flow replaces the old "show results free,
         // paywall individual sections" model — analysis runs in the background
         // while the user picks/pays for report modules (app/bundle).

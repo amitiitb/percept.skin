@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { trackEvent } from "@/lib/analytics";
 import { Logo } from "@/components/ui/Logo";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { IconLock } from "@/components/ui/icons";
@@ -82,6 +83,7 @@ function SignupForm() {
       return;
     }
 
+    trackEvent("sign_up", { method: "password" });
     router.replace(params.get("next") || "/dashboard");
   }
 

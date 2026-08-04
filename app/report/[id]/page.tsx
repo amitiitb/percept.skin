@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +12,7 @@ import FrameAIPanel from "@/components/v2/FrameAIPanel";
 import { FrameGrid } from "@/components/v2/FrameGrid";
 import { MAX_GENERATIONS } from "@/lib/v2/generationBudget";
 import { guideFor } from "@/lib/v2/metricGuide";
+import { trackEvent } from "@/lib/analytics";
 import { IconFaceScan, IconScissors, IconPalette, IconGlasses, IconLock, IconCheck, IconSparkle, IconSun, IconMoon, IconStrands } from "@/components/ui/icons";
 import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
 import type { ModuleId } from "@/lib/v2/reportModules";
@@ -619,6 +620,9 @@ export default function V2ReportPage() {
   // rather than stored. The routes re-check this, so it is only for the button.
   const [hairUsed, setHairUsed] = useState(0);
   const [frameUsed, setFrameUsed] = useState(0);
+  // Guards report_generated against firing again on every 4s poll tick once
+  // status has already flipped to complete.
+  const reportedRef = useRef(false);
 
   async function load(): Promise<string | undefined> {
     const { data: { user } } = await supabase.auth.getUser();
@@ -707,6 +711,13 @@ export default function V2ReportPage() {
   useEffect(() => {
     load();
   }, [sessionId]);
+
+  useEffect(() => {
+    if (session?.status === "complete" && !reportedRef.current) {
+      reportedRef.current = true;
+      trackEvent("report_generated", { session_id: sessionId, overall_score: session.overall_score });
+    }
+  }, [session?.status, sessionId]);
 
   // Real analysis (Claude vision over 7 photos) takes ~60-100s. A user can
   // reach this page before it finishes — e.g. background-kicked analysis on
