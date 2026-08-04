@@ -7,6 +7,7 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { ScoreReveal } from "@/components/v2/ScoreReveal";
 import ColourAnalysisPanel from "@/components/v2/ColourAnalysisPanel";
 import HairstylePanel from "@/components/v2/HairstylePanel";
+import GroomingPanel from "@/components/v2/GroomingPanel";
 import GlassesVirtualTryOn from "@/components/v2/GlassesVirtualTryOn";
 import FrameAIPanel from "@/components/v2/FrameAIPanel";
 import { FrameGrid } from "@/components/v2/FrameGrid";
@@ -616,10 +617,12 @@ export default function V2ReportPage() {
   // billed a fresh generation of an image the user had already paid for.
   const [hairGridPath, setHairGridPath] = useState<string | null>(null);
   const [frameGridPath, setFrameGridPath] = useState<string | null>(null);
+  const [beardGridPath, setBeardGridPath] = useState<string | null>(null);
   // Row counts double as the generation counters, so redos left is derived
   // rather than stored. The routes re-check this, so it is only for the button.
   const [hairUsed, setHairUsed] = useState(0);
   const [frameUsed, setFrameUsed] = useState(0);
+  const [beardUsed, setBeardUsed] = useState(0);
   // Guards report_generated against firing again on every 4s poll tick once
   // status has already flipped to complete.
   const reportedRef = useRef(false);
@@ -640,16 +643,20 @@ export default function V2ReportPage() {
 
     // Newest row wins: the grid routes insert rather than upsert, so a
     // regeneration leaves the older row in place.
-    const [{ data: hairGrids }, { data: frameGrids }] = await Promise.all([
+    const [{ data: hairGrids }, { data: frameGrids }, { data: beardGrids }] = await Promise.all([
       supabase.from("hairstyle_generations_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id)
         .eq("style_name", "Style grid").order("created_at", { ascending: false }),
       supabase.from("frame_generations_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id)
         .eq("frame_name", "Frame grid").order("created_at", { ascending: false }),
+      supabase.from("grooming_generations_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id)
+        .eq("kind", "beard").order("created_at", { ascending: false }),
     ]);
     setHairGridPath(hairGrids?.[0]?.storage_path ?? null);
     setFrameGridPath(frameGrids?.[0]?.storage_path ?? null);
+    setBeardGridPath(beardGrids?.[0]?.storage_path ?? null);
     setHairUsed(hairGrids?.length ?? 0);
     setFrameUsed(frameGrids?.length ?? 0);
+    setBeardUsed(beardGrids?.length ?? 0);
 
     // Bundle-first model: no purchase record means nothing was bought yet —
     // used to hard-redirect to the paywall here. Now renders a teaser instead
@@ -1169,6 +1176,14 @@ export default function V2ReportPage() {
                 onRequirePremium={() => {}}
                 initialPath={hairGridPath}
                 initialRemaining={Math.max(0, MAX_GENERATIONS - hairUsed)}
+              />
+              <GroomingPanel
+                sessionId={sessionId}
+                photo={photo}
+                isPremium
+                onRequirePremium={() => {}}
+                initialBeardPath={beardGridPath}
+                initialBeardRemaining={Math.max(0, MAX_GENERATIONS - beardUsed)}
               />
             </div>
           )}

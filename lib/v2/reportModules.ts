@@ -14,7 +14,7 @@ export interface ModuleDef {
 export const MODULES: ModuleDef[] = [
   { id: "skin", label: "Skin Analysis", description: "Texture, tone, fine lines, pores, and facial balance", price: 5 },
   { id: "colour", label: "Color Analysis", description: "Your seasonal palette, best colours, and draping preview", price: 5 },
-  { id: "hairstyle", label: "Hairstyle Recommendations", description: "Hair & scalp health plus AI-generated style previews", price: 5 },
+  { id: "hairstyle", label: "Hairstyle Recommendations", description: "Hair & scalp health plus AI-generated hairstyle and beard previews", price: 5 },
   { id: "frame", label: "Frame Recommendations", description: "Eyewear frames matched to your face shape", price: 5 },
 ];
 
