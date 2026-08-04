@@ -112,6 +112,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           gtag('config', 'G-ELGVCD5CYZ');
           gtag('config', 'G-VBV34ETWWN');`}
       </Script>
+      <Script
+        src="https://t.contentsquare.net/uxa/f9da0da61a34e.js"
+        strategy="afterInteractive"
+      />
       <ReactLenis root>
         <body className="antialiased">
           {children}
