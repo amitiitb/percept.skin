@@ -13,6 +13,7 @@ import { FrameGrid } from "@/components/v2/FrameGrid";
 import { MAX_GENERATIONS } from "@/lib/v2/generationBudget";
 import { guideFor } from "@/lib/v2/metricGuide";
 import { trackEvent } from "@/lib/analytics";
+import { HARMONY_METRIC_NAMES, ANGULARITY_METRIC_NAMES } from "@/lib/v2/faceMetricGroups";
 import { IconFaceScan, IconScissors, IconPalette, IconGlasses, IconLock, IconCheck, IconSparkle, IconSun, IconMoon, IconStrands } from "@/components/ui/icons";
 import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
 import type { ModuleId } from "@/lib/v2/reportModules";
@@ -488,7 +489,8 @@ const PHOTO_LABELS: Record<string, string> = {
 
 const SECTION_INTRO: Record<string, string> = {
   Skin: "Texture, tone, and hydration.",
-  Face: "Proportion and symmetry.",
+  Harmony: "How your features balance against each other.",
+  Angularity: "Jawline, cheekbone, and chin definition.",
   "Hair & Scalp": "Density, hairline, and scalp health.",
 };
 
@@ -797,6 +799,8 @@ export default function V2ReportPage() {
     const score = session.overall_score ?? 0;
     const skinMetrics = metrics.filter((m) => m.category === "skin");
     const faceMetrics = metrics.filter((m) => m.category === "face");
+    const harmonyMetrics = faceMetrics.filter((m) => (HARMONY_METRIC_NAMES as string[]).includes(m.metricName));
+    const angularityMetrics = faceMetrics.filter((m) => (ANGULARITY_METRIC_NAMES as string[]).includes(m.metricName));
     const hairMetrics = metrics.filter((m) => m.category === "hair");
 
     // Lowest scores first, so the free rows are the ones actually worth acting
@@ -874,7 +878,8 @@ export default function V2ReportPage() {
                 accent={TAB_LABELS.skin.accent}
                 onUnlock={unlock}
               />
-              <FreeSkinSection title="Face" intro={SECTION_INTRO.Face} free={[]} locked={faceMetrics} accent="#D9A62E" onUnlock={unlock} />
+              <FreeSkinSection title="Harmony" intro={SECTION_INTRO.Harmony} free={[]} locked={harmonyMetrics} accent="#D9A62E" onUnlock={unlock} />
+              <FreeSkinSection title="Angularity" intro={SECTION_INTRO.Angularity} free={[]} locked={angularityMetrics} accent="#C8503A" onUnlock={unlock} />
               <FreeSkinSection title="Hair & Scalp" intro={SECTION_INTRO["Hair & Scalp"]} free={[]} locked={hairMetrics} accent="#E8604F" onUnlock={unlock} />
             </div>
 
@@ -951,6 +956,8 @@ export default function V2ReportPage() {
 
   const skinMetrics = hasSkin ? metrics.filter((m) => m.category === "skin") : [];
   const faceMetrics = hasSkin ? metrics.filter((m) => m.category === "face") : [];
+  const harmonyMetrics = faceMetrics.filter((m) => (HARMONY_METRIC_NAMES as string[]).includes(m.metricName));
+  const angularityMetrics = faceMetrics.filter((m) => (ANGULARITY_METRIC_NAMES as string[]).includes(m.metricName));
   const hairMetrics = hasHairstyle ? metrics.filter((m) => m.category === "hair") : [];
   const score = session.overall_score ?? 0;
 
@@ -984,7 +991,8 @@ export default function V2ReportPage() {
   const isPart = (p: unknown): p is Part => Boolean(p) && (p as Part).metrics.length > 0;
   const skinParts = [
     hasSkin && { id: "skin", title: "Skin", metrics: skinMetrics },
-    hasSkin && { id: "face", title: "Face", metrics: faceMetrics },
+    hasSkin && { id: "harmony", title: "Harmony", metrics: harmonyMetrics },
+    hasSkin && { id: "angularity", title: "Angularity", metrics: angularityMetrics },
   ].filter(isPart);
   const hairParts = [
     hasHairstyle && { id: "hair", title: "Hair & Scalp", metrics: hairMetrics },
