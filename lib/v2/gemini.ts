@@ -242,3 +242,41 @@ export function generateFramePreview(photoDataUrl: string, framePrompt: string) 
     `No warping, no floating frame, no misaligned temples. Photorealistic, natural studio lighting, cosmetic preview only — not a cartoon or sketch.`
   );
 }
+
+// "Simulate" grooming previews — deliberately scoped to styling choices
+// (beard shape), never bone-structure reshaping. A user can grow or shave a
+// beard; that implies no surgical or medical outcome, unlike a simulated
+// nose/cheekbone/chin change would. Same 6-panel grid mechanism as
+// hairstyle/frame/colour.
+//
+// An eyebrow-shape version of this (EYEBROW_STYLES/generateEyebrowGrid) was
+// built and tried, then removed: two real generation rounds, including a
+// prompt explicitly demanding exaggerated differences, both came back with
+// all 6 panels showing near-identical brows. Beard presence/coverage is a
+// large, reliable edit for this model; eyebrow shape is not — that appears to
+// be a capability limit, not a prompt-wording problem.
+export const BEARD_STYLES = [
+  "fully clean-shaven",
+  "light stubble, a few days of growth",
+  "short boxed beard, neatly lined",
+  "full classic beard, moderate length",
+  "goatee with a trimmed mustache",
+  "mustache only, no beard",
+] as const;
+
+export function generateBeardGrid(photoDataUrl: string, _styleNames: string[]) {
+  return generateImageEdit(
+    photoDataUrl,
+    `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same hairstyle, same neutral background and same clothing in every panel. ` +
+    `Each panel shows a different facial hair style, in this exact order: ${BEARD_STYLES.join("; then ")}. ` +
+    `Every panel must show a visibly distinct facial hair style, never the same look twice. ` +
+    `Return EXACTLY 6 panels arranged in a grid 3 panels wide and 2 panels tall, and fill every one of the 6 cells. ` +
+    `Never leave a cell blank, grey or empty, and never pad the grid with a duplicate. ` +
+    `Not one of the 6 panels may be the original unedited photograph: every panel must show a real, visible change. ` +
+    `All 6 panels must differ clearly from one another. ` +
+
+    `Keep the person's own hair colour, jawline, and bone structure completely unchanged, only the facial hair itself changes. ` +
+    `Photorealistic, identical framing and lighting in every panel, thin white gutters between panels. ` +
+    `Absolutely no text, no words, no letters and no labels anywhere in the image.`
+  );
+}
