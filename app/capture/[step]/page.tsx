@@ -362,7 +362,12 @@ export default function V2CapturePage() {
   }, [autoCapture, showPhaseTransition, captured, cameraError, step, facingMode]);
 
   const ensureSession = useCallback(async (): Promise<string> => {
-    const { data: { user } } = await supabase.auth.getUser();
+    let { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const { data, error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+      user = data.user;
+    }
     if (!user) throw new Error("Not authenticated");
 
     if (currentSessionId) {

@@ -14,6 +14,7 @@ import { FrameGrid } from "@/components/v2/FrameGrid";
 import { MAX_GENERATIONS } from "@/lib/v2/generationBudget";
 import { guideFor } from "@/lib/v2/metricGuide";
 import { trackEvent } from "@/lib/analytics";
+import { logV2 } from "@/lib/v2/log";
 import { HARMONY_METRIC_NAMES, ANGULARITY_METRIC_NAMES } from "@/lib/v2/faceMetricGroups";
 import { IconFaceScan, IconScissors, IconPalette, IconGlasses, IconLock, IconCheck, IconSparkle, IconSun, IconMoon, IconStrands } from "@/components/ui/icons";
 import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
@@ -539,6 +540,11 @@ function TabBar({ tabs, active, onChange, locked }: {
           display: "flex", gap: "0.4rem", overflowX: "auto", scrollbarWidth: "none",
           background: "var(--wash)", borderRadius: "9999px", padding: "0.5rem",
           border: "1px solid var(--line)",
+          // Without this the rail stretched to the report column's full
+          // width (a block div fills its parent by default) while the tab
+          // buttons only filled part of it, leaving a long stretch of empty
+          // pill-shaped background after the last tab.
+          width: "fit-content", maxWidth: "100%",
         }}
       >
         {tabs.map((t) => {
@@ -630,8 +636,33 @@ export default function V2ReportPage() {
   const reportedRef = useRef(false);
 
   async function load(): Promise<string | undefined> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.replace(`/auth/login?next=/report/${sessionId}`); return; }
+    // A hard timeout around the auth check specifically: if getUser() hangs
+    // (a stale/corrupted refresh token in localStorage can do this — the
+    // Supabase client retries internally rather than rejecting quickly) the
+    // page previously had no fallback and sat on the blank loading screen
+    // forever, with no redirect and no error shown. Any failure here now
+    // sends the user to login instead, which is always a safe recovery.
+    let user;
+    try {
+      const authResult = await Promise.race([
+        supabase.auth.getUser(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("auth check timed out")), 8000)),
+      ]);
+      user = authResult.data.user;
+    } catch {
+      router.replace(`/auth/login?next=/report/${sessionId}`);
+      setLoading(false);
+      return;
+    }
+    if (!user) { router.replace(`/auth/login?next=/report/${sessionId}`); setLoading(false); return; }
+
+    // Everything below this point used to be unguarded — any unexpected
+    // failure (a dropped connection mid-fetch, a storage signing error) threw
+    // an unhandled rejection and left the page on the blank loading screen
+    // forever, the same silent-stuck failure as the auth check above. Same
+    // fix: fall back to a visible state (reuses the existing "not found" UI,
+    // which already has a way back to the dashboard) rather than hang.
+    try {
 
     const [{ data: sess }, { data: purchase }, { data: metricRows }, { data: photoRows }, { data: colourRow }] = await Promise.all([
       supabase.from("analysis_sessions_v2").select("id, status, overall_score, skin_age, created_at, stage, fail_reason").eq("id", sessionId).eq("user_id", user.id).maybeSingle(),
@@ -715,6 +746,12 @@ export default function V2ReportPage() {
 
     setLoading(false);
     return sess.status;
+    } catch (err) {
+      logV2.error("v2_report_load_failed", { message: err instanceof Error ? err.message : String(err), session_id: sessionId });
+      setNotFound(true);
+      setLoading(false);
+      return undefined;
+    }
   }
 
   useEffect(() => {
