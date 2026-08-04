@@ -540,11 +540,10 @@ function TabBar({ tabs, active, onChange, locked }: {
           display: "flex", gap: "0.4rem", overflowX: "auto", scrollbarWidth: "none",
           background: "var(--wash)", borderRadius: "9999px", padding: "0.5rem",
           border: "1px solid var(--line)",
-          // Without this the rail stretched to the report column's full
-          // width (a block div fills its parent by default) while the tab
-          // buttons only filled part of it, leaving a long stretch of empty
-          // pill-shaped background after the last tab.
-          width: "fit-content", maxWidth: "100%",
+          // Tabs share the rail's full width equally (flex:1 on each button
+          // below) rather than the rail shrinking to fit them, so there's
+          // never a stretch of empty pill-shaped background on wide screens.
+          width: "100%",
         }}
       >
         {tabs.map((t) => {
@@ -558,7 +557,8 @@ function TabBar({ tabs, active, onChange, locked }: {
               onClick={() => onChange(t)}
               whileTap={{ scale: 0.96 }}
               style={{
-                position: "relative", flex: "0 0 auto", display: "inline-flex", alignItems: "center",
+                position: "relative", flex: "1 1 0", minWidth: 0, display: "inline-flex", alignItems: "center",
+                justifyContent: "center",
                 gap: "0.8rem", padding: "1.1rem 2rem", borderRadius: "9999px", border: "none",
                 background: "none", cursor: "pointer", whiteSpace: "nowrap",
                 fontSize: "1.5rem", fontWeight: 700,
@@ -1113,8 +1113,8 @@ export default function V2ReportPage() {
               <img src={photo} alt="Your guided-capture photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
           )}
-          <div style={{ textAlign: photo ? "left" : "center" }}>
-            <div style={{ margin: photo ? "0" : "0 auto" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ margin: "0 auto" }}>
               <ScoreReveal score={score} />
             </div>
             <p style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Percept Score</p>
@@ -1125,7 +1125,7 @@ export default function V2ReportPage() {
               </div>
             )}
             {sorted.length > 0 && (
-              <div style={{ display: "flex", gap: "3.2rem", justifyContent: photo ? "flex-start" : "center", marginTop: "2.4rem", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "3.2rem", justifyContent: "center", marginTop: "2.4rem", flexWrap: "wrap" }}>
                 <div>
                   <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Strongest</p>
                   <p style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{strongest.join(" · ")}</p>
