@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { METRIC_GUIDE } from "@/lib/v2/metricGuide";
@@ -29,11 +30,11 @@ const ALL_METRICS = Object.keys(METRIC_GUIDE);
 
 type PreviewId = "skin" | "colour" | "hairstyle" | "frame";
 
-const PREVIEWS: Array<{ id: PreviewId; chip: string; title: string; blurb: string }> = [
-  { id: "skin", chip: "Skin & face", title: "Read region by region", blurb: "Twenty separate scores, each tied to where on your face it was measured." },
-  { id: "colour", chip: "Colour", title: "The shades that suit your skin", blurb: "Your season, the colours to wear, and the ones that drain you." },
-  { id: "hairstyle", chip: "Hairstyles", title: "A cut for each occasion", blurb: "Generated on your own photo, so you see it before the salon." },
-  { id: "frame", chip: "Frames", title: "Eyewear matched to your face", blurb: "Five shapes fitted to your proportions, plus a live try-on." },
+const PREVIEWS: Array<{ id: PreviewId; chip: string; title: string; blurb: string; image: string }> = [
+  { id: "skin", chip: "Skin & face", title: "Read region by region", blurb: "Separate scores for skin, harmony, and angularity, each tied to where on your face it was measured.", image: "/images/wyg-skin.png" },
+  { id: "colour", chip: "Colour", title: "The shades that suit your skin", blurb: "Your season, the colours to wear, and the ones that drain you.", image: "/images/wyg-colour.png" },
+  { id: "hairstyle", chip: "Hairstyles", title: "A cut for each occasion", blurb: "Generated on your own photo, so you see it before the salon.", image: "/images/wyg-hair.png" },
+  { id: "frame", chip: "Frames", title: "Eyewear matched to your face", blurb: "Five shapes fitted to your proportions, plus a live try-on.", image: "/images/wyg-frames.png" },
 ];
 
 function bandColour(score: number): string {
@@ -351,6 +352,14 @@ export function DashboardEmptyState({ onStart }: { onStart: () => void }) {
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.22 }}
             >
+              {/* A real photo leading each preview — the diagrams/lists below are
+                  illustrative UI, not photography, and standing alone they read
+                  as placeholder art next to the photo-led cards elsewhere on the
+                  site (components/marketing/WhatYouGet.tsx). Same 4 image assets,
+                  reused here for a consistent, finished look. */}
+              <div style={{ position: "relative", width: "100%", aspectRatio: "21/9", borderRadius: "1.4rem", overflow: "hidden", marginBottom: "2rem" }}>
+                <Image src={current.image} alt={current.title} fill sizes="(max-width: 700px) 100vw, 60rem" style={{ objectFit: "cover" }} />
+              </div>
               <p style={{ fontSize: "1.7rem", fontWeight: 600, color: "var(--primary)", margin: "0 0 0.4rem" }}>{current.title}</p>
               <p style={{ fontSize: "1.35rem", color: "var(--secondary)", lineHeight: 1.5, margin: "0 0 1.8rem" }}>{current.blurb}</p>
               {active === "skin" && <FaceDiagram />}
