@@ -109,7 +109,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {`window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', 'G-ELGVCD5CYZ');`}
+          gtag('config', 'G-ELGVCD5CYZ');
+          gtag('config', 'G-VBV34ETWWN');`}
       </Script>
       <ReactLenis root>
         <body className="antialiased">
