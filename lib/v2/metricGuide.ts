@@ -1,4 +1,4 @@
-// Reference knowledge for each of the 20 metrics the analysis produces
+// Reference knowledge for each of the 22 metrics the analysis produces
 // (names are a fixed set, see SKIN/FACE/HAIR_METRIC_NAMES in aiProvider.ts).
 //
 // This is deliberately NOT AI-generated: the per-user explanation on each
@@ -97,6 +97,18 @@ export const METRIC_GUIDE: Record<string, MetricGuide> = {
     matters: "One of the most requested aesthetic traits, and one of the most influenced by things that are not skincare at all.",
     drivers: ["Body composition, subcutaneous fat over the jaw", "Bone structure, the fixed baseline", "Posture, forward head position visibly softens the jawline", "Fluid retention, often sodium-driven", "Skin laxity with age"],
     helps: ["Overall body composition, more decisive than any targeted routine", "Posture work, often an immediate visible difference", "Reducing sodium and alcohol for fluid retention", "Skepticism toward jaw exercise devices, evidence is weak"],
+  },
+  "Cheekbone definition": {
+    what: "How prominent the cheekbones (zygomatic bones) read against the surrounding midface.",
+    matters: "A structural read, not a flaw list. Cheekbone prominence is one of the more fixed traits on a face, set almost entirely by bone structure rather than anything in a daily routine.",
+    drivers: ["Zygomatic bone structure, essentially fixed from adulthood", "Body fat percentage, which affects how much surrounding tissue covers the bone", "Lighting and camera angle, both of which change this reading substantially photo to photo"],
+    helps: ["Body composition, the only real lever if surrounding fullness is the factor", "Makeup contouring or hairstyle framing for a temporary visual effect", "Perspective, this is descriptive, not something that needs fixing"],
+  },
+  "Chin projection": {
+    what: "How far the chin extends forward relative to the rest of the facial profile.",
+    matters: "Mostly a side-profile read. It interacts with jawline definition, but is its own distinct structural trait.",
+    drivers: ["Mandible (jawbone) structure and growth pattern, the dominant factor", "Bite alignment", "Soft tissue and fat distribution over the chin"],
+    helps: ["Posture, a forward head position visually reduces chin projection regardless of bone structure", "Perspective, camera angle changes this reading more than almost any other metric", "An orthodontist or maxillofacial specialist is the right resource for anyone with a genuine bite-related concern, this is descriptive only"],
   },
   "Cheek balance": {
     what: "Volume and position of the cheeks, and how evenly they sit relative to each other.",
