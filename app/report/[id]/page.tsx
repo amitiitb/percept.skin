@@ -1024,7 +1024,6 @@ export default function V2ReportPage() {
   // show them if the user actually bought at least one of skin/hairstyle
   // (same access boundary the metric sections use).
   const hasContentAccess = hasSkin || hasHairstyle;
-  const positiveObservations = hasContentAccess ? (session.positive_observations ?? []) : [];
   const limitations = hasContentAccess ? (session.limitations ?? []) : [];
   const recommendations = hasContentAccess ? session.recommendations : null;
 
@@ -1154,22 +1153,6 @@ export default function V2ReportPage() {
                     <img src={p.url} alt={PHOTO_LABELS[p.photoType] ?? p.photoType} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </div>
                   <p style={{ fontSize: "1.2rem", color: "var(--secondary)", marginTop: "0.6rem", textAlign: "center" }}>{PHOTO_LABELS[p.photoType] ?? p.photoType}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* What's working well — the AI's positive observations, previously
-            generated on every analysis but never surfaced anywhere. */}
-        {positiveObservations.length > 0 && (
-          <div style={{ background: "var(--panel)", borderRadius: "1.6rem", padding: "3.2rem 3.6rem", marginBottom: "4.8rem" }}>
-            <p style={{ fontSize: "1.2rem", color: "var(--on-dark)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1.8rem", opacity: 0.8 }}>What&apos;s working well</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-              {positiveObservations.slice(0, 3).map((p, i) => (
-                <div key={i} style={{ display: "flex", gap: "1.2rem", alignItems: "flex-start" }}>
-                  <span style={{ color: "var(--rose)", flexShrink: 0, display: "flex", marginTop: "0.4rem" }}><IconSparkle size={1.7} /></span>
-                  <p style={{ fontSize: "1.6rem", color: "#fff", lineHeight: 1.6, margin: 0 }}>{p}</p>
                 </div>
               ))}
             </div>
