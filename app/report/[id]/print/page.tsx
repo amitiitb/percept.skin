@@ -28,9 +28,17 @@ const PHOTO_LABELS: Record<string, string> = {
 
 const COLOUR_LABELS = ["Office", "Formal suit", "Wedding / festive", "Weekend casual", "Evening party", "Smart casual"];
 const HAIR_LABELS = ["Office", "Wedding / formal", "Everyday casual", "Evening party", "Short & low-maintenance", "Textured everyday"];
+const BEARD_LABELS = ["Clean-shaven", "Light stubble", "Short boxed beard", "Full classic beard", "Goatee", "Mustache only"];
 const FRAME_LABELS = ["Office", "Evening / party", "Formal & wedding", "Everyday casual", "Minimal rimless", "Sporty everyday"];
 
 const CAPTION: React.CSSProperties = { fontSize: "1.05rem", color: "#666", margin: "0.5rem 0 0" };
+
+function printBand(score: number | null) {
+  if (score === null) return { label: "Not assessed", colour: "#65716D", tint: "#ECEFEE" };
+  if (score >= 60) return { label: "Strong", colour: "#17633F", tint: "#E2F1E8" };
+  if (score >= 40) return { label: "Watch", colour: "#9A6512", tint: "#FAF0D7" };
+  return { label: "Needs attention", colour: "#A93636", tint: "#F8E5E3" };
+}
 
 function GridImage({ src, alt, labels }: { src: string; alt: string; labels: string[] }) {
   return (
@@ -70,14 +78,14 @@ export default function V2ReportPrintPage() {
   const [purchased, setPurchased] = useState<Set<ModuleId>>(new Set());
   const [photos, setPhotos] = useState<Array<{ type: string; url: string }>>([]);
   const [colour, setColour] = useState<ColourAnalysis | null>(null);
-  const [images, setImages] = useState<{ colour?: string; hair?: string; frame?: string }>({});
+  const [images, setImages] = useState<{ colour?: string; hair?: string; beard?: string; frame?: string }>({});
   const [generating, setGenerating] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const [{ data: profile }, { data: sess }, { data: metricRows }, { data: purchase }, { data: photoRows }, { data: colourRow }, { data: hairRows }, { data: frameRows }] = await Promise.all([
+      const [{ data: profile }, { data: sess }, { data: metricRows }, { data: purchase }, { data: photoRows }, { data: colourRow }, { data: hairRows }, { data: beardRows }, { data: frameRows }] = await Promise.all([
         supabase.from("user_profiles_v2").select("name").eq("user_id", user.id).maybeSingle(),
         supabase.from("analysis_sessions_v2").select("overall_score, skin_age, created_at, positive_observations, recommendations, limitations").eq("id", sessionId).eq("user_id", user.id).maybeSingle(),
         supabase.from("analysis_metrics_v2").select("category, metric_name, score, label, explanation, recommendation, is_premium, confidence").eq("session_id", sessionId).eq("user_id", user.id),
@@ -85,6 +93,7 @@ export default function V2ReportPrintPage() {
         supabase.from("analysis_photos_v2").select("photo_type, storage_path").eq("session_id", sessionId).eq("user_id", user.id),
         supabase.from("colour_analysis_v2").select("data").eq("session_id", sessionId).eq("user_id", user.id).maybeSingle(),
         supabase.from("hairstyle_generations_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id).eq("style_name", "Style grid").order("created_at", { ascending: false }).limit(1),
+        supabase.from("grooming_generations_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id).eq("kind", "beard").order("created_at", { ascending: false }).limit(1),
         supabase.from("frame_generations_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id).eq("frame_name", "Frame grid").order("created_at", { ascending: false }).limit(1),
       ]);
       setName(profile?.name ?? "");
@@ -109,12 +118,13 @@ export default function V2ReportPrintPage() {
       })));
       setPhotos(signedPhotos.filter((p) => p.url).sort((a, b) => PHOTO_ORDER.indexOf(a.type) - PHOTO_ORDER.indexOf(b.type)));
 
-      const [colourUrl, hairUrl, frameUrl] = await Promise.all([
+      const [colourUrl, hairUrl, beardUrl, frameUrl] = await Promise.all([
         sign(analysis?.drapings?.storagePath),
         sign(hairRows?.[0]?.storage_path as string | undefined),
+        sign(beardRows?.[0]?.storage_path as string | undefined),
         sign(frameRows?.[0]?.storage_path as string | undefined),
       ]);
-      setImages({ colour: colourUrl, hair: hairUrl, frame: frameUrl });
+      setImages({ colour: colourUrl, hair: hairUrl, beard: beardUrl, frame: frameUrl });
       setLoading(false);
     });
   }, [sessionId, supabase]);
@@ -224,13 +234,14 @@ export default function V2ReportPrintPage() {
           <div key={cat} style={{ marginBottom: "2.6rem" }}>
             <h2 style={{ ...H2, textTransform: "capitalize" }}>{cat === "hair" ? "Hair & scalp" : cat}</h2>
             {rows.map((m) => (
-              <div key={m.metricName} style={{ padding: "0.7rem 0", borderBottom: "1px solid #eee", pageBreakInside: "avoid" }}>
+              <div key={m.metricName} style={{ padding: "0.9rem 0", borderBottom: "1px solid #ddd", pageBreakInside: "avoid" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
-                  <strong style={{ fontSize: "1.2rem" }}>{m.metricName}</strong>
-                  <span style={{ fontSize: "1.2rem", whiteSpace: "nowrap" }}>{m.score ?? "no read"}{m.label ? ` · ${m.label}` : ""}</span>
+                  <strong style={{ fontSize: "1.3rem", color: "#102F28" }}>{m.metricName}</strong>
+                  <span style={{ fontSize: "1.05rem", fontWeight: 700, whiteSpace: "nowrap", padding: ".25rem .55rem", borderRadius: "9999px", color: printBand(m.score).colour, background: printBand(m.score).tint }}>{m.score ?? "-"} · {printBand(m.score).label}</span>
                 </div>
-                {m.explanation && <p style={{ fontSize: "1.1rem", color: "#444", margin: "0.35rem 0 0", lineHeight: 1.5 }}>{m.explanation}</p>}
-                {m.recommendation && <p style={{ fontSize: "1.1rem", color: "#003934", margin: "0.3rem 0 0", lineHeight: 1.5 }}><strong>Next step:</strong> {m.recommendation}</p>}
+                {m.score !== null && <div style={{ height: ".35rem", margin: ".55rem 0", overflow: "hidden", borderRadius: "9999px", background: "#E8E6E0" }}><span style={{ display: "block", width: `${m.score}%`, height: "100%", background: printBand(m.score).colour }} /></div>}
+                {m.explanation && <p style={{ fontSize: "1.16rem", color: "#263D37", margin: "0.35rem 0 0", lineHeight: 1.55 }}>{m.explanation}</p>}
+                {m.recommendation && <p style={{ fontSize: "1.16rem", color: "#123F34", margin: "0.35rem 0 0", lineHeight: 1.55 }}><strong>Next step:</strong> {m.recommendation}</p>}
               </div>
             ))}
           </div>
@@ -289,6 +300,13 @@ export default function V2ReportPrintPage() {
         <div style={BLOCK}>
           <h2 style={H2}>Hairstyle suggestions</h2>
           <GridImage src={images.hair} alt="Hairstyle previews on your photo" labels={HAIR_LABELS} />
+        </div>
+      )}
+
+      {hasHair && (
+        <div style={BLOCK}>
+          <h2 style={H2}>Beard suggestions</h2>
+          {images.beard ? <GridImage src={images.beard} alt="Beard previews on your photo" labels={BEARD_LABELS} /> : <p style={{ padding: "1rem 1.2rem", border: "1px solid #ddd", borderRadius: ".6rem", color: "#555", fontSize: "1.1rem" }}>Beard previews have not been generated yet. Open the interactive report and select Generate beard previews to add them here.</p>}
         </div>
       )}
 

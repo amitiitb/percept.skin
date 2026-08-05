@@ -78,14 +78,34 @@ export async function POST(req: NextRequest) {
     const auth = await verifySupabaseUser(req);
     if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = await req.json() as { sessionId?: string; messages?: ChatMessage[] };
-    const { sessionId, messages } = body;
-    if (!sessionId || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: "sessionId and messages are required" }, { status: 400 });
+    const body = await req.json() as { sessionId?: string; conversationId?: string; messages?: ChatMessage[] };
+    const { sessionId, conversationId, messages } = body;
+    if (!sessionId || !conversationId || !Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json({ error: "sessionId, conversationId and messages are required" }, { status: 400 });
     }
 
     const token = req.headers.get("authorization")!.slice(7);
     const supabase = scopedClient(token);
+
+    const { data: conversation } = await supabase
+      .from("perceptgpt_conversations_v2")
+      .select("id, title")
+      .eq("id", conversationId)
+      .eq("analysis_session_id", sessionId)
+      .eq("user_id", auth.userId)
+      .maybeSingle();
+    if (!conversation) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+
+    const latestUserMessage = [...messages].reverse().find((message) => message.role === "user");
+    if (!latestUserMessage?.content.trim()) return NextResponse.json({ error: "A message is required" }, { status: 400 });
+
+    const { error: userMessageError } = await supabase.from("perceptgpt_messages_v2").insert({
+      conversation_id: conversationId,
+      user_id: auth.userId,
+      role: "user",
+      content: latestUserMessage.content.trim(),
+    });
+    if (userMessageError) throw userMessageError;
 
     const systemPrompt = await buildSystemPrompt(supabase, auth.userId, sessionId);
     const trimmed = messages.slice(-MAX_HISTORY_MESSAGES);
@@ -139,7 +159,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "PerceptGPT didn't return a response, please try again" }, { status: 500 });
     }
 
-    return NextResponse.json({ reply: reply.replace(/—/g, "-") });
+    const cleanReply = reply.replace(/—/g, "-").trim();
+    const title = conversation.title === "New conversation"
+      ? latestUserMessage.content.trim().replace(/\s+/g, " ").slice(0, 52)
+      : conversation.title;
+    const [{ error: assistantMessageError }, { error: conversationError }] = await Promise.all([
+      supabase.from("perceptgpt_messages_v2").insert({
+        conversation_id: conversationId,
+        user_id: auth.userId,
+        role: "assistant",
+        content: cleanReply,
+      }),
+      supabase.from("perceptgpt_conversations_v2").update({ title, updated_at: new Date().toISOString() }).eq("id", conversationId),
+    ]);
+    if (assistantMessageError) throw assistantMessageError;
+    if (conversationError) throw conversationError;
+
+    return NextResponse.json({ reply: cleanReply, title });
   } catch (err) {
     logV2.error("perceptgpt_route_failed", { message: err instanceof Error ? err.message : String(err) });
     return NextResponse.json({ error: "Something went wrong, please try again" }, { status: 500 });

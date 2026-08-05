@@ -25,6 +25,7 @@ interface SessionRow {
   status: string;
   overall_score: number | null;
   skin_age: number | null;
+  image_quality_score: number | null;
   created_at: string;
   positive_observations: string[] | null;
   recommendations: RecommendationSet | null;
@@ -46,11 +47,11 @@ function verdictFor(score: number): string {
 // Score bands drive the colour of both the bar and the status chip, so a
 // glance down the column reads as a status list rather than 20 identical bars.
 function bandFor(score: number | null): { label: string; color: string; tint: string } {
-  if (score === null) return { label: "No read", color: "var(--muted)", tint: "var(--wash)" };
-  if (score >= 80) return { label: "Excellent", color: "#2E7D5B", tint: "rgba(46,125,91,0.1)" };
-  if (score >= 60) return { label: "Good", color: "#1A9E8F", tint: "rgba(26,158,143,0.1)" };
-  if (score >= 40) return { label: "Moderate", color: "#C08420", tint: "rgba(192,132,32,0.12)" };
-  return { label: "Focus area", color: "#C8503A", tint: "rgba(200,80,58,0.1)" };
+  if (score === null) return { label: "Not assessed", color: "#65716D", tint: "#ECEFEE" };
+  if (score >= 80) return { label: "Excellent", color: "#17633F", tint: "#E2F1E8" };
+  if (score >= 60) return { label: "Good", color: "#217A55", tint: "#E7F3EC" };
+  if (score >= 40) return { label: "Watch", color: "#9A6512", tint: "#FAF0D7" };
+  return { label: "Needs attention", color: "#A93636", tint: "#F8E5E3" };
 }
 
 function ScoreBar({ score, color }: { score: number | null; color?: string }) {
@@ -83,9 +84,9 @@ function MetricRow({ m }: { m: AnalysisMetric }) {
           background: "none", border: "none", cursor: "pointer", textAlign: "left",
         }}
       >
-        <span style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, flex: "1 1 auto", minWidth: 0 }}>{m.metricName}</span>
+        <span style={{ fontSize: "1.65rem", color: "var(--primary)", fontWeight: 650, flex: "1 1 auto", minWidth: 0 }}>{m.metricName}</span>
         <span style={{
-          fontSize: "1.1rem", fontWeight: 700, color: band.color, background: band.tint, borderRadius: "9999px",
+          fontSize: "1.18rem", fontWeight: 800, color: band.color, background: band.tint, borderRadius: "9999px",
           padding: "0.4rem 1rem", whiteSpace: "nowrap", flexShrink: 0, letterSpacing: "0.02em",
         }}>
           {band.label}
@@ -110,12 +111,12 @@ function MetricRow({ m }: { m: AnalysisMetric }) {
               <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem", borderLeft: `2px solid ${band.color}`, paddingLeft: "1.8rem" }}>
                 <div>
                   <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.5rem" }}>In your scan</p>
-                  <p style={{ fontSize: "1.5rem", color: "var(--primary)", lineHeight: 1.6, margin: 0 }}>{m.explanation}</p>
+                  <p style={{ fontSize: "1.6rem", color: "var(--primary)", lineHeight: 1.65, margin: 0 }}>{m.explanation}</p>
                 </div>
                 {m.recommendation && (
                   <div>
                     <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.5rem" }}>Suggested next step</p>
-                    <p style={{ fontSize: "1.5rem", color: "var(--primary)", lineHeight: 1.6, margin: 0 }}>{m.recommendation}</p>
+                    <p style={{ fontSize: "1.6rem", color: "var(--primary)", lineHeight: 1.65, margin: 0 }}>{m.recommendation}</p>
                   </div>
                 )}
                 {m.confidence && (
@@ -165,6 +166,27 @@ function GuideList({ title, items, color, tick }: { title: string; items: string
   );
 }
 
+const REPORT_GLOSSARY: Record<string, { meaning: string; why: string }> = {
+  Skin: { meaning: "Visible qualities such as texture, tone, hydration, pores and pigmentation.", why: "It helps identify what looks healthy now and what may benefit from a consistent routine." },
+  Harmony: { meaning: "How naturally the visible proportions of your facial features balance together.", why: "It describes overall balance, not whether one individual feature is good or bad." },
+  Angularity: { meaning: "How defined or softly curved your jawline, cheekbones and chin appear.", why: "It can help guide hairstyles, facial hair, makeup and frame shapes that complement your structure." },
+  "Hair & Scalp": { meaning: "Visible hair density, hairline pattern, part width and scalp presentation.", why: "It provides a baseline for grooming choices and future scan comparisons." },
+};
+
+function InfoTip({ term }: { term: string }) {
+  const [open, setOpen] = useState(false);
+  const copy = REPORT_GLOSSARY[term];
+  if (!copy) return null;
+  return (
+    <span className="v2-info-wrap" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button type="button" className="v2-info-button" aria-label={`What does ${term} mean?`} aria-expanded={open} onClick={() => setOpen((value) => !value)}>i</button>
+      <AnimatePresence>{open && <motion.span className="v2-info-popover" role="tooltip" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}>
+        <button type="button" className="v2-info-close" aria-label="Close explanation" onClick={() => setOpen(false)}>×</button><strong>What is {term}?</strong><span>{copy.meaning}</span><small>Why it matters</small><span>{copy.why}</span>
+      </motion.span>}</AnimatePresence>
+    </span>
+  );
+}
+
 // Pre-purchase teaser row — real metric name (what was measured), score/bar
 // blurred behind a lock (real proportions still faintly visible, exact value
 // not readable), no explanation. The data itself already exists for every
@@ -194,9 +216,11 @@ function LockedMetricRow({ m }: { m: AnalysisMetric }) {
 // One accent per section, keyed by title (not index) so it stays fixed
 // regardless of which sections a given purchase actually renders.
 const SECTION_ACCENT: Record<string, string> = {
-  Skin: "var(--rose)",
-  Face: "#D9A62E",
-  "Hair & Scalp": "#E8604F",
+  Skin: "#3E7B68",
+  Face: "#8B7355",
+  Harmony: "#71857C",
+  Angularity: "#8B7355",
+  "Hair & Scalp": "#6D7768",
 };
 
 // How many skin metrics a free scan reads in full — real score, real band, the
@@ -225,9 +249,9 @@ type BandKey = "all" | "focus" | "moderate" | "good";
 // teaches the colour language used by every score row underneath it.
 const BAND_FILTERS: Array<{ key: BandKey; label: string; short: string; colour: string; match: (s: number | null) => boolean }> = [
   { key: "all", label: "All metrics", short: "All", colour: "var(--primary)", match: () => true },
-  { key: "focus", label: "Focus areas", short: "Focus", colour: "#C8503A", match: (s) => s !== null && s < 40 },
-  { key: "moderate", label: "Moderate", short: "Moderate", colour: "#C08420", match: (s) => s !== null && s >= 40 && s < 60 },
-  { key: "good", label: "Doing well", short: "Good", colour: "#2E7D5B", match: (s) => s !== null && s >= 60 },
+  { key: "focus", label: "Needs attention", short: "Attention", colour: "#A93636", match: (s) => s !== null && s < 40 },
+  { key: "moderate", label: "Neutral or watch", short: "Watch", colour: "#9A6512", match: (s) => s !== null && s >= 40 && s < 60 },
+  { key: "good", label: "Strong results", short: "Strong", colour: "#217A55", match: (s) => s !== null && s >= 60 },
 ];
 
 function matchesBand(key: BandKey, score: number | null): boolean {
@@ -241,28 +265,23 @@ function MetricFilterBar({ value, onChange, metrics }: {
     <div style={{ marginBottom: "2rem" }}>
       <p className="v2-filter-label" style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--muted)", letterSpacing: "0.12em", margin: "0 0 1rem" }}>SHOW ME</p>
       <div className="v2-filter-row" style={{ display: "flex", gap: "0.8rem", flexWrap: "wrap" }}>
-        {BAND_FILTERS.map((f) => {
+        {BAND_FILTERS.filter((f) => metrics.some((m) => f.match(m.score))).map((f) => {
           const count = metrics.filter((m) => f.match(m.score)).length;
           const active = value === f.key;
-          const empty = count === 0;
-          // A filter that would empty the list stays visible but disabled, so
-          // the row does not reflow as scores change between scans.
           return (
             <motion.button
               key={f.key}
               type="button"
-              disabled={empty}
               onClick={() => onChange(f.key)}
-              whileTap={empty ? undefined : { scale: 0.94 }}
+              whileTap={{ scale: 0.94 }}
               animate={{ scale: 1 }}
               style={{
                 display: "inline-flex", alignItems: "center", gap: "0.8rem",
                 padding: "1rem 1.6rem", borderRadius: "1.4rem",
-                cursor: empty ? "default" : "pointer", fontSize: "1.45rem", fontWeight: 700,
+                cursor: "pointer", fontSize: "1.45rem", fontWeight: 700,
                 border: `2px solid ${active ? f.colour : "var(--line)"}`,
                 background: active ? f.colour : "var(--surface)",
-                color: active ? "#fff" : empty ? "var(--muted)" : "var(--primary)",
-                opacity: empty ? 0.4 : 1,
+                color: active ? "#fff" : "var(--primary)",
                 boxShadow: active ? `0 0.6rem 1.6rem -0.6rem ${f.colour}` : "none",
                 transition: "background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s",
               }}
@@ -270,7 +289,6 @@ function MetricFilterBar({ value, onChange, metrics }: {
               <span aria-hidden className="v2-filter-dot" style={{
                 width: "0.9rem", height: "0.9rem", borderRadius: "50%", flexShrink: 0,
                 background: active ? "rgba(255,255,255,0.9)" : f.colour,
-                opacity: empty ? 0.5 : 1,
               }} />
               <span className="v2-filter-full">{f.label}</span>
               <span className="v2-filter-short" style={{ display: "none" }}>{f.short}</span>
@@ -287,7 +305,7 @@ function MetricFilterBar({ value, onChange, metrics }: {
   );
 }
 
-function Section({ index, id, title, intro, metrics, locked, filter = "all" }: {
+function Section({ index: _index, id, title, intro, metrics, locked, filter = "all" }: {
   index: number; id: string; title: string; intro?: string; metrics: AnalysisMetric[]; locked?: boolean; filter?: BandKey;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -305,11 +323,14 @@ function Section({ index, id, title, intro, metrics, locked, filter = "all" }: {
   const scored = metrics.filter((m) => m.score !== null);
   const avg = scored.length ? Math.round(scored.reduce((s, m) => s + (m.score ?? 0), 0) / scored.length) : null;
   const band = bandFor(avg);
+  const focusCount = metrics.filter((m) => m.score !== null && m.score < 40).length;
+  const moderateCount = metrics.filter((m) => m.score !== null && m.score >= 40 && m.score < 60).length;
+  const strongCount = metrics.filter((m) => m.score !== null && m.score >= 60).length;
   const hiddenCount = locked || filter !== "all" ? 0 : Math.max(0, ordered.length - COLLAPSED_COUNT);
   const visible = hiddenCount > 0 ? ordered.slice(0, COLLAPSED_COUNT) : ordered;
 
   return (
-    <section id={id} style={{
+    <section id={id} className="v2-report-section" style={{
       marginBottom: "1.6rem", background: "var(--surface)", borderRadius: "1.6rem",
       border: "1px solid var(--line)", overflow: "hidden", scrollMarginTop: "2.4rem",
     }}>
@@ -317,10 +338,10 @@ function Section({ index, id, title, intro, metrics, locked, filter = "all" }: {
           The average used to be a three-line stack floated to the right, which
           wrapped below the title on a phone and left the header six lines tall
           before a single score appeared. */}
-      <header style={{ borderTop: `0.4rem solid ${accent}`, padding: "2rem 2.4rem 1.6rem", borderBottom: "1px solid var(--line)" }}>
+      <header className="v2-section-header" style={{ borderTop: `0.4rem solid ${accent}`, padding: "2rem 2.4rem 1.6rem", borderBottom: "1px solid var(--line)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.2rem", marginBottom: "0.7rem" }}>
           <p style={{ fontSize: "1.1rem", fontWeight: 700, color: accent, letterSpacing: "0.12em", margin: 0 }}>
-            PART {String(index).padStart(2, "0")}
+            {scored.length} MEASUREMENT{scored.length === 1 ? "" : "S"}
           </p>
           {avg !== null && !locked && (
             <span style={{
@@ -328,15 +349,20 @@ function Section({ index, id, title, intro, metrics, locked, filter = "all" }: {
               background: band.tint, borderRadius: "9999px", padding: "0.4rem 1.1rem",
             }}>
               <strong style={{ fontSize: "1.7rem", fontWeight: 800, color: band.color, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{avg}</strong>
-              <span style={{ fontSize: "1.1rem", fontWeight: 600, color: band.color, opacity: 0.85 }}>avg of {metrics.length}</span>
+              <span style={{ fontSize: "1.1rem", fontWeight: 600, color: band.color, opacity: 0.85 }}>section score</span>
             </span>
           )}
         </div>
-        <h2 style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", margin: 0, letterSpacing: "-0.01em" }}>{title}</h2>
+        <div className="v2-title-with-info"><h2 style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", margin: 0, letterSpacing: "-0.01em" }}>{title}</h2><InfoTip term={title} /></div>
         {intro && <p style={{ fontSize: "1.4rem", color: "var(--secondary)", margin: "0.5rem 0 0", maxWidth: "52rem" }}>{intro}</p>}
+        <div className="v2-section-summary" aria-label={`${title} score summary`}>
+          <span><i style={{ background: "#A93636" }} />{focusCount} need attention</span>
+          <span><i style={{ background: "#9A6512" }} />{moderateCount} watch</span>
+          <span><i style={{ background: "#217A55" }} />{strongCount} strong</span>
+        </div>
       </header>
 
-      <div style={{ padding: "0 2.4rem 1.8rem" }}>
+      <div className="v2-section-body" style={{ padding: "0 2.4rem 1.8rem" }}>
         {visible.map((m) => locked ? <LockedMetricRow key={m.metricName} m={m} /> : <MetricRow key={m.metricName} m={m} />)}
         <AnimatePresence initial={false}>
           {hiddenCount > 0 && expanded && (
@@ -402,7 +428,7 @@ function FreeSkinSection({ title, intro, free, locked, accent, onUnlock }: {
             </span>
           )}
         </div>
-        <h2 style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", margin: 0, letterSpacing: "-0.01em" }}>{title}</h2>
+        <div className="v2-title-with-info"><h2 style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", margin: 0, letterSpacing: "-0.01em" }}>{title}</h2><InfoTip term={title} /></div>
         {intro && <p style={{ fontSize: "1.4rem", color: "var(--secondary)", margin: "0.5rem 0 0", maxWidth: "52rem" }}>{intro}</p>}
       </header>
 
@@ -490,10 +516,10 @@ const PHOTO_LABELS: Record<string, string> = {
 };
 
 const SECTION_INTRO: Record<string, string> = {
-  Skin: "Texture, tone, and hydration.",
-  Harmony: "How your features balance against each other.",
-  Angularity: "Jawline, cheekbone, and chin definition.",
-  "Hair & Scalp": "Density, hairline, and scalp health.",
+  Skin: "A practical view of texture, tone, hydration, pores and visible skin quality.",
+  Harmony: "How the proportions of your visible features relate and balance as a whole.",
+  Angularity: "How clearly your jawline, cheekbones and chin define the structure of your face.",
+  "Hair & Scalp": "Visible density, hairline pattern, parting and scalp presentation across your captured angles.",
 };
 
 // One tab per purchased module. Turning the report into four short documents
@@ -594,11 +620,11 @@ function TabBar({ tabs, active, onChange, locked }: {
   );
 }
 
-const ROUTINE_META: Array<{ key: keyof RecommendationSet; label: string; Icon: (p: { size?: number }) => React.ReactElement; gate: "skin" | "hair" }> = [
-  { key: "morning", label: "Morning", Icon: IconSun, gate: "skin" },
-  { key: "evening", label: "Evening", Icon: IconMoon, gate: "skin" },
-  { key: "weekly", label: "Weekly", Icon: IconSparkle, gate: "skin" },
-  { key: "hairScalp", label: "Hair & Scalp", Icon: IconStrands, gate: "hair" },
+const ROUTINE_META: Array<{ key: keyof RecommendationSet; label: string; note: string; Icon: (p: { size?: number }) => React.ReactElement; gate: "skin" | "hair" }> = [
+  { key: "morning", label: "Morning", note: "Your daily foundation before sun and environmental exposure", Icon: IconSun, gate: "skin" },
+  { key: "evening", label: "Evening", note: "A consistent reset to support recovery overnight", Icon: IconMoon, gate: "skin" },
+  { key: "weekly", label: "Weekly", note: "Occasional steps that complement your daily routine", Icon: IconSparkle, gate: "skin" },
+  { key: "hairScalp", label: "Hair & Scalp", note: "A repeatable routine based on your visible hair and scalp findings", Icon: IconStrands, gate: "hair" },
 ];
 
 // Tabbed instead of one card per block side by side — with only 2-3 blocks a
@@ -622,6 +648,7 @@ function RoutinePanel({ gate, recommendations }: { gate: "skin" | "hair"; recomm
 
       {blocks.length > 1 && (
         <div
+          className="v2-routine-tabs"
           role="tablist"
           aria-label={`${gate === "skin" ? "Routine" : "Hair routine"} sections`}
           style={{
@@ -652,15 +679,22 @@ function RoutinePanel({ gate, recommendations }: { gate: "skin" | "hair"; recomm
         </div>
       )}
 
-      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem 3.2rem", maxWidth: "60rem", margin: "0 auto" }}>
+      <div className="v2-routine-content" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem 3.2rem", maxWidth: "60rem", margin: "0 auto" }}>
+        <div className="v2-routine-context">
+          <span><current.Icon size={1.8} /></span>
+          <div><strong>{current.label} plan</strong><p>{current.note}</p></div>
+        </div>
         <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
           {(recommendations?.[current.key] ?? []).map((s, i) => (
-            <li key={i} style={{ display: "flex", gap: "1rem", fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55, textAlign: "left" }}>
-              <span style={{ color: "var(--rose)", fontWeight: 600, flexShrink: 0 }}>{i + 1}.</span>
-              <span>{s}</span>
+            <li key={i} style={{ display: "flex", gap: "1rem", padding: "1rem 0", fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55, textAlign: "left", borderBottom: "1px solid var(--line)" }}>
+              <span style={{ display: "grid", placeItems: "center", width: "2.6rem", height: "2.6rem", borderRadius: "50%", background: "rgba(26,158,143,0.1)", color: "var(--rose)", fontWeight: 700, flexShrink: 0 }}>{i + 1}</span>
+              <span style={{ paddingTop: "0.2rem" }}>{s}</span>
             </li>
           ))}
         </ol>
+        <p style={{ margin: "1.6rem 0 0", color: "var(--muted)", fontSize: "1.15rem", lineHeight: 1.5 }}>
+          Introduce one change at a time. Stop if irritation occurs and seek professional advice for persistent concerns.
+        </p>
       </div>
     </div>
   );
@@ -730,7 +764,7 @@ export default function V2ReportPage() {
     try {
 
     const [{ data: sess }, { data: purchase }, { data: metricRows }, { data: photoRows }, { data: colourRow }] = await Promise.all([
-      supabase.from("analysis_sessions_v2").select("id, status, overall_score, skin_age, created_at, stage, fail_reason").eq("id", sessionId).eq("user_id", user.id).maybeSingle(),
+      supabase.from("analysis_sessions_v2").select("id, status, overall_score, skin_age, image_quality_score, created_at, stage, fail_reason").eq("id", sessionId).eq("user_id", user.id).maybeSingle(),
       supabase.from("report_purchases_v2").select("modules").eq("session_id", sessionId).eq("user_id", user.id).maybeSingle(),
       supabase.from("analysis_metrics_v2").select("category, metric_name, score, label, confidence, explanation, recommendation, is_premium").eq("session_id", sessionId).eq("user_id", user.id),
       supabase.from("analysis_photos_v2").select("photo_type, storage_path").eq("session_id", sessionId).eq("user_id", user.id),
@@ -1078,11 +1112,25 @@ export default function V2ReportPage() {
     ...(hasSkin ? (["skin", "face"] as MetricCategory[]) : []),
     ...(hasHairstyle ? (["hair"] as MetricCategory[]) : []),
   ]);
-  const sorted = metrics
-    .filter((m) => purchasedCategories.has(m.category))
+  const assessed = metrics.filter((m) => purchasedCategories.has(m.category) && m.score !== null);
+  const sorted = assessed
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
   const strongest = sorted.slice(0, 3).map((m) => m.metricName);
-  const priority = sorted.slice(-3).map((m) => m.metricName);
+  const priorityMetrics = [...assessed].sort((a, b) => (a.score ?? 101) - (b.score ?? 101)).slice(0, 3);
+  const priority = priorityMetrics.map((m) => m.metricName);
+  const unavailable = metrics.filter((m) => purchasedCategories.has(m.category) && m.score === null);
+  const categoryScore = (rows: AnalysisMetric[]) => {
+    const values = rows.flatMap((m) => m.score === null ? [] : [m.score]);
+    return values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
+  };
+  const categoryCards = [
+    ...(hasSkin ? [{ tab: "skin" as TabId, label: "Skin", score: categoryScore(skinMetrics), detail: "Texture, tone and visible skin quality" }, { tab: "skin" as TabId, label: "Face", score: categoryScore(faceMetrics), detail: "Balance, harmony and definition" }] : []),
+    ...(hasHairstyle ? [{ tab: "hairstyle" as TabId, label: "Hair", score: categoryScore(hairMetrics), detail: "Hairline, density and scalp presentation" }] : []),
+    ...(hasColour ? [{ tab: "colour" as TabId, label: "Colour", score: null, detail: colourAnalysis?.season ? `${colourAnalysis.season} palette` : "Personal palette and contrast" }] : []),
+  ];
+  const qualityLabel = (session.image_quality_score ?? 0) >= 75 ? "Strong scan quality" : "Review with care";
+  const nextScanDate = new Date(new Date(session.created_at).getTime() + 21 * 24 * 60 * 60 * 1000)
+    .toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
   // positiveObservations/limitations/recommendations are generated from
   // whatever photos existed at analysis time, not tagged per module — only
@@ -1120,7 +1168,7 @@ export default function V2ReportPage() {
     : activeTab === "hairstyle" ? hairMetrics : [];
 
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
+    <div className="v2-report-page" style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
@@ -1134,48 +1182,61 @@ export default function V2ReportPage() {
           <PrimaryButton size="sm" fullWidth={false} onClick={() => router.push(`/perceptgpt?session=${sessionId}`)}>Ask PerceptGPT →</PrimaryButton>
         </div>
 
-        {/* Hero — portrait + Percept Score side by side (Design review Decision #12,
-            extended with the user's own photo so the payoff moment feels like a
-            personal consultation, not a bare number) */}
-        <div className="v2-hero-grid" style={{ display: "grid", gridTemplateColumns: photo ? "30rem 1fr" : "1fr", gap: "4.8rem", alignItems: "center", marginBottom: "3.2rem" }}>
+        <div className="v2-hero-grid" style={{ display: "grid", gridTemplateColumns: photo ? "26rem 1fr" : "1fr", gap: "4rem", alignItems: "center", padding: "3.2rem", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "2rem", marginBottom: "2rem" }}>
           {photo && (
             <div style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2rem", overflow: "hidden", boxShadow: "0 2.4rem 4.8rem -1.2rem rgba(12, 92, 81,0.28)" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photo} alt="Your guided-capture photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
           )}
-          <div style={{ textAlign: "center" }}>
-            <div style={{ margin: "0 auto" }}>
-              <ScoreReveal score={score} />
+          <div className="v2-overview-copy">
+            <div style={{ display: "flex", alignItems: "center", gap: "1.4rem", flexWrap: "wrap" }}>
+              <div className="v2-score-compact"><ScoreReveal score={score} size={10} /></div>
+              <div><p style={{ margin: 0, color: "var(--muted)", fontSize: "1.2rem", textTransform: "uppercase", letterSpacing: "0.1em" }}>Your report at a glance</p><h1 style={{ margin: "0.4rem 0 0", color: "var(--primary)", fontSize: "2.6rem" }}>{verdictFor(score)} overall</h1></div>
             </div>
-            <p style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Percept Score</p>
-            {session.skin_age !== null && (
-              <div style={{ display: "inline-flex", alignItems: "baseline", gap: "0.8rem", marginTop: "1.4rem", background: "var(--wash)", borderRadius: "9999px", padding: "0.8rem 1.8rem" }}>
-                <span style={{ fontSize: "1.3rem", color: "var(--secondary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Skin age</span>
-                <span style={{ fontSize: "2.2rem", fontWeight: 800, color: "var(--primary)" }}>{session.skin_age}</span>
-              </div>
-            )}
-            {sorted.length > 0 && (
-              <div style={{ display: "flex", gap: "3.2rem", justifyContent: "center", marginTop: "2.4rem", flexWrap: "wrap" }}>
-                <div>
-                  <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Strongest</p>
-                  <p style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{strongest.join(" · ")}</p>
-                </div>
-                <div>
-                  <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Priority areas</p>
-                  <p style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{priority.join(" · ")}</p>
-                </div>
-              </div>
-            )}
+            <p style={{ margin: "1.8rem 0", color: "var(--secondary)", fontSize: "1.5rem", lineHeight: 1.65, maxWidth: "58rem" }}>
+              Your scan shows a strong baseline. Protect what is working, then focus on the few areas where consistent changes can be most useful.
+            </p>
+            <div className="v2-overview-pills" style={{ display: "flex", gap: "0.8rem", flexWrap: "wrap" }}>
+              <span>{qualityLabel}</span>
+              {session.skin_age !== null && <span>Estimated skin age: <strong>{session.skin_age}</strong></span>}
+              <span>{assessed.length} measurements assessed</span>
+            </div>
+            {limitations.length > 0 && <p className="v2-quality-note">Some results are less certain because the scan was underexposed or a requested photo was missing. Those items are marked as not assessed.</p>}
           </div>
         </div>
+
+        {assessed.length > 0 && (
+          <section className="v2-priority-panel">
+            <div className="v2-priority-intro"><p className="v2-eyebrow">Your priorities</p><h2>Three clear next moves</h2><p>Start here, then explore the measurements for supporting detail.</p></div>
+            <div className="v2-priority-grid">
+              <article className="maintain"><div className="v2-priority-card-top"><span className="v2-priority-icon"><IconCheck size={1.7} /></span><small>01 · Protect</small></div><div><strong>Maintain what works</strong><div className="v2-factor-list">{(session.positive_observations?.slice(0, 2) ?? strongest.slice(0, 2)).map((factor) => <b key={factor}>{factor}</b>)}</div></div><i className="v2-priority-signal"><b style={{ width: "88%" }} /></i></article>
+              <article className="improve"><div className="v2-priority-card-top"><span className="v2-priority-icon"><IconSparkle size={1.7} /></span><small>02 · Focus</small></div><div><strong>Improve or monitor</strong><div className="v2-factor-list">{priority.map((factor) => <b key={factor}>{factor}</b>)}</div></div><i className="v2-priority-signal"><b style={{ width: "58%" }} /></i></article>
+              <article className="retake"><div className="v2-priority-card-top"><span className="v2-priority-icon"><IconFaceScan size={1.7} /></span><small>03 · Verify</small></div><div><strong>{unavailable.length ? "Retake for clarity" : "Keep your baseline"}</strong><div className="v2-factor-list">{unavailable.length ? unavailable.map((m) => <b key={m.metricName}>{m.metricName}</b>) : <b>Same lighting and angle</b>}</div></div><i className="v2-priority-signal"><b style={{ width: unavailable.length ? "34%" : "76%" }} /></i></article>
+            </div>
+          </section>
+        )}
+
+        {categoryCards.length > 0 && (
+          <section className="v2-report-block v2-category-block">
+            <p className="v2-eyebrow">Category overview</p><h2 style={{ margin: "0 0 1.6rem", color: "var(--primary)", fontSize: "2.2rem" }}>See the whole picture</h2>
+            <div className="v2-category-grid">{categoryCards.map((card) => {
+              const categoryBand = bandFor(card.score);
+              return <button key={card.label} onClick={() => setTab(card.tab)}>
+                <div className="v2-category-heading"><span>{card.label}</span><strong style={{ color: card.score === null ? "var(--primary)" : categoryBand.color }}>{card.score ?? "View"}</strong></div>
+                {card.score !== null && <div className="v2-category-bar"><i style={{ width: `${card.score}%`, background: categoryBand.color }} /></div>}
+                <p>{card.detail}</p><small>Explore details →</small>
+              </button>;
+            })}</div>
+          </section>
+        )}
 
         {/* All 7 guided-capture photos — previously only face_front ever
             rendered anywhere on the report; the other 6 (angles, hairline,
             crown, parting) were captured but never shown back to the user. */}
         {allPhotos.length > 0 && (
-          <div style={{ marginBottom: "4.8rem" }}>
-            <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.4rem" }}>Your photos</p>
+          <section className="v2-report-block v2-photo-block">
+            <div className="v2-block-heading"><div><p className="v2-eyebrow">Capture record</p><h2>Your scan photos</h2></div><span>{allPhotos.length} captured</span></div>
             <div style={{ display: "flex", gap: "1.2rem", overflowX: "auto", paddingBottom: "0.4rem" }}>
               {allPhotos.map((p) => (
                 <div key={p.photoType} style={{ flex: "0 0 auto", width: "11rem" }}>
@@ -1187,12 +1248,15 @@ export default function V2ReportPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {/* One module per tab, so the page is only ever as long as the thing
             being read. Replaces the old anchor-link contents list, which still
             left every module stacked in one scroll. */}
+        <section className="v2-analysis-block">
+        <div className="v2-block-heading v2-analysis-heading"><div><p className="v2-eyebrow">Detailed analysis</p><h2>Explore your results</h2></div><span>Select a category</span></div>
+        <div className="v2-score-legend" aria-label="Score colour guide"><span><i className="strong" />Strong result</span><span><i className="watch" />Neutral or watch</span><span><i className="focus" />Needs attention</span><span><i className="unknown" />Not assessed</span></div>
         <TabBar
           tabs={tabs}
           active={activeTab ?? "skin"}
@@ -1265,9 +1329,26 @@ export default function V2ReportPage() {
             </div>
           )}
         </div>
+        </section>
+
+        {hasContentAccess && (
+          <section className="v2-progress-panel">
+            <div className="v2-progress-copy">
+              <p className="v2-eyebrow">Track your progress</p>
+              <h2>Make this scan your baseline</h2>
+              <p>Use similar lighting and the same angles so your next comparison is meaningful.</p>
+            </div>
+            <div className="v2-next-scan"><span>Recommended next scan</span><strong>{nextScanDate}</strong><small>21-day check-in</small></div>
+            <div className="v2-progress-metrics">
+              <span>Watch next time</span>
+              <strong>{priority.slice(0, 2).join(" and ") || "your key measurements"}</strong>
+            </div>
+            <div className="v2-progress-action"><PrimaryButton variant="onDark" fullWidth={false} onClick={() => router.push("/scan-prep")}>Plan next scan →</PrimaryButton><small>Compare trends, not daily fluctuations</small></div>
+          </section>
+        )}
 
         {limitations.length > 0 && (
-          <div style={{ marginTop: "3.2rem", padding: "2.4rem 2.8rem", background: "var(--wash)", borderRadius: "1.2rem" }}>
+          <div className="v2-limitations" style={{ marginTop: "3.2rem", padding: "2.4rem 2.8rem", background: "var(--wash)", borderRadius: "1.2rem" }}>
             <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>Good to know</p>
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
               {limitations.map((l, i) => <li key={i} style={{ fontSize: "1.3rem", color: "var(--secondary)", lineHeight: 1.6 }}>{l}</li>)}
@@ -1282,10 +1363,107 @@ export default function V2ReportPage() {
         </div>
       </div>
       <style>{`
+        .v2-report-page {
+          --canvas: #F3F1EC;
+          --surface: #FCFBF8;
+          --wash: #EEECE6;
+          --line: #DCD8CF;
+          --primary: #0D3028;
+          --secondary: #334F47;
+          --muted: #5F746D;
+          --panel: #173E35;
+          --rose: #3E7B68;
+          background-image: radial-gradient(circle at 82% 4%, rgba(133,164,151,0.13), transparent 28rem);
+        }
+        .v2-score-compact { width: 10rem; height: 10rem; display: grid; place-items: center; flex: 0 0 auto; }
+        .v2-score-legend { display: flex; flex-wrap: wrap; gap: .7rem 1.5rem; margin: -0.3rem 0 1.6rem; padding: 1rem 1.2rem; border: 1px solid var(--line); border-radius: 1rem; background: #F7F5F0; }
+        .v2-score-legend span { display: inline-flex; align-items: center; gap: .55rem; color: var(--secondary); font-size: 1.12rem; font-weight: 650; }
+        .v2-score-legend i { width: .8rem; height: .8rem; border-radius: 50%; }
+        .v2-score-legend .strong { background: #217A55; } .v2-score-legend .watch { background: #C28A27; } .v2-score-legend .focus { background: #B33B3B; } .v2-score-legend .unknown { background: #7A8581; }
+        .v2-title-with-info { display: flex; align-items: center; gap: .8rem; }
+        .v2-info-wrap { position: relative; display: inline-flex; flex: 0 0 auto; }
+        .v2-info-button { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; padding: 0; border: 1px solid #AEBDB7; border-radius: 50%; background: #F5F7F5; color: #476A60; font: 700 1.2rem/1 Georgia, serif; cursor: help; }
+        .v2-info-button:hover, .v2-info-button:focus-visible { border-color: #3E7B68; background: #E8F0EC; outline: none; }
+        .v2-info-popover { position: absolute; z-index: 50; top: calc(100% + .8rem); left: 50%; width: min(30rem, calc(100vw - 4rem)); padding: 1.5rem; border: 1px solid #D6D2C8; border-radius: 1rem; background: #FFFDF9; box-shadow: 0 1.6rem 4rem -1.8rem rgba(23,62,53,.4); transform: translateX(-50%); }
+        .v2-info-popover:before { content: ""; position: absolute; top: -.5rem; left: calc(50% - .5rem); width: 1rem; height: 1rem; border-left: 1px solid #D6D2C8; border-top: 1px solid #D6D2C8; background: #FFFDF9; transform: rotate(45deg); }
+        .v2-info-popover strong, .v2-info-popover small, .v2-info-popover span { display: block; }
+        .v2-info-popover strong { margin-bottom: .55rem; color: var(--primary); font-size: 1.3rem; }
+        .v2-info-popover span { color: var(--secondary); font-size: 1.15rem; line-height: 1.5; }
+        .v2-info-popover small { margin: 1rem 0 .35rem; color: #3E7B68; font-size: .95rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+        .v2-info-close { position: absolute; top: .7rem; right: .7rem; width: 2.4rem; height: 2.4rem; border: 0; border-radius: 50%; background: var(--wash); color: var(--secondary); font-size: 1.6rem; line-height: 1; cursor: pointer; }
+        .v2-report-section { overflow: visible !important; }
+        .v2-hero-grid { box-shadow: 0 1.8rem 5rem -4rem rgba(23,62,53,0.45); }
+        .v2-report-block, .v2-analysis-block { margin: 3.2rem 0; padding: 2.6rem 2.8rem; border: 1px solid #D8D4CA; border-radius: 1.6rem; background: rgba(252,251,248,0.82); box-shadow: 0 1.6rem 4rem -4rem rgba(23,62,53,0.5); }
+        .v2-category-block { border-top: 0.35rem solid #6F9386; }
+        .v2-photo-block { border-top: 0.35rem solid #A38B69; }
+        .v2-analysis-block { border-top: 0.35rem solid #315F52; }
+        .v2-block-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.6rem; margin-bottom: 1.8rem; padding-bottom: 1.4rem; border-bottom: 1px solid var(--line); }
+        .v2-block-heading h2 { margin: 0; color: var(--primary); font-size: 2.1rem; }
+        .v2-block-heading > span { padding: 0.55rem 0.9rem; border: 1px solid var(--line); border-radius: 9999px; background: #F5F3EE; color: var(--muted); font-size: 1.05rem; font-weight: 700; white-space: nowrap; }
+        .v2-category-block > h2 { padding-bottom: 1.4rem; border-bottom: 1px solid var(--line); }
+        .v2-analysis-block .v2-tabbar { background: rgba(252,251,248,0.96) !important; margin-bottom: 1.8rem !important; padding-top: 0 !important; }
+        .v2-analysis-block .v2-report-section { box-shadow: 0 1rem 2.8rem -2.8rem rgba(23,62,53,0.5); }
+        .v2-limitations { border: 1px solid #DDD5C5; border-left: 0.35rem solid #A97931; }
+        .v2-overview-pills span { padding: 0.7rem 1.1rem; border-radius: 9999px; background: #F0EEE8; border: 1px solid #E2DED5; color: #425E56; font-size: 1.15rem; }
+        .v2-quality-note { margin: 1.4rem 0 0; padding: 1rem 1.2rem; border-left: 3px solid #A97931; background: #F6EFE3; color: #66553A; font-size: 1.2rem; line-height: 1.5; }
+        .v2-eyebrow { margin: 0 0 0.5rem; color: var(--rose); font-size: 1.1rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+        .v2-priority-panel { padding: 2.8rem 3.2rem 3.2rem; border: 1px solid var(--line); border-radius: 1.6rem; background: #FCFBF8; margin-bottom: 3.2rem; box-shadow: 0 1.8rem 5rem -4.2rem rgba(23,62,53,0.55); }
+        .v2-priority-intro { display: flex; align-items: end; gap: 1.8rem; margin-bottom: 2rem; }
+        .v2-priority-intro .v2-eyebrow { flex: 0 0 auto; margin-bottom: 0.35rem; }
+        .v2-priority-panel h2 { margin: 0; color: var(--primary); font-size: 2.2rem; }
+        .v2-priority-intro > p:last-child { margin: 0 0 0.2rem auto; max-width: 34rem; color: var(--secondary); font-size: 1.25rem; line-height: 1.5; text-align: right; }
+        .v2-priority-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+        .v2-priority-grid article { display: flex; flex-direction: column; min-height: 17rem; padding: 1.6rem; border: 1px solid var(--line); border-radius: 1.2rem; background: #F7F5F0; }
+        .v2-priority-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.6rem; }
+        .v2-priority-card-top small { color: var(--muted); font-size: 1rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; }
+        .v2-priority-grid strong { color: var(--primary); font-size: 1.4rem; }
+        .v2-priority-grid p { margin: 0.5rem 0 1.5rem; color: var(--secondary); font-size: 1.2rem; line-height: 1.5; }
+        .v2-factor-list { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 1rem 0 1.5rem; }
+        .v2-factor-list b { padding: 0.5rem 0.75rem; border: 1px solid #D9D5CC; border-radius: 0.65rem; background: #fff; color: #244A40; font-size: 1.12rem; font-weight: 750; line-height: 1.3; }
+        article.improve .v2-factor-list b { color: #79551E; background: #FCF8EF; border-color: #E8D9BC; }
+        article.retake .v2-factor-list b { color: #405F57; background: #F2F6F4; border-color: #D6E1DD; }
+        .v2-priority-icon { display: grid; place-items: center; width: 3.2rem; height: 3.2rem; flex: 0 0 auto; border-radius: 0.9rem; }
+        .v2-priority-grid article.maintain .v2-priority-icon { background: #E6EFEA; color: #356B57; } .v2-priority-grid article.improve .v2-priority-icon { background: #F5EBD8; color: #966A27; } .v2-priority-grid article.retake .v2-priority-icon { background: #E7EEEC; color: #55756C; }
+        .v2-priority-signal { display: block; width: 100%; height: 0.45rem; margin-top: auto; overflow: hidden; border-radius: 9999px; background: #E4E1DA; }
+        .v2-priority-signal b { display: block; height: 100%; border-radius: inherit; background: #356B57; }
+        article.improve .v2-priority-signal b { background: #A97931; } article.retake .v2-priority-signal b { background: #66847A; }
+        .v2-category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
+        .v2-category-grid button { padding: 1.8rem; text-align: left; border: 1px solid var(--line); border-radius: 1.4rem; background: var(--surface); cursor: pointer; color: var(--primary); box-shadow: 0 1.2rem 3rem -2.8rem rgba(23,62,53,0.65); transition: transform .18s ease, box-shadow .18s ease; }
+        .v2-category-grid button:hover { transform: translateY(-2px); box-shadow: 0 1.6rem 3.4rem -2.6rem rgba(23,62,53,0.55); }
+        .v2-category-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+        .v2-category-heading > span { color: var(--muted); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 0.08em; }
+        .v2-category-heading > strong { font-size: 2.6rem; font-variant-numeric: tabular-nums; }
+        .v2-category-bar { width: 100%; height: 0.55rem; margin: 1rem 0 1.3rem; border-radius: 9999px; overflow: hidden; background: #E4E1DA; }
+        .v2-category-bar i { display: block; height: 100%; border-radius: inherit; }
+        .v2-category-grid button p { min-height: 3.6rem; margin: 0 0 1rem; color: var(--secondary); font-size: 1.2rem; line-height: 1.45; }
+        .v2-category-grid button small { color: var(--rose); font-weight: 700; }
+        .v2-progress-panel { display: grid; grid-template-columns: minmax(20rem, 1.2fr) auto minmax(16rem, .7fr) auto; align-items: center; gap: 2.4rem; margin-top: 3.2rem; padding: 3rem; overflow: hidden; position: relative; background: linear-gradient(135deg, #173E35 0%, #244F43 68%, #315F52 100%); border: 1px solid #315F52; border-radius: 1.6rem; box-shadow: 0 2.2rem 5rem -3.6rem rgba(23,62,53,.8); }
+        .v2-progress-panel:after { content: ""; position: absolute; width: 18rem; height: 18rem; right: -8rem; top: -10rem; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 0 0 3rem rgba(255,255,255,.025), 0 0 0 6rem rgba(255,255,255,.018); pointer-events: none; }
+        .v2-progress-panel .v2-eyebrow { color: #91C6B3; }
+        .v2-progress-panel h2 { margin: 0 0 0.7rem; color: #fff; font-size: 2.25rem; line-height: 1.15; } .v2-progress-panel p { margin: 0; max-width: 42rem; color: rgba(255,255,255,.74); font-size: 1.3rem; line-height: 1.55; }
+        .v2-next-scan { min-width: 17rem; padding: 1.4rem 1.6rem; border: 1px solid rgba(255,255,255,.18); border-radius: 1.2rem; background: rgba(255,255,255,.09); }
+        .v2-next-scan span, .v2-next-scan small { display: block; color: rgba(255,255,255,.68); font-size: 1rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+        .v2-next-scan strong { display: block; margin: .55rem 0; color: #fff; font-size: 2rem; white-space: nowrap; }
+        .v2-next-scan small { color: #9ED2BF; font-size: .95rem; }
+        .v2-progress-metrics { padding-left: 2rem; border-left: 1px solid rgba(255,255,255,.18); } .v2-progress-metrics span { display: block; color: #9ED2BF; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.08em; } .v2-progress-metrics strong { display: block; max-width: 22rem; margin-top: 0.55rem; color: #fff; font-size: 1.25rem; line-height: 1.4; }
+        .v2-progress-action { position: relative; z-index: 1; text-align: center; }
+        .v2-progress-action small { display: block; max-width: 16rem; margin: .7rem auto 0; color: rgba(255,255,255,.6); font-size: .95rem; line-height: 1.35; }
+        .v2-section-summary { display: flex; flex-wrap: wrap; gap: 0.7rem 1.6rem; margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
+        .v2-section-summary span { display: inline-flex; align-items: center; gap: 0.55rem; color: var(--muted); font-size: 1.1rem; }
+        .v2-section-summary i { width: 0.65rem; height: 0.65rem; border-radius: 50%; }
+        .v2-routine-context { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 2rem; padding-bottom: 1.6rem; border-bottom: 1px solid var(--line); }
+        .v2-routine-context > span { display: grid; width: 3.6rem; height: 3.6rem; flex: 0 0 auto; place-items: center; border-radius: 1rem; background: rgba(26,158,143,0.1); color: var(--rose); }
+        .v2-routine-context strong { display: block; margin-bottom: 0.35rem; color: var(--primary); font-size: 1.35rem; font-weight: 600; }
+        .v2-routine-context p { margin: 0; color: var(--muted); font-size: 1.15rem; line-height: 1.45; }
         @media (max-width: 900px) {
           .v2-metric-cols { grid-template-columns: 1fr !important; }
           .v2-hero-grid { grid-template-columns: 1fr !important; }
           .v2-hero-grid > div:first-child { max-width: 24rem; margin: 0 auto; }
+          .v2-priority-intro { display: block; }
+          .v2-priority-intro > p:last-child { margin: 0.8rem 0 0; text-align: left; }
+          .v2-priority-grid { grid-template-columns: 1fr; }
+          .v2-progress-panel { grid-template-columns: 1fr; }
+          .v2-progress-metrics { padding: 1.4rem 0 0; border-left: 0; border-top: 1px solid rgba(255,255,255,.18); }
         }
         @media (max-width: 700px) {
           .v2-guide-cols { grid-template-columns: 1fr !important; }
@@ -1294,6 +1472,30 @@ export default function V2ReportPage() {
            wrapping to two rows, so the sticky header stays one line tall. */
         .v2-tabbar [role="tablist"]::-webkit-scrollbar { display: none; }
         @media (max-width: 600px) {
+          .v2-report-page { padding: 2rem 1.4rem 6rem !important; overflow-x: hidden; }
+          .v2-report-block, .v2-analysis-block { margin: 2rem 0; padding: 1.6rem 1.4rem; border-radius: 1.3rem; }
+          .v2-block-heading { align-items: center; margin-bottom: 1.4rem; padding-bottom: 1.2rem; }
+          .v2-block-heading h2 { font-size: 1.8rem; }
+          .v2-block-heading > span { font-size: 0.95rem; }
+          .v2-score-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+          .v2-score-legend span { font-size: 1.05rem; }
+          .v2-hero-grid { padding: 1.6rem !important; gap: 1.8rem !important; border-radius: 1.4rem !important; }
+          .v2-hero-grid > div:first-child { max-width: 18rem !important; }
+          .v2-score-compact { width: 10rem; height: 10rem; }
+          .v2-overview-copy h1 { font-size: 2.2rem !important; }
+          .v2-priority-panel { padding: 2rem 1.6rem; border-radius: 1.3rem; }
+          .v2-priority-grid article { min-height: 0; padding: 1.4rem; }
+          .v2-priority-card-top { margin-bottom: 1rem; }
+          .v2-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .v2-category-grid button { padding: 1.4rem; }
+          .v2-category-heading > strong { font-size: 2.2rem; }
+          .v2-category-grid button p { min-height: 5.2rem; }
+          .v2-progress-panel { padding: 2rem 1.6rem; gap: 1.5rem; }
+          .v2-progress-panel h2 { font-size: 2rem; }
+          .v2-next-scan { min-width: 0; }
+          .v2-next-scan strong { font-size: 1.8rem; }
+          .v2-progress-action { text-align: left; }
+          .v2-progress-action small { margin-left: 0; }
           /* Segments share the width equally and the decorative icons and long
              labels drop out, so all four fit the rail exactly. Previously the
              rail scrolled and clipped the last tab mid-word. */
@@ -1305,31 +1507,36 @@ export default function V2ReportPage() {
           .v2-tab-icon { display: none !important; }
           .v2-tab-full { display: none !important; }
           .v2-tab-short { display: inline !important; }
-          /* Four filters stacked into four full-width rows and ate a third of
-             the screen. One compact scrollable row instead. */
+          /* Two columns keep labels and counts readable without horizontal overflow. */
           .v2-filter-label { display: none !important; }
-          .v2-filter-row { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; gap: 0.5rem !important; }
-          .v2-filter-row::-webkit-scrollbar { display: none; }
-          /* All four share the row rather than scrolling: a filter you cannot
-             see is a filter nobody uses. */
-          .v2-filter-row { flex-wrap: nowrap !important; gap: 0.4rem !important; }
+          .v2-filter-row { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 0.7rem !important; overflow: visible !important; }
           .v2-filter-row button {
-            flex: 1 1 0 !important; min-width: 0 !important; justify-content: center;
-            padding: 0.7rem 0.5rem !important; font-size: 1.2rem !important;
-            border-width: 1px !important; gap: 0.4rem !important;
+            width: 100%; min-width: 0 !important; justify-content: space-between;
+            padding: 0.9rem 1rem !important; font-size: 1.2rem !important;
+            border-width: 1px !important; gap: 0.5rem !important;
           }
           .v2-filter-dot { display: none !important; }
           .v2-filter-full { display: none !important; }
           .v2-filter-short { display: inline !important; }
-          /* Bar + number would squeeze the metric name to a few characters at
-             this width, so the row keeps name, status chip, and score only. */
-          .v2-metric-bar > div:first-child { display: none !important; }
-          .v2-metric-bar { flex: 0 0 auto !important; }
+          .v2-report-section { margin-bottom: 1.2rem !important; border-radius: 1.25rem !important; }
+          .v2-info-popover { position: fixed; top: 50%; left: 50%; width: calc(100vw - 3.2rem); max-width: 34rem; transform: translate(-50%, -50%); box-shadow: 0 0 0 100vmax rgba(18,35,31,.42), 0 2rem 5rem -1rem rgba(18,35,31,.45); }
+          .v2-info-popover:before { display: none; }
+          .v2-section-header { padding: 1.5rem 1.6rem 1.4rem !important; }
+          .v2-section-header h2 { font-size: 2.1rem !important; }
+          .v2-section-header > div:first-child > span { padding: 0.45rem 0.8rem !important; }
+          .v2-section-summary { gap: 0.6rem 1.2rem; margin-top: 1.1rem; padding-top: 1rem; }
+          .v2-section-body { padding: 0 1.6rem 1.5rem !important; }
+          .v2-metric-bar { flex: 1 1 auto !important; min-width: 10rem; }
           /* Even without the bar, a name like "Sun-damage appearance" competing
              with the status chip on one line broke over three lines. Giving the
              name its own full-width row keeps every metric to two tidy lines. */
           .v2-metric-row { flex-wrap: wrap !important; gap: 0.7rem 1rem !important; padding: 1.3rem 0 !important; }
           .v2-metric-row > span:first-child { flex: 1 1 100% !important; }
+          .v2-routine-tabs { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100% !important; max-width: 100%; border-radius: 1.4rem !important; }
+          .v2-routine-tabs button { min-width: 0; justify-content: center; gap: 0.45rem !important; padding: 1rem 0.5rem !important; font-size: 1.15rem !important; }
+          .v2-routine-tabs button span { display: none !important; }
+          .v2-routine-content { padding: 2rem 1.6rem !important; border-radius: 1.25rem !important; }
+          .v2-routine-content li { gap: 0.8rem !important; font-size: 1.3rem !important; }
         }
       `}</style>
     </div>

@@ -142,9 +142,9 @@ const BEARD_LABELS = ["Clean-shaven", "Light stubble", "Short boxed beard", "Ful
 export default function GroomingPanel({ sessionId, photo, isPremium, onRequirePremium, initialBeardPath, initialBeardRemaining }: Props) {
   return (
     <div style={{ marginTop: "4rem", paddingTop: "4rem", borderTop: "1px solid var(--line)" }}>
-      <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.8rem" }}>Simulate</h2>
+      <h2 style={{ fontSize: "2rem", fontWeight: 600, color: "var(--primary)", marginBottom: "0.8rem" }}>Beard Style Suggestions</h2>
       <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "2.8rem" }}>
-        See yourself with different looks before you commit. Illustrative only, actual results vary.
+        Compare six facial-hair options on the same real source photo before you commit. Illustrative only, actual results vary.
       </p>
 
       <GroomingGrid

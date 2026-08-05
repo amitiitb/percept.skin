@@ -218,12 +218,14 @@ export const HAIRSTYLE_OCCASIONS = [
 export function generateHairstyleGrid(photoDataUrl: string, _styleNames: string[]) {
   return generateImageEdit(
     photoDataUrl,
-    `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same neutral background and same clothing in every panel. ` +
+    `Use the supplied photograph as an IMMUTABLE identity reference and create a single clean grid collage of THIS EXACT person. ` +
     `Each panel shows a different hairstyle suited to a different occasion, in this exact order: ${HAIRSTYLE_OCCASIONS.join("; then ")}. ` +
     `Every panel must show a visibly distinct cut and styling, never the same look twice. ` +
     GRID_CONSISTENCY_RULES +
-    `Keep the person's own hair colour and hairline. ` +
-    `Photorealistic, identical framing and lighting in every panel, thin white gutters between panels. ` +
+    `EDIT ONLY THE HAIR PIXELS ON THE TOP AND SIDES OF THE HEAD. Preserve the original hairline and natural hair colour. ` +
+    `Everything below the hairline must remain visually identical to the source photograph: exact facial identity, face shape, eyes, eyebrows, nose, lips, ears, skin tone, skin texture, beard, mustache, neck, clothing, pose, expression, camera perspective, lighting, shadows and background. ` +
+    `Do not beautify, retouch, sharpen, relight, smooth skin, remove marks, alter facial hair, change body proportions, or reconstruct the face. Do not make the person younger, slimmer, more symmetrical or more conventionally attractive. ` +
+    `The result must look like the original unedited photo with only a hairstyle placed naturally onto it. Identical framing and thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters and no labels anywhere in the image.`
   );
 }
@@ -269,8 +271,9 @@ export function generateBeardGrid(photoDataUrl: string, _styleNames: string[]) {
     `Each panel shows a different facial hair style, in this exact order: ${BEARD_STYLES.join("; then ")}. ` +
     `Every panel must show a visibly distinct facial hair style, never the same look twice. ` +
     GRID_CONSISTENCY_RULES +
-    `Keep the person's own hair colour, jawline, and bone structure completely unchanged, only the facial hair itself changes. ` +
-    `Photorealistic, identical framing and lighting in every panel, thin white gutters between panels. ` +
+    `EDIT ONLY THE FACIAL-HAIR PIXELS around the upper lip, cheeks, chin and jaw. Keep the person's own hair colour, jawline and bone structure completely unchanged. ` +
+    `Preserve the source face, skin texture, hairstyle, clothing, pose, lighting, shadows and background exactly. Do not beautify, retouch, smooth skin, relight or reconstruct the person. ` +
+    `The result must look like the original unedited photo with only the facial hair changed. Identical framing and thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters and no labels anywhere in the image.`
   );
 }
