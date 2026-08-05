@@ -32,6 +32,9 @@ export const metadata: Metadata = {
     title: "Percept | See Your Skin More Clearly",
     description,
   },
+  verification: {
+    google: "muHM2nIanifLFaE9JRyM-Fkdmz7T3GRAlUue_s7Fyg0",
+  },
 };
 
 export const viewport: Viewport = {
