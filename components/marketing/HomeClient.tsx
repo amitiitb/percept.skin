@@ -731,11 +731,19 @@ export function HomeClient() {
         .desktop-home-hero { display: none !important; }
         .home-header-inner { transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, padding 0.25s ease; }
         .home-header-inner {
+          position: relative;
           padding: 0.8rem 0.9rem 0.8rem 1.6rem !important;
         }
         .home-header-inner > a:first-child img { height: 3.2rem !important; }
-        .home-header-inner > a:first-child { display: flex !important; align-items: center; align-self: stretch; }
-        .home-header-inner > div { gap: 0.7rem !important; }
+        .home-header-inner > a:first-child {
+          position: absolute;
+          left: 1.6rem;
+          top: 50%;
+          transform: translateY(-50%);
+          display: flex !important;
+          align-items: center;
+        }
+        .home-header-inner > div { margin-left: auto; gap: 0.7rem !important; }
         .home-header .site-header-cta button {
           height: 3.8rem !important;
           padding: 0 1.6rem !important;
