@@ -358,44 +358,6 @@ export function HomeClient() {
         </div>
       </section>
 
-      {/* ── Report preview — the actual product, not a promised outcome ── */}
-      <section style={{ padding: "8rem 3.2rem", position: "relative" }}>
-        <div className="percept-hero-grid" style={{ maxWidth: "108rem", margin: "0 auto", display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "5.6rem", alignItems: "center" }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
-            style={{ position: "relative", aspectRatio: "3/4", maxWidth: "36rem", margin: "0 auto" }}
-          >
-            <Image
-              src="/assets/report-preview-mockup.png"
-              alt="Percept skin report screen showing an overall score and individual metrics"
-              fill
-              sizes="(max-width: 900px) 80vw, 36rem"
-              style={{ objectFit: "contain" }}
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
-          >
-            <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
-              What you get
-            </p>
-            <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.6rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.15, marginBottom: "2rem" }}>
-              Your actual report, not a promised outcome
-            </h2>
-            <p style={{ fontSize: "1.7rem", color: "var(--secondary)", lineHeight: 1.6, marginBottom: "2.8rem" }}>
-              An overall score plus every metric broken out individually, texture, tone, pores, hydration, clarity, firmness, so you know exactly what&apos;s driving the number, not just the number itself.
-            </p>
-            <a href="/splash"><PrimaryButton fullWidth={false}>Start your scan →</PrimaryButton></a>
-          </motion.div>
-        </div>
-      </section>
-
       <WhatYouGet />
 
       {/* ── Why Percept ── */}
