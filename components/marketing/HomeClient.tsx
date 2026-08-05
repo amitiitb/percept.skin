@@ -744,6 +744,9 @@ export function HomeClient() {
           align-items: center;
         }
         .home-header-inner > div { margin-left: auto; gap: 0.7rem !important; }
+        @media (min-width: 701px) {
+          .home-header-inner > a:first-child { top: calc(50% + 0.2rem); }
+        }
         .home-header .site-header-cta button {
           height: 3.8rem !important;
           padding: 0 1.6rem !important;
