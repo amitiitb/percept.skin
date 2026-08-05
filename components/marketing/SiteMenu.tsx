@@ -122,7 +122,7 @@ export function SiteMenu({ open, onClose }: Props) {
             </a>
 
             {/* The account route and theme toggle live only here — the header
-                bar itself is just the logo, the "Start free" CTA, and this
+                bar itself is just the logo, the "Try Free" CTA, and this
                 menu button. */}
             <a
               href={signedIn ? "/dashboard" : "/auth/login"}

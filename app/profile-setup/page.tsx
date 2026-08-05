@@ -127,7 +127,7 @@ export default function V2ProfileSetupPage() {
             <div>
               <label style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Age range</label>
               <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
-                {["under18", "18-24", "25-34", "35-44", "45-54", "55+"].map((r) => (
+                {["18-24", "25-34", "35-44", "45-54", "55+"].map((r) => (
                   <Chip key={r} selected={form.ageRange === r} onClick={() => setForm((f) => ({ ...f, ageRange: r }))}>{r}</Chip>
                 ))}
               </div>
@@ -195,7 +195,9 @@ export default function V2ProfileSetupPage() {
             {consent && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           </span>
           <span style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55 }}>
-            I consent to Percept processing my uploaded photographs to generate my analysis. Photos are never used to train AI models without separate explicit consent.
+            I consent to Percept processing my uploaded photographs to generate my analysis, as described in the{" "}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: "var(--primary)", fontWeight: 500 }}>Privacy Policy</a>.
+            Photos are never used to train AI models without separate explicit consent.
           </span>
         </button>
 

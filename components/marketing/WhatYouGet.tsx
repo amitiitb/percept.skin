@@ -44,7 +44,7 @@ const FEATURES: Feature[] = [
     icon: IconFaceScan,
     title: "Full skin & face profile",
     blurb:
-      "20 scores from your photos — texture, tone, pores, hydration — each with the one thing to do about it.",
+      "20 scores from your photos, including texture, tone, pores and hydration, each with the one thing to do about it.",
     points: [
       "Face proportion & symmetry",
       "Morning, evening & weekly routine",
@@ -60,7 +60,7 @@ const FEATURES: Feature[] = [
     icon: IconPalette,
     title: "Colours that suit you",
     blurb:
-      "Your season worked out from skin, hair & eyes — the palette to wear and the shades that wash you out.",
+      "Your season worked out from skin, hair and eyes, with the palette to wear and the shades that wash you out.",
     points: [
       "Seasonal palette named & explained",
       "Colours to avoid, with reasons",
@@ -76,7 +76,7 @@ const FEATURES: Feature[] = [
     icon: IconScissors,
     title: "Hairstyles on your face",
     blurb:
-      "Cuts matched to your face shape, rendered on your own photo — see it before the chair.",
+      "Cuts matched to your face shape and rendered on your own photo, so you can see it before the chair.",
     points: [
       "A cut for every occasion",
       "Hair & scalp health scored",

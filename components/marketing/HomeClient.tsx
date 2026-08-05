@@ -280,13 +280,21 @@ function FaqRow({ q, a }: { q: string; a: string }) {
 
 export function HomeClient() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    const updateHeader = () => setHeaderScrolled(window.scrollY > 32);
+    updateHeader();
+    window.addEventListener("scroll", updateHeader, { passive: true });
+    return () => window.removeEventListener("scroll", updateHeader);
+  }, []);
 
   return (
     <div style={{ background: "var(--canvas)", minHeight: "100dvh" }}>
       <SiteMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <header style={{ position: "sticky", top: "1.6rem", zIndex: 40, padding: "0 1.6rem", marginBottom: "1.6rem" }}>
-        <div style={{
+      <header className={`home-header${headerScrolled ? " is-scrolled" : ""}`} style={{ position: "fixed", top: "1.6rem", left: 0, right: 0, zIndex: 40, padding: "0 1.6rem" }}>
+        <div className="home-header-inner" style={{
           maxWidth: "128rem", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "1.2rem 1.2rem 1.2rem 2.4rem", borderRadius: "9999px", border: "1px solid var(--line)",
           background: "var(--header-bg)", backdropFilter: "blur(10px)",
@@ -295,27 +303,55 @@ export function HomeClient() {
             <Logo height="clamp(2.6rem, 7vw, 4.2rem)" />
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
-            {/* Previously the only "Start free" CTA lived in the hero, so it
+            {/* Previously the only "Try Free" CTA lived in the hero, so it
                 scrolled out of view immediately — someone reading further down
                 the page had no way to start without scrolling back up or
                 opening the menu. Sticky, so it's reachable from anywhere on
                 the page, on mobile and desktop alike. */}
             <a href="/splash" className="site-header-cta">
-              <PrimaryButton size="sm" fullWidth={false}>Start free</PrimaryButton>
+              <PrimaryButton size="sm" fullWidth={false}>Try Free</PrimaryButton>
             </a>
             <button
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
-              style={{ width: "4.4rem", height: "4.4rem", borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              style={{ width: "4.4rem", height: "4.4rem", border: 0, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
             >
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" d="M4 8h16M4 16h16" /></svg>
             </button>
           </div>
         </div>
       </header>
 
+      {/* Mobile gets a dedicated, image-led first impression. Keeping it
+          separate avoids compromising the more spacious desktop hero. */}
+      <section className="mobile-first-hero" aria-labelledby="mobile-hero-title">
+        <Image
+          src="/images/skincare-portraits/portrait-light-freckled.png"
+          alt="Close-up portrait showing natural skin texture"
+          fill
+          priority
+          sizes="100vw"
+          className="mobile-hero-image"
+        />
+        <div className="mobile-hero-shade" />
+        <motion.div
+          className="mobile-hero-copy"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.15 }}
+        >
+          <p className="mobile-hero-kicker">Personal beauty analysis</p>
+          <h1 id="mobile-hero-title">Understand your features.<br />Improve what matters.</h1>
+          <p className="mobile-hero-sub">A private AI-guided scan for clearer skin, face, hair and colour insights, personalized to you.</p>
+          <div className="mobile-hero-actions">
+            <a href="/splash">Start my plan</a>
+            <a href="#what-you-get">How it works</a>
+          </div>
+        </motion.div>
+      </section>
+
       {/* ── Hero ── */}
-      <section style={{ position: "relative", padding: "6.4rem 3.2rem 8rem" }}>
+      <section className="desktop-home-hero" style={{ position: "relative", padding: "6.4rem 3.2rem 8rem" }}>
         <div className="percept-hero-grid" style={{ position: "relative", maxWidth: "120rem", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "5.6rem", alignItems: "center" }}>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
@@ -639,7 +675,7 @@ export function HomeClient() {
         <div style={{ maxWidth: "128rem", margin: "0 auto" }}>
           <div className="percept-footer-grid" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: "4rem", paddingBottom: "4rem", borderBottom: "1px solid rgba(255,255,255,0.14)" }}>
             <div className="percept-footer-brand">
-              <img src="/brand/percept-logo-dark.png" alt="Percept" style={{ display: "block", height: "3.6rem", width: "auto" }} />
+              <img src="/brand/percept-ai-logo.svg" alt="Percept AI" style={{ display: "block", height: "3.6rem", width: "auto", background: "#E8E7E5", borderRadius: "0.8rem", padding: "0.2rem 0.6rem" }} />
               <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginTop: "1.6rem", maxWidth: "32rem" }}>
                 A guided photo scan, understood by AI. Skin, face, and hair insight in a few minutes, no lab visit.
               </p>
@@ -692,6 +728,92 @@ export function HomeClient() {
       </footer>
 
       <style>{`
+        .desktop-home-hero { display: none !important; }
+        .home-header-inner { transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, padding 0.25s ease; }
+        .home-header-inner {
+          padding: 0.8rem 0.9rem 0.8rem 1.6rem !important;
+        }
+        .home-header-inner > a:first-child img { height: 3.2rem !important; }
+        .home-header-inner > div { gap: 0.7rem !important; }
+        .home-header .site-header-cta button {
+          height: 3.8rem !important;
+          padding: 0 1.6rem !important;
+          font-size: 1.25rem !important;
+        }
+        .home-header button[aria-label="Open menu"] {
+          width: 3.8rem !important;
+          height: 3.8rem !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+        }
+        .home-header button[aria-label="Open menu"] svg { width: 1.6rem; height: 1.6rem; }
+        .home-header:not(.is-scrolled) .home-header-inner {
+          background: transparent !important;
+          border-color: transparent !important;
+          box-shadow: none !important;
+          backdrop-filter: none !important;
+        }
+        .home-header:not(.is-scrolled) .home-header-inner > a:first-child img {
+          filter: brightness(0) invert(1) drop-shadow(0 0.2rem 0.45rem rgba(0,0,0,0.42));
+        }
+        .home-header.is-scrolled .home-header-inner > a:first-child img { filter: none; }
+        .home-header:not(.is-scrolled) button[aria-label="Open menu"] {
+          color: #fff !important;
+        }
+        .home-header:not(.is-scrolled) button[aria-label="Open menu"] svg {
+          filter: drop-shadow(0 0.2rem 0.35rem rgba(0,0,0,0.55));
+          stroke-width: 3;
+        }
+        .home-header.is-scrolled button[aria-label="Open menu"] svg { filter: none; stroke-width: 2.6; }
+        .home-header.is-scrolled button[aria-label="Open menu"] { color: var(--primary) !important; }
+        .home-header.is-scrolled .home-header-inner { box-shadow: 0 0.8rem 2.4rem rgba(8,32,29,0.12); }
+        .mobile-first-hero {
+          position: relative;
+          display: block;
+          min-height: 100svh;
+          overflow: hidden;
+          background: #9aacae;
+        }
+        .mobile-hero-image { object-fit: cover; object-position: center 26%; }
+        .mobile-hero-shade {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, rgba(3,10,9,0.72) 0%, rgba(3,10,9,0.3) 46%, rgba(3,10,9,0.05) 72%), linear-gradient(180deg, transparent 48%, rgba(2,7,6,0.74) 100%);
+        }
+        .mobile-hero-copy {
+          position: absolute;
+          z-index: 2;
+          left: max(3.2rem, calc((100vw - 120rem) / 2));
+          bottom: 3.2rem;
+          width: min(55rem, calc(100vw - 6.4rem));
+          color: #fff;
+        }
+        .mobile-hero-kicker { margin-bottom: 1.2rem; font-size: 1.4rem; font-weight: 500; color: rgba(255,255,255,0.9); }
+        .mobile-hero-copy h1 {
+          max-width: 55rem;
+          margin: 0 0 1.6rem;
+          font-size: clamp(4.8rem, 5vw, 7.2rem);
+          font-weight: 400;
+          line-height: 0.98;
+          letter-spacing: -0.05em;
+        }
+        .mobile-hero-sub { max-width: 50rem; margin-bottom: 2.8rem; font-size: 1.6rem; line-height: 1.5; color: rgba(255,255,255,0.78); }
+        .mobile-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 40rem; }
+        .mobile-hero-actions a {
+          min-height: 5.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 1.8rem;
+          border-radius: 999px;
+          background: #fff;
+          color: #123f39;
+          font-size: 1.45rem;
+          font-weight: 700;
+          text-align: center;
+        }
+        .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
         #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
         .percept-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .percept-carousel::-webkit-scrollbar { display: none; }
@@ -702,6 +824,65 @@ export function HomeClient() {
           .percept-footer-brand { grid-column: 1 / -1 !important; }
         }
         @media (max-width: 700px) {
+          .home-header {
+            position: fixed !important;
+            inset: 1.6rem 0 auto 0 !important;
+            margin: 0 !important;
+          }
+          .mobile-first-hero { min-height: min(92svh, 88rem); }
+          .mobile-hero-image {
+            object-fit: cover;
+            object-position: center 18%;
+          }
+          .mobile-hero-shade {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(3,12,11,0.06) 36%, rgba(3,10,9,0.52) 66%, rgba(2,7,6,0.96) 100%);
+          }
+          .mobile-hero-copy {
+            position: absolute;
+            z-index: 2;
+            left: 2rem;
+            right: 2rem;
+            bottom: 2rem;
+            color: #fff;
+          }
+          .mobile-hero-kicker {
+            margin-bottom: 0.8rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+          }
+          .mobile-hero-copy h1 {
+            max-width: 34rem;
+            margin: 0 0 1rem;
+            font-size: clamp(3.1rem, 9vw, 4.1rem);
+            font-weight: 400;
+            line-height: 1.02;
+            letter-spacing: -0.045em;
+          }
+          .mobile-hero-sub {
+            max-width: 36rem;
+            margin-bottom: 2.4rem;
+            font-size: 1.35rem;
+            line-height: 1.45;
+            color: rgba(255,255,255,0.78);
+          }
+          .mobile-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+          .mobile-hero-actions a {
+            min-height: 4.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 1.4rem;
+            border-radius: 999px;
+            background: #fff;
+            color: #123f39;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+          }
+          .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
           #why { padding-top: 5.6rem !important; padding-bottom: 5.6rem !important; }
           .percept-why-heading { margin-bottom: 3.2rem !important; }
         }

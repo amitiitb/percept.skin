@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { OPEN_COOKIE_PREFS_EVENT } from "@/components/ConsentBanner";
 
 const ICON = {
   person: <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0" strokeLinecap="round" strokeLinejoin="round" />,
@@ -214,6 +215,7 @@ export default function V2SettingsPage() {
           <SettingsRow icon={ICON.folder} tint="rgba(26,158,143,0.12)" label="Scan reports" sublabel="Every report you've unlocked" onClick={() => router.push("/history")} />
           <SettingsRow icon={ICON.shield} tint="rgba(232,96,79,0.1)" label="Privacy Policy" href="/privacy" external />
           <SettingsRow icon={ICON.doc} tint="rgba(232,96,79,0.1)" label="Terms of Service" href="/terms" external />
+          <SettingsRow icon={ICON.sliders} tint="rgba(12,92,81,0.1)" label="Cookie Preferences" onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_PREFS_EVENT))} />
           <SettingsRow icon={ICON.mail} tint="rgba(217,166,46,0.14)" label="Contact support" href="mailto:support@percept.skin" />
         </Card>
 

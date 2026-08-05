@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import "./globals.css";
 import { ReactLenis } from "@/utils/lenis";
+import { ConsentBanner } from "@/components/ConsentBanner";
 
 const description =
   "Personalised AI skin analysis and practical, dermatologist-backed plans, without surgery-first recommendations.";
@@ -75,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "@id": "https://percept.skin/#organization",
                   name: "Percept",
                   url: "https://percept.skin/",
-                  logo: "https://percept.skin/brand/percept-logo.png",
+                  logo: "https://percept.skin/brand/percept-ai-logo.svg",
                   email: "support@percept.skin",
                   description,
                 },
@@ -104,24 +104,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-ELGVCD5CYZ"
-        strategy="afterInteractive"
-      />
-      <Script id="ga4" strategy="afterInteractive">
-        {`window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-ELGVCD5CYZ');
-          gtag('config', 'G-VBV34ETWWN');`}
-      </Script>
-      <Script
-        src="https://t.contentsquare.net/uxa/f9da0da61a34e.js"
-        strategy="afterInteractive"
-      />
       <ReactLenis root>
         <body className="antialiased">
           {children}
+          {/* Gates GA4/GTM/Contentsquare loading behind cookie consent —
+              see Section 8 of /privacy. Nothing analytics-related fires
+              until the visitor accepts. */}
+          <ConsentBanner />
         </body>
       </ReactLenis>
     </html>

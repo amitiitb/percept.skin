@@ -13,7 +13,7 @@ import { Logo } from "@/components/ui/Logo";
 const GOLD = "#D9A62E";
 
 const TIPS = [
-  "Retake your scan every 2-3 weeks — that's the smallest gap where real change actually shows up.",
+  "Retake your scan every 2-3 weeks. That is the smallest gap where real change actually shows up.",
   "Same lighting and angle each time makes your trend line mean something. Guided capture handles both for you.",
   "A metric moving a few points either way is normal. Look at the trend across scans, not one number alone.",
 ];
