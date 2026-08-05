@@ -480,10 +480,12 @@ export default function V2CapturePage() {
 
       if (index + 1 >= TOTAL_STEPS) {
         trackEvent("capture_flow_completed", { session_id: sessionId });
-        // Bundle-first purchase flow replaces the old "show results free,
-        // paywall individual sections" model — analysis runs in the background
-        // while the user picks/pays for report modules (app/bundle).
-        router.push(`/bundle/${sessionId}`);
+        const nextPath = `/bundle/${sessionId}`;
+        if (user.is_anonymous) {
+          router.push(`/auth/signup?next=${encodeURIComponent(`/profile-setup?session=${sessionId}`)}`);
+        } else {
+          router.push(nextPath);
+        }
       } else {
         router.push(`/capture/${index + 1}`);
       }

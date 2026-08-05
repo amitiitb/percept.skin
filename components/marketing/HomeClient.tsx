@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect, type ReactNode } from "react";
 import Image from "next/image";
-import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion";
+import { motion, useMotionValue, animate } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { WhatYouGet } from "@/components/marketing/WhatYouGet";
 import { Logo } from "@/components/ui/Logo";
-import { IconCheck, IconClose, IconSparkle, IconShield, IconClock, IconPhoto, IconFaceScan, IconRefresh } from "@/components/ui/icons";
+import { IconCheck, IconClose, IconSparkle, IconShield, IconClock } from "@/components/ui/icons";
 import { MODULES, BUNDLE_PRICE, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 import { FAQS } from "@/lib/v2/homeFaqs";
 import { OPEN_COOKIE_PREFS_EVENT } from "@/components/ConsentBanner";
@@ -42,7 +42,7 @@ function WaveDivider({ fill, variant = 0, flip = false }: { fill: string; varian
   );
 }
 
-// Horizontal scroll-snap carousel — side-by-side cards instead of a tall
+// Horizontal scroll-snap carousel with side-by-side cards instead of a tall
 // stacked grid, cheap way to save vertical space on mobile without losing
 // any content. Native scroll (not a JS slider) so it works everywhere.
 function Carousel({ children }: { children: ReactNode }) {
@@ -56,116 +56,40 @@ function Carousel({ children }: { children: ReactNode }) {
   );
 }
 
-function ResearchSlider() {
+function ResearchEvidence() {
   const [index, setIndex] = useState(0);
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  }, []);
-
-  useEffect(() => {
-    if (reduceMotion) return;
-    const t = setInterval(() => setIndex((i) => (i + 1) % RESEARCH_SLIDES.length), 6500);
-    return () => clearInterval(t);
-  }, [reduceMotion]);
-
-  const slide = RESEARCH_SLIDES[index];
+  const category = RESEARCH_CATEGORIES[index];
 
   return (
-    <div>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.4 }}
-        >
-          <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.8rem)", fontWeight: 400, color: "#fff", textAlign: "center", lineHeight: 1.2, maxWidth: "60rem", margin: "0 auto 4rem" }}>
-            {slide.title}
-          </h2>
-
-          {slide.kind === "bars" && (
-            <>
-              <div className="percept-research-tags" style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "0.8rem", marginBottom: "3.6rem" }}>
-                {slide.tags.map((tag) => (
-                  <span key={tag} style={{ fontSize: "1.2rem", fontWeight: 600, color: "rgba(255,255,255,0.85)", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "9999px", padding: "0.6rem 1.4rem" }}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div style={{ maxWidth: "64rem", margin: "0 auto 2.4rem" }}>
-                {BAR_DATA.map((row) => (
-                  <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "1.6rem", marginBottom: "2rem" }}>
-                    <span style={{ flexShrink: 0, width: "13rem", fontSize: "1.3rem", fontWeight: 700, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{row.label}</span>
-                    <div style={{ flex: 1, height: "1.6rem", background: "rgba(255,255,255,0.08)", borderRadius: "9999px", overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${row.width}%`, background: row.highlight ? GOLD : "rgba(255,255,255,0.4)", borderRadius: "9999px" }} />
-                    </div>
-                    <strong style={{ flexShrink: 0, width: "5.6rem", textAlign: "right", fontSize: "1.8rem", fontWeight: 800, color: row.highlight ? GOLD : "#fff" }}>{row.value}</strong>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {slide.kind === "stat" && (
-            <div style={{ textAlign: "center", marginBottom: "2.4rem" }}>
-              <p style={{ fontSize: "clamp(5.6rem, 12vw, 8rem)", fontWeight: 800, color: GOLD, lineHeight: 1, marginBottom: "1.2rem", textShadow: "0 0 6rem rgba(217,166,46,0.4)" }}>
-                {slide.stat}
-              </p>
-              <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.75)", maxWidth: "48rem", margin: "0 auto" }}>{slide.statLabel}</p>
+    <div className="research-editorial">
+      <h2 className="research-statement">
+        Better decisions begin with <span>{category.emphasis}</span>
+      </h2>
+      <div className="research-tabs" role="tablist" aria-label="Research topics">
+        {RESEARCH_CATEGORIES.map((item, i) => (
+          <button key={item.label} type="button" role="tab" aria-selected={i === index} onClick={() => setIndex(i)}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div className="research-evidence-grid">
+        {category.cards.map((card) => (
+          <article key={card.title} className="research-evidence-card">
+            <h3>{card.title}</h3>
+            <p>{card.finding}</p>
+            <div className="research-source">
+              <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7V3Z" stroke="currentColor" strokeWidth="1.5"/><path d="M14 3v5h5M10 13h5M10 17h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <span>{card.source}</span>
             </div>
-          )}
-
-          {slide.kind === "insight" && (
-            <p style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.85)", lineHeight: 1.6, textAlign: "center", maxWidth: "64rem", margin: "0 auto 2.4rem" }}>
-              {slide.body}
-            </p>
-          )}
-
-          <p style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.75)", textAlign: "center", maxWidth: "56rem", margin: "0 auto 3.2rem" }}>
-            {slide.caption}
-          </p>
-
-          <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.45)", textAlign: "center" }}>
-            Source: {slide.source}
-          </p>
-        </motion.div>
-      </AnimatePresence>
-
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "2rem", marginTop: "4rem" }}>
-        <button
-          aria-label="Previous insight"
-          onClick={() => setIndex((i) => (i - 1 + RESEARCH_SLIDES.length) % RESEARCH_SLIDES.length)}
-          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "50%", width: "3.6rem", height: "3.6rem", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", flexShrink: 0 }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </button>
-        <div style={{ display: "flex", gap: "0.8rem" }}>
-          {RESEARCH_SLIDES.map((_, i) => (
-            <button
-              key={i}
-              aria-label={`Show insight ${i + 1}`}
-              onClick={() => setIndex(i)}
-              style={{ width: i === index ? "2rem" : "0.8rem", height: "0.8rem", borderRadius: "9999px", background: i === index ? GOLD : "rgba(255,255,255,0.3)", border: "none", cursor: "pointer", transition: "width 0.25s, background 0.25s", padding: 0 }}
-            />
-          ))}
-        </div>
-        <button
-          aria-label="Next insight"
-          onClick={() => setIndex((i) => (i + 1) % RESEARCH_SLIDES.length)}
-          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.16)", borderRadius: "50%", width: "3.6rem", height: "3.6rem", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", flexShrink: 0 }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        </button>
+          </article>
+        ))}
       </div>
     </div>
   );
 }
 
 // Illustrative anchor comparison (typical U.S. session pricing, not verified
-// quotes) — same pattern iMorph uses: separate specialist visits vs. one
+// quotes), using the same pattern iMorph uses: separate specialist visits vs. one
 // Percept payment. Disclaimed below the comparison, not presented as fact.
 const OLD_WAY = [
   { label: "Skin consultation", price: 120 },
@@ -175,47 +99,33 @@ const OLD_WAY = [
 ];
 const OLD_WAY_TOTAL = OLD_WAY.reduce((s, i) => s + i.price, 0);
 
-// Hourly-pay index relative to "average" perceived appearance (Hamermesh &
-// Biddle), normalized to the highest value so bar widths stay honest to the
-// real relative gap rather than an exaggerated infographic scale.
-const BAR_DATA = [
-  { label: "Below average", value: "-9%", width: (91 / 105) * 100, highlight: false },
-  { label: "Average", value: "Baseline", width: (100 / 105) * 100, highlight: false },
-  { label: "Above average", value: "+5%", width: 100, highlight: true },
-];
-
-// 3 research-backed slides instead of one — broadens who the section speaks
-// to (not just one demographic pictured at the top) by naming the actual
-// range of people this applies to directly in copy, and gives 3 different
-// real findings instead of repeating one. Auto-advances, but stays fully
-// operable via the dots/arrows for anyone who doesn't want to wait.
-type ResearchSlide =
-  | { kind: "bars"; title: string; tags: string[]; caption: string; source: string }
-  | { kind: "stat"; title: string; stat: string; statLabel: string; caption: string; source: string }
-  | { kind: "insight"; title: string; body: string; caption: string; source: string };
-
-const RESEARCH_SLIDES: ResearchSlide[] = [
+const RESEARCH_CATEGORIES = [
   {
-    kind: "bars",
-    title: "Presentation is a measurable business asset",
-    tags: ["Retail & mall staff", "Office & corporate", "Students & Gen Z"],
-    caption: "Hourly pay by perceived appearance, every occupation studied, no exceptions.",
-    source: "Hamermesh and Biddle, Beauty and the Labor Market, American Economic Review, NBER Working Paper No. 4518.",
+    label: "First impressions",
+    emphasis: "clearer self-knowledge.",
+    cards: [
+      { title: "100 milliseconds", finding: "People form impressions of a face in a fraction of a second.", source: "Willis and Todorov, Psychological Science, 2006" },
+      { title: "Visible signals", finding: "Skin, expression and grooming all contribute to an initial read.", source: "Review of person perception research" },
+      { title: "More consistency", finding: "A guided capture makes comparison across scans more useful.", source: "Percept guided scan methodology" },
+    ],
   },
   {
-    kind: "stat",
-    title: "First impressions form before you say a word",
-    stat: "100ms",
-    statLabel: "How little time it takes to judge competence and trustworthiness from a face alone",
-    caption: "Behind a counter, on a sales floor, or on a video call, that snap judgment happens either way.",
-    source: "Todorov and Willis, Princeton University, published in Psychological Science.",
+    label: "Work",
+    emphasis: "a more intentional presentation.",
+    cards: [
+      { title: "Presentation matters", finding: "Appearance can influence workplace impressions and outcomes.", source: "Hamermesh and Biddle, American Economic Review, 1994" },
+      { title: "Competence cues", finding: "Facial impressions can shape perceived competence before conversation begins.", source: "Todorov et al., Trends in Cognitive Sciences, 2015" },
+      { title: "Personal, not generic", finding: "Useful guidance should reflect your own features and priorities.", source: "Percept personalized analysis framework" },
+    ],
   },
   {
-    kind: "insight",
-    title: "Grooming shows up in who gets called back",
-    body: "In controlled hiring studies, candidates rated as well-groomed and put together received meaningfully more interview callbacks than equally qualified candidates rated lower, before a single word was exchanged.",
-    caption: "Not about looking a certain way, about showing up as your clearest, healthiest self, whoever you are.",
-    source: "Labor-economics \"beauty premium\" research literature, multiple studies.",
+    label: "Progress",
+    emphasis: "changes you can actually track.",
+    cards: [
+      { title: "A useful baseline", finding: "Your first scan creates a consistent point for future comparison.", source: "Percept scan history" },
+      { title: "Small changes", finding: "Repeated photos can make gradual differences easier to notice.", source: "Standardized visual comparison principle" },
+      { title: "Focused routines", finding: "Tracking helps you keep what works and reconsider what does not.", source: "Percept progress workflow" },
+    ],
   },
 ];
 
@@ -223,28 +133,19 @@ const WHY_ITEMS = [
   {
     title: "Guided capture",
     description: "Clear prompts help you photograph each angle consistently. No appointment or extra hardware required.",
-    field: "Capture",
-    value: "Guided photo set",
-    Icon: IconPhoto,
   },
   {
     title: "Specific analysis",
     description: "Visible areas are reviewed separately across skin, face and hair instead of being reduced to one vague grade.",
-    field: "Output",
-    value: "20+ visual metrics",
-    Icon: IconFaceScan,
   },
   {
     title: "Progress over time",
     description: "Completed scans stay in your history, making it easier to compare changes and refine your routine.",
-    field: "Compare",
-    value: "Scan to scan",
-    Icon: IconRefresh,
   },
 ];
 
 // Counts up to the real bundle price once the pricing section scrolls into
-// view — the payoff moment of the pricing section, same reveal pattern as
+// view. This is the payoff moment of the pricing section, using the same reveal pattern as
 // the report page's Percept Score ring. Jumps straight to the value for
 // prefers-reduced-motion instead of animating.
 function AnimatedPrice({ value }: { value: number }) {
@@ -313,7 +214,7 @@ export function HomeClient() {
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
             {/* Previously the only "Try Free" CTA lived in the hero, so it
-                scrolled out of view immediately — someone reading further down
+                scrolled out of view immediately, so someone reading further down
                 the page had no way to start without scrolling back up or
                 opening the menu. Sticky, so it's reachable from anywhere on
                 the page, on mobile and desktop alike. */}
@@ -421,7 +322,7 @@ export function HomeClient() {
             style={{ position: "relative" }}
           >
             {/* Natural aspect ratio (1024x1536, 2:3), not force-cropped into a
-                4:5 box — cover was cutting off her hair and hands. */}
+                4:5 box because cover was cutting off her hair and hands. */}
             <Image
               src="/images/skincare-portraits/portrait-deep-brown.png"
               alt="Close-up portrait showing clear, healthy skin"
@@ -453,7 +354,7 @@ export function HomeClient() {
               A structured view of what is visible today, what may be worth focusing on, and how your results change over time.
             </p>
           </div>
-          <div className="why-card-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.6rem" }}>
+          <div className="why-list">
             {WHY_ITEMS.map((item, i) => (
               <motion.div
                 key={item.title}
@@ -461,23 +362,12 @@ export function HomeClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                style={{
-                  display: "flex", flexDirection: "column", minHeight: "34rem",
-                  background: "var(--canvas)", padding: "2.4rem", borderRadius: "2rem",
-                  boxShadow: "0 1.2rem 3.2rem -1.6rem rgba(12,92,81,0.2)", border: "1px solid var(--line)"
-                }}
+                className="why-list-item"
               >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "5rem" }}>
-                  <span style={{ width: "4.8rem", height: "4.8rem", borderRadius: "1.4rem", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(26,158,143,0.1)", color: "var(--primary)", border: "1px solid rgba(26,158,143,0.16)" }}>
-                    <item.Icon size={2.2} strokeWidth={1.6} />
-                  </span>
-                  <span style={{ fontSize: "1.1rem", color: "var(--muted)", letterSpacing: "0.12em" }}>0{i + 1}</span>
-                </div>
-                <h3 style={{ fontSize: "2.1rem", color: "var(--primary)", lineHeight: 1.2, margin: "0 0 1.2rem", fontWeight: 500 }}>{item.title}</h3>
-                <p style={{ fontSize: "1.35rem", color: "var(--secondary)", lineHeight: 1.55, margin: "0 0 2.4rem" }}>{item.description}</p>
-                <div style={{ marginTop: "auto", paddingTop: "1.6rem", borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.2rem" }}>
-                  <span style={{ fontSize: "1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>{item.field}</span>
-                  <span style={{ fontSize: "1.15rem", fontWeight: 600, color: "var(--primary)" }}>{item.value}</span>
+                <span className="why-list-number">[{i + 1}]</span>
+                <div>
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -487,15 +377,13 @@ export function HomeClient() {
       </section>
 
       {/* ── Why it matters (research) ── */}
-      <section style={{ padding: "8rem 3.2rem", background: "var(--panel)", position: "relative", overflow: "hidden" }}>
-        <div aria-hidden style={{ position: "absolute", top: "-25%", right: "-10%", width: "48rem", height: "48rem", borderRadius: "50%", background: `radial-gradient(circle, ${GOLD} 0%, transparent 70%)`, opacity: 0.12, filter: "blur(60px)" }} />
-        <div style={{ maxWidth: "108rem", margin: "0 auto", position: "relative" }}>
-          <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
+      <section className="research-section">
+        <div style={{ maxWidth: "112rem", margin: "0 auto" }}>
+          <p className="research-eyebrow">
             The research
           </p>
-          <ResearchSlider />
+          <ResearchEvidence />
         </div>
-        <WaveDivider fill="var(--canvas)" variant={1} flip />
       </section>
 
       {/* ── Experts ── */}
@@ -544,8 +432,9 @@ export function HomeClient() {
       </section>
 
       {/* ── Pricing ── */}
-      <section id="pricing" style={{ padding: "8rem 3.2rem", background: "var(--panel)", position: "relative", overflow: "hidden" }}>
-        <div aria-hidden style={{ position: "absolute", top: "-20%", left: "50%", transform: "translateX(-50%)", width: "80rem", height: "80rem", borderRadius: "50%", background: `radial-gradient(circle, ${GOLD} 0%, transparent 65%)`, opacity: 0.16, filter: "blur(40px)", pointerEvents: "none" }} />
+      <section id="pricing" className="pricing-section">
+        <div aria-hidden className="pricing-orb pricing-orb-one" />
+        <div aria-hidden className="pricing-orb pricing-orb-two" />
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -553,22 +442,27 @@ export function HomeClient() {
           transition={{ duration: 0.6, ease: [0.24, 0.43, 0.15, 0.97] }}
           style={{ maxWidth: "96rem", margin: "0 auto", position: "relative" }}
         >
-          <p style={{ fontSize: "1.3rem", fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
-            Pricing
+          <p className="pricing-kicker">
+            One scan. The complete picture.
           </p>
-          <h2 style={{ fontSize: "clamp(2.8rem, 6vw, 4.8rem)", fontWeight: 700, color: "#fff", textAlign: "center", lineHeight: 1.12, letterSpacing: "-0.02em", marginBottom: "0.8rem" }}>
-            What could cost you <span style={{ color: CORAL, textDecoration: "line-through", textDecorationThickness: "0.3rem" }}>${OLD_WAY_TOTAL}+</span> is now
+          <h2 className="pricing-heading">
+            Your full Percept report<br /><span>for less than one consultation.</span>
           </h2>
-          <p style={{ fontSize: "clamp(5.6rem, 12vw, 8.8rem)", fontWeight: 800, color: GOLD, textAlign: "center", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: "1.2rem", textShadow: `0 0 6rem rgba(217,166,46,0.4)` }}>
-            $<AnimatedPrice value={BUNDLE_PRICE} />
-          </p>
-          <p style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.75)", textAlign: "center", marginBottom: "5.6rem" }}>
-            One payment. Every module covered. No subscription, right now.
-          </p>
+          <div className="pricing-price-lockup">
+            <span className="pricing-urgency"><i aria-hidden /> Limited-time launch offer</span>
+            <span className="pricing-was">Typical separate cost <s>${OLD_WAY_TOTAL}+</s></span>
+            <div className="pricing-price"><sup>$</sup><strong className="pricing-price-blink"><AnimatedPrice value={BUNDLE_PRICE} /></strong><span>one time</span></div>
+            <span className="pricing-saving">Save ${OLD_WAY_TOTAL - BUNDLE_PRICE}+</span>
+          </div>
+          <div className="pricing-benefits" aria-label="Plan benefits">
+            <span><IconCheck size={1.4} strokeWidth={2.4} /> Every analysis module</span>
+            <span><IconCheck size={1.4} strokeWidth={2.4} /> One payment</span>
+            <span><IconCheck size={1.4} strokeWidth={2.4} /> No subscription</span>
+          </div>
 
           <div className="percept-pricing-compare" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginBottom: "2rem" }}>
-            {/* Old way — light card floating on the dark section for maximum contrast */}
-            <div style={{ background: "var(--surface)", borderRadius: "1.6rem", padding: "3.2rem" }}>
+            {/* Old way: light card floating on the dark section for maximum contrast */}
+            <div className="pricing-old-card" style={{ background: "var(--surface)", borderRadius: "1.6rem", padding: "3.2rem" }}>
               <p style={{ display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
                 <span aria-hidden style={{ color: CORAL, display: "flex" }}><IconClose size={1.4} strokeWidth={2.4} /></span> The old way
               </p>
@@ -584,14 +478,14 @@ export function HomeClient() {
               </div>
             </div>
 
-            {/* Percept bundle — inverted to solid gold so it's unmissable against
+            {/* Percept bundle, inverted to solid gold so it's unmissable against
                 the dark section and the muted "old way" card beside it */}
             <motion.div
               whileHover={{ y: -6 }}
               transition={{ type: "spring", stiffness: 300, damping: 22 }}
-              style={{ background: GOLD, borderRadius: "1.6rem", padding: "3.2rem", position: "relative", overflow: "hidden", boxShadow: `0 2.4rem 5rem -1rem rgba(217,166,46,0.5)` }}
+              className="pricing-bundle-card"
             >
-              {/* Shimmer sweep — same technique as the report-page bundle card,
+              {/* Shimmer sweep, using the same technique as the report-page bundle card,
                   used sparingly so it reads as premium polish, not a loading spinner */}
               <motion.div
                 aria-hidden
@@ -600,7 +494,7 @@ export function HomeClient() {
                 style={{ position: "absolute", top: 0, bottom: 0, width: "30%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)", pointerEvents: "none" }}
               />
               <div style={{ position: "absolute", top: "1.6rem", right: "-3.2rem", transform: "rotate(45deg)", background: "var(--panel)", color: GOLD, fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.08em", padding: "0.5rem 4rem", textTransform: "uppercase" }}>
-                50% off
+                Limited time
               </div>
               <p style={{ position: "relative", display: "flex", alignItems: "center", gap: "0.8rem", fontSize: "1.3rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2.4rem" }}>
                 ⭐ Percept bundle
@@ -619,15 +513,15 @@ export function HomeClient() {
             </motion.div>
           </div>
 
-          <div className="percept-cta-banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem", flexWrap: "wrap", background: GOLD, borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "1.2rem", minWidth: 0 }}>
+          <div className="percept-cta-banner pricing-cta-banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem", flexWrap: "wrap", borderRadius: "1.6rem", padding: "2.4rem 3.2rem", marginBottom: "1.2rem", minWidth: 0 }}>
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>You save</p>
-              <p style={{ fontSize: "3.2rem", fontWeight: 800, color: "var(--primary)", lineHeight: 1 }}>${OLD_WAY_TOTAL - BUNDLE_PRICE}+</p>
+              <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "rgba(255,255,255,0.65)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>Ready when you are</p>
+              <p style={{ fontSize: "2.4rem", fontWeight: 500, color: "#fff", lineHeight: 1.15 }}>Get the $10 launch price while it is available.</p>
             </div>
             <a href="/splash" style={{ minWidth: 0, flexShrink: 0 }}><PrimaryButton fullWidth={false} size="lg">Get your report · ${BUNDLE_PRICE} →</PrimaryButton></a>
           </div>
 
-          {/* Complete Package upsell — same visual weight as the bundle card
+          {/* Complete Package upsell, with the same visual weight as the bundle card
               above (solid color, checklist, big price), not a footnote.
               Still two separate real purchases today (report bundle, then
               consultation add-on) -- no combined single-order checkout exists
@@ -877,6 +771,61 @@ export function HomeClient() {
         .hero-proof-points > div:first-child { padding-left: 0; border-left: 0; }
         .hero-proof-points strong { display: block; font-size: 1.2rem; font-weight: 500; line-height: 1.2; color: #fff; white-space: nowrap; }
         .hero-proof-points span { display: block; margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.25; color: rgba(255,255,255,0.62); white-space: nowrap; }
+        .why-list { border-top: 1px solid var(--line); }
+        .why-list-item { display: grid; grid-template-columns: 8rem minmax(0, 1fr); gap: 2rem; align-items: start; padding: 2.8rem 0; border-bottom: 1px solid var(--line); }
+        .why-list-number { padding-top: 0.25rem; font-size: 1.2rem; color: var(--muted); letter-spacing: 0.04em; }
+        .why-list-item h3 { margin: 0 0 0.8rem; color: var(--primary); font-size: 2rem; font-weight: 400; line-height: 1.25; letter-spacing: -0.02em; }
+        .why-list-item p { max-width: 68rem; margin: 0; color: var(--secondary); font-size: 1.4rem; line-height: 1.6; }
+        .research-section { padding: 9rem 3.2rem; background: #f7f9f8; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+        .research-eyebrow { margin: 0 0 2.4rem; color: var(--muted); font-size: 1.15rem; font-weight: 600; letter-spacing: 0.12em; text-align: center; text-transform: uppercase; }
+        .research-statement { max-width: 82rem; margin: 0 auto 4rem; color: var(--primary); font-size: clamp(3.2rem, 5vw, 5.4rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.045em; text-align: center; }
+        .research-statement span { color: #91aaa6; }
+        .research-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-width: 72rem; margin: 0 auto 4.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--line); }
+        .research-tabs button { min-height: 4.4rem; padding: 0.8rem 1.4rem; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: inherit; font-size: 1.35rem; cursor: pointer; transition: background 180ms ease, color 180ms ease; }
+        .research-tabs button[aria-selected="true"] { background: var(--primary); color: #fff; }
+        .research-evidence-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6rem; }
+        .research-evidence-card { display: flex; min-height: 19rem; flex-direction: column; padding: 2.4rem; border: 1px solid var(--line); border-radius: 1.6rem; background: #fff; }
+        .research-evidence-card h3 { margin: 0 0 1.2rem; color: var(--primary); font-size: 2rem; font-weight: 400; line-height: 1.25; letter-spacing: -0.025em; }
+        .research-evidence-card p { margin: 0; color: var(--secondary); font-size: 1.35rem; line-height: 1.55; }
+        .research-source { display: flex; align-items: center; gap: 0.9rem; margin-top: auto; padding-top: 2.4rem; color: var(--muted); min-width: 0; }
+        .research-source svg { flex: 0 0 auto; }
+        .research-source span { overflow: hidden; font-size: 1.05rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+        .pricing-section { position: relative; overflow: hidden; padding: 9.6rem 3.2rem; background: #082f2b; }
+        .pricing-section::before { content: ""; position: absolute; inset: 0; opacity: 0.2; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px); background-size: 6rem 6rem; mask-image: linear-gradient(to bottom, #000, transparent 62%); }
+        .pricing-orb { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(10px); }
+        .pricing-orb-one { top: -30rem; left: 50%; width: 74rem; height: 74rem; transform: translateX(-50%); background: rgba(217,166,46,0.2); }
+        .pricing-orb-two { top: 12rem; right: -24rem; width: 50rem; height: 50rem; background: rgba(26,158,143,0.18); }
+        .pricing-kicker { width: fit-content; margin: 0 auto 2rem; padding: 0.7rem 1.4rem; border: 1px solid rgba(217,166,46,0.55); border-radius: 999px; color: #f2cb68; font-size: 1.15rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+        .pricing-heading { margin: 0 auto 2.8rem; color: #fff; font-size: clamp(3.4rem, 6vw, 5.8rem); font-weight: 400; line-height: 1.03; letter-spacing: -0.045em; text-align: center; }
+        .pricing-heading span { color: rgba(255,255,255,0.55); }
+        .pricing-price-lockup { display: flex; flex-direction: column; align-items: center; margin-bottom: 2.4rem; }
+        .pricing-urgency { display: inline-flex; align-items: center; gap: 0.8rem; margin-bottom: 1.2rem; color: #fff; font-size: 1.3rem; font-weight: 600; }
+        .pricing-urgency i { width: 0.8rem; height: 0.8rem; border-radius: 50%; background: #ff7868; box-shadow: 0 0 0 0.5rem rgba(255,120,104,0.13); animation: urgency-pulse 1.3s ease-in-out infinite; }
+        .pricing-was { margin-bottom: 0.6rem; color: rgba(255,255,255,0.58); font-size: 1.3rem; }
+        .pricing-was s { color: #ff8d7f; text-decoration-thickness: 2px; }
+        .pricing-price { display: flex; align-items: flex-end; color: #f2c85b; line-height: 0.86; }
+        .pricing-price sup { align-self: flex-start; margin-top: 1.1rem; font-size: clamp(2.6rem, 5vw, 4.4rem); font-weight: 500; }
+        .pricing-price strong { font-size: clamp(8rem, 16vw, 14rem); font-weight: 600; letter-spacing: -0.075em; }
+        .pricing-price-blink { animation: price-blink 1.45s ease-in-out infinite; }
+        .pricing-price > span { margin: 0 0 1.1rem 1.2rem; color: rgba(255,255,255,0.58); font-size: 1.25rem; white-space: nowrap; }
+        .pricing-saving { margin-top: 1.4rem; padding: 0.75rem 1.5rem; border-radius: 999px; background: #f2c85b; color: #082f2b; font-size: 1.25rem; font-weight: 700; }
+        .pricing-benefits { display: flex; justify-content: center; gap: 1rem 2.8rem; flex-wrap: wrap; margin-bottom: 5.6rem; color: rgba(255,255,255,0.78); }
+        .pricing-benefits span { display: flex; align-items: center; gap: 0.7rem; font-size: 1.3rem; }
+        .pricing-benefits svg { color: #f2c85b; }
+        .pricing-old-card { border: 1px solid rgba(255,255,255,0.08); opacity: 0.86; }
+        .pricing-bundle-card { position: relative; overflow: hidden; padding: 3.2rem; border: 1px solid rgba(255,255,255,0.55); border-radius: 1.6rem; background: #f2c85b; box-shadow: 0 2.4rem 6rem -1.4rem rgba(217,166,46,0.62); }
+        .pricing-cta-banner { border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); backdrop-filter: blur(16px); }
+        @keyframes price-blink {
+          0%, 100% { opacity: 1; text-shadow: 0 0 0 rgba(242,200,91,0); }
+          50% { opacity: 0.58; text-shadow: 0 0 3.2rem rgba(242,200,91,0.72); }
+        }
+        @keyframes urgency-pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(0.72); opacity: 0.55; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .pricing-price-blink, .pricing-urgency i { animation: none; }
+        }
         #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
         .percept-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .percept-carousel::-webkit-scrollbar { display: none; }
@@ -885,7 +834,7 @@ export function HomeClient() {
           .percept-experts-grid { grid-template-columns: 1fr !important; }
           .why-section-heading { grid-template-columns: 1fr !important; align-items: start !important; }
           .why-section-heading > p { justify-self: start !important; }
-          .why-card-grid { grid-template-columns: 1fr !important; }
+          .research-evidence-grid { grid-template-columns: 1fr; }
           .percept-footer-grid { grid-template-columns: 1fr 1fr !important; row-gap: 3.2rem !important; }
           .percept-footer-brand { grid-column: 1 / -1 !important; }
         }
@@ -955,6 +904,22 @@ export function HomeClient() {
           .hero-proof-points { display: none; }
           #why { padding-top: 5.6rem !important; padding-bottom: 5.6rem !important; }
           .percept-why-heading { margin-bottom: 3.2rem !important; }
+          .why-section-heading { gap: 0 !important; margin-bottom: 3.2rem !important; }
+          .why-list-item { grid-template-columns: 5.6rem minmax(0, 1fr); gap: 1.2rem; padding: 2.4rem 0; }
+          .why-list-item h3 { font-size: 1.8rem; }
+          .why-list-item p { font-size: 1.35rem; }
+          .research-section { padding: 6.4rem 2rem; }
+          .research-statement { margin-bottom: 3.2rem; font-size: clamp(3.2rem, 10vw, 4.2rem); }
+          .research-tabs { gap: 0.5rem; margin-bottom: 3.2rem; }
+          .research-tabs button { padding-inline: 0.8rem; font-size: 1.2rem; }
+          .research-evidence-grid { gap: 1.2rem; }
+          .research-evidence-card { min-height: 16rem; padding: 2rem; }
+          .pricing-section { padding: 7.2rem 2rem; }
+          .pricing-heading br { display: none; }
+          .pricing-price strong { font-size: clamp(8rem, 30vw, 11rem); }
+          .pricing-benefits { align-items: flex-start; flex-direction: column; width: fit-content; margin: 0 auto 4rem; }
+          .pricing-old-card { order: 2; }
+          .pricing-bundle-card { order: 1; }
         }
         @media (max-width: 520px) {
           .percept-footer-legalsupport { flex-direction: column !important; gap: 2.4rem !important; }

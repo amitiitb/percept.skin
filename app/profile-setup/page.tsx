@@ -50,6 +50,7 @@ export default function V2ProfileSetupPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (sessionStorage.getItem("percept_photo_consent") === "true") setConsent(true);
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.replace("/auth/login?next=/profile-setup"); return; }
       // Signup already asked for the name (auth/signup's "Full name" field,
@@ -87,7 +88,8 @@ export default function V2ProfileSetupPage() {
       }, { onConflict: "user_id" });
       if (dbErr) throw dbErr;
 
-      router.push("/dashboard");
+      const sessionId = new URLSearchParams(window.location.search).get("session");
+      router.push(sessionId ? `/bundle/${sessionId}` : "/dashboard");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong saving your profile.");
     } finally {

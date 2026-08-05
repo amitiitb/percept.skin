@@ -26,6 +26,7 @@ function SignupForm() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [savingScan, setSavingScan] = useState(false);
 
   useEffect(() => {
     if (params.get("error")) setError("That link is invalid or has expired. Please try again.");
@@ -43,7 +44,16 @@ function SignupForm() {
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session?.user || session.user.is_anonymous) return;
+      if (!session?.user) return;
+      if (session.user.is_anonymous) {
+        setSavingScan(true);
+        const next = params.get("next") || "";
+        const query = next.includes("?") ? next.slice(next.indexOf("?") + 1) : "";
+        const pendingSessionId = new URLSearchParams(query).get("session");
+        sessionStorage.setItem("percept_pending_anon_token", session.access_token);
+        if (pendingSessionId) sessionStorage.setItem("percept_pending_session_id", pendingSessionId);
+        return;
+      }
       const next = params.get("next") || "/dashboard";
       if (next === "/profile-setup") {
         const { data: profile } = await supabase.from("user_profiles_v2").select("name").eq("user_id", session.user.id).maybeSingle();
@@ -63,10 +73,14 @@ function SignupForm() {
 
     const supabase = createClient();
     const cleanEmail = email.trim().toLowerCase();
+    const { data: { session } } = await supabase.auth.getSession();
 
     const res = await fetch("/api/auth/signup", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(session?.user.is_anonymous && session.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
       body: JSON.stringify({ name: name.trim(), email: cleanEmail, password }),
     });
     const json = await res.json();
@@ -84,6 +98,9 @@ function SignupForm() {
       setLoading(false);
       return;
     }
+
+    sessionStorage.removeItem("percept_pending_anon_token");
+    sessionStorage.removeItem("percept_pending_session_id");
 
     trackEvent("sign_up", { method: "password" });
     router.replace(params.get("next") || "/dashboard");
@@ -115,10 +132,12 @@ function SignupForm() {
         {/* Header */}
         <div style={{ marginBottom: "3.6rem" }}>
           <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 3.6rem)", fontWeight: 600, color: "var(--primary)", lineHeight: 1.1, letterSpacing: "-0.025em", margin: 0 }}>
-            Create your account.
+            {savingScan ? "Your photos are ready." : "Create your account."}
           </h1>
           <p style={{ marginTop: "1.4rem", fontSize: "1.6rem", color: "var(--secondary)", lineHeight: 1.6 }}>
-            Takes a minute, then we'll guide you through your guided scan.
+            {savingScan
+              ? "Create your private account to save this scan, complete your profile, and continue to your report."
+              : "Create a private account to save scans and track your progress."}
           </p>
         </div>
 
@@ -221,7 +240,7 @@ function SignupForm() {
 
         <p style={{ marginTop: "2.4rem", fontSize: "1.3rem", color: "var(--muted)", textAlign: "center", lineHeight: 1.6 }}>
           Already have an account?{" "}
-          <a href="/auth/login" style={{ color: "var(--primary)", fontWeight: 500, textDecoration: "underline" }}>
+          <a href={`/auth/login?next=${encodeURIComponent(params.get("next") || "/dashboard")}`} style={{ color: "var(--primary)", fontWeight: 500, textDecoration: "underline" }}>
             Sign in
           </a>
         </p>

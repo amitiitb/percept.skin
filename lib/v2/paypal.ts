@@ -1,14 +1,13 @@
-// Thin PayPal REST wrapper — live endpoint. Plain HTTP, no SDK dependency
+// Thin PayPal REST wrapper. Sandbox is the safe default and live mode must be
+// selected explicitly with PAYPAL_ENVIRONMENT=live. Plain HTTP, no SDK dependency
 // (PayPal's Orders v2 API is REST; the client-side button uses PayPal's
 // hosted JS SDK via a script tag, not an npm package — that script already
 // points at www.paypal.com, which auto-detects sandbox vs. live from
 // whichever client-id it's given, so no separate swap was needed there).
 //
 // Still outstanding before this is fully production-ready:
-// - NEXT_PUBLIC_PAYPAL_CLIENT_ID and PAYPAL_SECRET must be the LIVE app's
-//   credentials (from a live REST app in the PayPal dashboard, not the
-//   sandbox app) in both .env.local and the Vercel project's env vars —
-//   this file only talks to whichever credentials it's given.
+// - NEXT_PUBLIC_PAYPAL_CLIENT_ID and PAYPAL_SECRET must come from the same
+//   PayPal environment selected by PAYPAL_ENVIRONMENT.
 // - Register a webhook subscription in the PayPal dashboard against the
 //   live domain and set PAYPAL_WEBHOOK_ID (verifyWebhookSignature below is
 //   ready; nothing is registered yet, so nothing calls this endpoint today)
@@ -25,7 +24,10 @@ export const PLANS: Record<PlanId, { label: string; price: string; period: strin
   annual: { label: "Annual", price: "79.99", period: "12 months" },
 };
 
-export const PAYPAL_API_BASE = "https://api-m.paypal.com";
+export const PAYPAL_ENVIRONMENT = process.env.PAYPAL_ENVIRONMENT === "live" ? "live" : "sandbox";
+export const PAYPAL_API_BASE = PAYPAL_ENVIRONMENT === "live"
+  ? "https://api-m.paypal.com"
+  : "https://api-m.sandbox.paypal.com";
 
 export async function getAccessToken(): Promise<string> {
   // Client ID is intentionally public (NEXT_PUBLIC_ — same value the browser

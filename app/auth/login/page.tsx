@@ -41,12 +41,35 @@ function LoginForm() {
       return;
     }
 
+    const anonymousAccessToken = sessionStorage.getItem("percept_pending_anon_token");
+    const pendingSessionId = sessionStorage.getItem("percept_pending_session_id");
+    if (anonymousAccessToken && pendingSessionId && signInData.session?.access_token) {
+      const claimResponse = await fetch("/api/auth/claim-scan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${signInData.session.access_token}`,
+        },
+        body: JSON.stringify({ anonymousAccessToken, sessionId: pendingSessionId }),
+      });
+      if (!claimResponse.ok) {
+        const result = await claimResponse.json().catch(() => ({}));
+        setError(result.error || "Signed in, but the scan could not be attached. Please contact support.");
+        setLoading(false);
+        return;
+      }
+      sessionStorage.removeItem("percept_pending_anon_token");
+      sessionStorage.removeItem("percept_pending_session_id");
+    }
+
     // See app/auth/signup/page.tsx — next=/profile-setup would otherwise
     // send an existing user through profile creation again on every scan.
     const next = params.get("next") || "/dashboard";
-    if (next === "/profile-setup" && signInData.user) {
+    if (next.startsWith("/profile-setup") && signInData.user) {
       const { data: profile } = await supabase.from("user_profiles_v2").select("name").eq("user_id", signInData.user.id).maybeSingle();
-      router.replace(profile ? "/scan-prep" : next);
+      const query = next.includes("?") ? next.slice(next.indexOf("?") + 1) : "";
+      const pendingSessionId = new URLSearchParams(query).get("session");
+      router.replace(profile && pendingSessionId ? `/bundle/${pendingSessionId}` : profile ? "/dashboard" : next);
       return;
     }
     router.replace(next);

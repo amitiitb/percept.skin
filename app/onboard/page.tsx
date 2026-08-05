@@ -53,8 +53,8 @@ export default function V2OnboardPage() {
   const [step, setStep] = useState(0); // 0-2 = explainer screens, 3 = sample report preview
   const total = 4;
 
-  const next = () => (step < total - 1 ? setStep(step + 1) : router.push("/auth/signup?next=/profile-setup"));
-  const skip = () => router.push("/auth/signup?next=/profile-setup");
+  const next = () => (step < total - 1 ? setStep(step + 1) : router.push("/scan-prep"));
+  const skip = () => router.push("/scan-prep");
 
   return (
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>

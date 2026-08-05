@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { logV2 } from "@/lib/v2/log";
+import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -11,9 +12,6 @@ const supabaseAdmin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-// Instant signup — no email-verification wall. Unlike the legacy version,
-// there's no anonymous-session upgrade path: v2 requires an account before
-// any scan starts, so every signup here is a fresh user.
 export async function POST(req: NextRequest) {
   const { name, email, password } = await req.json();
 
@@ -24,9 +22,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
   }
 
-  const { error } = await supabaseAdmin.auth.admin.createUser({
-    email, password, email_confirm: true, user_metadata: { name },
-  });
+  const auth = await verifySupabaseUser(req);
+  let error: { message: string; status?: number } | null = null;
+
+  if (auth) {
+    const { data: existing, error: lookupError } = await supabaseAdmin.auth.admin.getUserById(auth.userId);
+    if (lookupError) error = lookupError;
+    else if (existing.user?.is_anonymous) {
+      const result = await supabaseAdmin.auth.admin.updateUserById(auth.userId, {
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { ...existing.user.user_metadata, name },
+      });
+      error = result.error;
+    } else {
+      return NextResponse.json({ error: "You already have an account. Please sign in." }, { status: 409 });
+    }
+  }
+
+  if (!auth) {
+    const result = await supabaseAdmin.auth.admin.createUser({
+      email, password, email_confirm: true, user_metadata: { name },
+    });
+    error = result.error;
+  }
+
+  if (auth && !error) {
+    const { data: refreshed } = await supabaseAdmin.auth.admin.getUserById(auth.userId);
+    if (refreshed.user?.is_anonymous) {
+      return NextResponse.json({ error: "Please refresh the page and try again." }, { status: 409 });
+    }
+  }
 
   if (error) {
     // Supabase's Auth admin API has been intermittently returning a genuinely
