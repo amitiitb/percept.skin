@@ -1,6 +1,8 @@
 "use client";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
+import { createClient } from "@/lib/supabase/client";
 
 interface MenuLink {
   label: string;
@@ -24,6 +26,17 @@ interface Props {
 // footer credit. Layout pattern only; palette/type are Percept's own
 // tokens (app/globals.css), not the reference site's.
 export function SiteMenu({ open, onClose }: Props) {
+  // Signed-out visitors get "Log in"; signed-in ones get "Dashboard", same
+  // reasoning as the header link this replaced — sending an authenticated
+  // user to the login form is a dead end they have to back out of.
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    const supabase = createClient();
+    let alive = true;
+    supabase.auth.getUser().then(({ data }) => { if (alive) setSignedIn(Boolean(data.user)); });
+    return () => { alive = false; };
+  }, []);
+
   function go(href: string) {
     onClose();
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
@@ -104,13 +117,19 @@ export function SiteMenu({ open, onClose }: Props) {
               </span>
             </a>
 
-            {/* On a phone the hamburger is the only nav, so the account route
-                has to live here too — not just in the desktop header bar. */}
+            {/* On a phone the header's own login link is hidden (<520px, see
+                .site-header-login) to keep the bar from crowding, so the
+                account route has to live here too — not just the desktop
+                header bar. */}
             <a
-              href="/auth/login"
+              href={signedIn ? "/dashboard" : "/auth/login"}
               style={{ marginTop: "2rem", width: "fit-content", fontSize: "1.7rem", fontWeight: 500, color: "var(--secondary)" }}
             >
-              Already have an account? <span style={{ color: "var(--primary)", fontWeight: 700 }}>Log in</span>
+              {signedIn ? (
+                <span style={{ color: "var(--primary)", fontWeight: 700 }}>Go to dashboard</span>
+              ) : (
+                <>Already have an account? <span style={{ color: "var(--primary)", fontWeight: 700 }}>Log in</span></>
+              )}
             </a>
           </div>
 

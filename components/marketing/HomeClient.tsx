@@ -4,9 +4,9 @@ import Image from "next/image";
 import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
-import { HeaderAuth } from "@/components/marketing/HeaderAuth";
 import { WhatYouGet } from "@/components/marketing/WhatYouGet";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/ui/Logo";
 import { IconCheck, IconClose, IconSparkle, IconShield, IconClock } from "@/components/ui/icons";
 import { MODULES, BUNDLE_PRICE, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
@@ -23,8 +23,6 @@ const TRUST_BADGES = [
   { Icon: IconSparkle, label: "AI-Powered Analysis" },
   { Icon: IconClock, label: "Under 2 minutes" },
 ] as const;
-
-const HERO_BEST_COLOURS = ["#6FA69C", "#1A9E8F", "#E8604F", "#F2C9B0"];
 
 // Curved section boundary instead of a hard straight edge where two
 // contrasting section backgrounds meet. Three different curve shapes so
@@ -283,6 +281,17 @@ function FaqRow({ q, a }: { q: string; a: string }) {
 
 export function HomeClient() {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Signed-out visitors get "Log in"; signed-in ones get "Dashboard" —
+  // sending an authenticated user to the login form is a dead end they have
+  // to back out of. Checked client-side after paint, so this renders as
+  // "Log in" first and swaps if a session turns up.
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    const supabase = createClient();
+    let alive = true;
+    supabase.auth.getUser().then(({ data }) => { if (alive) setSignedIn(Boolean(data.user)); });
+    return () => { alive = false; };
+  }, []);
 
   return (
     <div style={{ background: "var(--canvas)", minHeight: "100dvh" }}>
@@ -297,17 +306,26 @@ export function HomeClient() {
           <a href="/" style={{ display: "block" }}>
             <Logo height="clamp(2.6rem, 7vw, 4.2rem)" />
           </a>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
+            {/* Hidden below 520px — the hamburger menu carries the same
+                signed-in/out link there instead, so the bar stays compact
+                enough to fit next to the CTA and theme toggle on a phone. */}
+            <a
+              href={signedIn ? "/dashboard" : "/auth/login"}
+              className="site-header-login"
+              style={{ display: "none", fontSize: "1.5rem", fontWeight: 600, color: "var(--secondary)", whiteSpace: "nowrap" }}
+            >
+              {signedIn ? "Dashboard" : "Login"}
+            </a>
+            <ThemeToggle compact />
             {/* Previously the only "Start free" CTA lived in the hero, so it
                 scrolled out of view immediately — someone reading further down
                 the page had no way to start without scrolling back up or
                 opening the menu. Sticky, so it's reachable from anywhere on
                 the page, on mobile and desktop alike. */}
             <a href="/splash" className="site-header-cta">
-              <PrimaryButton size="sm" fullWidth={false}>Start free →</PrimaryButton>
+              <PrimaryButton size="sm" fullWidth={false}>Start free</PrimaryButton>
             </a>
-            <HeaderAuth />
-            <ThemeToggle compact />
             <button
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
@@ -320,142 +338,61 @@ export function HomeClient() {
       </header>
 
       {/* ── Hero ── */}
-      <section style={{ position: "relative", overflow: "hidden", padding: "6.4rem 3.2rem 8rem" }}>
-        <div aria-hidden style={{ position: "absolute", top: "-20%", left: "10%", width: "56rem", height: "56rem", borderRadius: "50%", background: "radial-gradient(circle, var(--rose) 0%, transparent 70%)", opacity: 0.06, filter: "blur(60px)", pointerEvents: "none" }} />
+      <section style={{ position: "relative", padding: "6.4rem 3.2rem 8rem" }}>
         <div className="percept-hero-grid" style={{ position: "relative", maxWidth: "120rem", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "5.6rem", alignItems: "center" }}>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "0.7rem", padding: "0.7rem 1.5rem 0.7rem 1.1rem", borderRadius: "9999px", background: "var(--wash)", marginBottom: "2rem" }}>
-              <span style={{ display: "flex", color: "var(--rose)" }}><IconSparkle size={1.3} strokeWidth={2} /></span>
-              <span style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Personal beauty analysis</span>
-            </div>
+            <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
+              Personal beauty analysis
+            </p>
             <h1 style={{ fontSize: "clamp(3.4rem, 5.5vw, 5.6rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.05, letterSpacing: "-0.02em", marginBottom: "2.4rem" }}>
               {HEADLINE_WORDS.map((word, i) => {
                 const isLast = i === HEADLINE_WORDS.length - 1;
                 return (
-                  <span key={i} style={{ display: "inline-block", position: isLast ? "relative" : undefined }}>
-                    <span style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top" }}>
-                      <motion.span
-                        style={{ display: "inline-block", fontStyle: isLast ? "italic" : "normal", color: isLast ? "var(--rose)" : undefined }}
-                        initial={{ y: "110%" }}
-                        animate={{ y: "0%" }}
-                        transition={{ duration: 0.6, delay: 0.15 + i * 0.07, ease: [0.24, 0.43, 0.15, 0.97] }}
-                      >
-                        {word}&nbsp;
-                      </motion.span>
-                    </span>
-                    {isLast && (
-                      <svg aria-hidden width="120" height="14" viewBox="0 0 120 14" style={{ position: "absolute", left: 0, bottom: "-0.2rem", width: "85%", pointerEvents: "none" }}>
-                        <motion.path
-                          d="M2 9 Q 30 2 60 7 T 118 5"
-                          fill="none" stroke="var(--rose)" strokeWidth="3" strokeLinecap="round"
-                          initial={{ pathLength: 0, opacity: 0 }}
-                          animate={{ pathLength: 1, opacity: 1 }}
-                          transition={{ duration: 0.6, delay: 1.05, ease: "easeOut" }}
-                        />
-                      </svg>
-                    )}
+                  <span key={i} style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top" }}>
+                    <motion.span
+                      style={{ display: "inline-block", color: isLast ? "var(--rose)" : undefined }}
+                      initial={{ y: "110%" }}
+                      animate={{ y: "0%" }}
+                      transition={{ duration: 0.6, delay: 0.15 + i * 0.07, ease: [0.24, 0.43, 0.15, 0.97] }}
+                    >
+                      {word}&nbsp;
+                    </motion.span>
                   </span>
                 );
               })}
             </h1>
             <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "48rem", marginBottom: "2.8rem" }}>
-              A guided photo scan, understood by AI. No lab visit, no appointment, just a clear, specific report you can act on and track over time.
+              A guided photo scan, read by AI. Clear, specific, and easy to track over time.
             </p>
-            <div style={{ display: "flex", gap: "1.8rem", flexWrap: "wrap", marginBottom: "3.2rem" }}>
-              {TRUST_BADGES.map(({ Icon, label }) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
-                  <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "3.6rem", height: "3.6rem", borderRadius: "1rem", background: "var(--wash)", color: "var(--rose)", flexShrink: 0 }}>
-                    <Icon size={1.7} strokeWidth={1.75} />
+            <div style={{ display: "flex", alignItems: "center", gap: "1.4rem", flexWrap: "wrap", marginBottom: "3.2rem" }}>
+              {TRUST_BADGES.map(({ Icon, label }, i) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: "1.4rem" }}>
+                  {i > 0 && <span aria-hidden style={{ width: "0.4rem", height: "0.4rem", borderRadius: "50%", background: "var(--line-strong)", flexShrink: 0 }} />}
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "1.4rem", fontWeight: 500, color: "var(--secondary)" }}>
+                    <Icon size={1.5} strokeWidth={1.75} />
+                    {label}
                   </span>
-                  <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "var(--primary)" }}>{label}</span>
                 </div>
               ))}
             </div>
-            <div style={{ display: "flex", gap: "1.2rem", flexWrap: "nowrap" }}>
-              <a href="/splash"><PrimaryButton size="sm" fullWidth={false}>Start free →</PrimaryButton></a>
+            <div style={{ display: "flex", gap: "1.2rem", flexWrap: "wrap" }}>
+              <a href="/splash"><PrimaryButton size="sm" fullWidth={false}>Start my journey →</PrimaryButton></a>
               <a href="#why"><PrimaryButton size="sm" variant="outline" fullWidth={false}>Why Percept</PrimaryButton></a>
             </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}
-            style={{ position: "relative" }}
+            style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2.4rem", overflow: "hidden" }}
           >
-            {/* Soft concentric rings behind the portrait — echoes the guided-scan
-                idea without needing another literal icon. */}
-            <div aria-hidden style={{ position: "absolute", inset: "8%", borderRadius: "50%", border: "1px solid var(--rose)", opacity: 0.14, pointerEvents: "none" }} />
-            <div aria-hidden style={{ position: "absolute", inset: "-1%", borderRadius: "50%", border: "1px solid var(--rose)", opacity: 0.08, pointerEvents: "none" }} />
-
-            <div style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2.4rem", overflow: "hidden", boxShadow: "0 2.4rem 5rem -1.6rem var(--shadow-strong)" }}>
-              <Image
-                src="/images/skincare-portraits/portrait-deep-brown.png"
-                alt="Close-up portrait showing clear, healthy skin"
-                fill
-                priority
-                sizes="(max-width: 900px) 100vw, 50vw"
-                style={{ objectFit: "cover", objectPosition: "50% 5%" }}
-              />
-              {/* Scan-corner overlay — a nod to the guided capture flow, not a
-                  literal analysis in progress. */}
-              <div aria-hidden style={{ position: "absolute", inset: "14% 20% 32% 20%", pointerEvents: "none" }}>
-                <div style={{ position: "absolute", top: 0, left: 0, width: "2.2rem", height: "2.2rem", borderTop: "3px solid rgba(255,255,255,0.85)", borderLeft: "3px solid rgba(255,255,255,0.85)", borderTopLeftRadius: "0.8rem" }} />
-                <div style={{ position: "absolute", top: 0, right: 0, width: "2.2rem", height: "2.2rem", borderTop: "3px solid rgba(255,255,255,0.85)", borderRight: "3px solid rgba(255,255,255,0.85)", borderTopRightRadius: "0.8rem" }} />
-                <div style={{ position: "absolute", bottom: 0, left: 0, width: "2.2rem", height: "2.2rem", borderBottom: "3px solid rgba(255,255,255,0.85)", borderLeft: "3px solid rgba(255,255,255,0.85)", borderBottomLeftRadius: "0.8rem" }} />
-                <div style={{ position: "absolute", bottom: 0, right: 0, width: "2.2rem", height: "2.2rem", borderBottom: "3px solid rgba(255,255,255,0.85)", borderRight: "3px solid rgba(255,255,255,0.85)", borderBottomRightRadius: "0.8rem" }} />
-              </div>
-            </div>
-
-            {/* Floating stat cards — illustrative examples, not live data,
-                same convention as the report previews elsewhere on the site. */}
-            <motion.div
-              className="percept-float-card percept-float-score"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.9 }}
-              style={{ position: "absolute", top: "5%", right: "-8%", background: "var(--surface)", borderRadius: "1.6rem", padding: "1.4rem 1.6rem", boxShadow: "0 1.6rem 3.2rem -1.2rem var(--shadow-strong)", border: "1px solid var(--line)", minWidth: "11rem" }}
-            >
-              <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.8rem" }}>Skin Score</p>
-              <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem" }}>
-                <span style={{ fontSize: "2.8rem", fontWeight: 700, color: "var(--primary)", lineHeight: 1 }}>92</span>
-                <span style={{ fontSize: "1.3rem", color: "var(--muted)" }}>/100</span>
-              </div>
-              <p style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--rose)", marginTop: "0.4rem" }}>Great</p>
-            </motion.div>
-
-            <motion.div
-              className="percept-float-card percept-float-type"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 1.05 }}
-              style={{ position: "absolute", top: "40%", right: "-9%", background: "var(--surface)", borderRadius: "1.6rem", padding: "1.4rem 1.6rem", boxShadow: "0 1.6rem 3.2rem -1.2rem var(--shadow-strong)", border: "1px solid var(--line)", minWidth: "12rem" }}
-            >
-              <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.6rem" }}>Skin Type</p>
-              <p style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--primary)" }}>Combination</p>
-            </motion.div>
-
-            <motion.div
-              className="percept-float-card percept-float-colors"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 1.2 }}
-              style={{ position: "absolute", bottom: "7%", left: "-7%", background: "var(--surface)", borderRadius: "1.6rem", padding: "1.4rem 1.6rem", boxShadow: "0 1.6rem 3.2rem -1.2rem var(--shadow-strong)", border: "1px solid var(--line)" }}
-            >
-              <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.8rem" }}>Best Colors</p>
-              <div style={{ display: "flex", gap: "0.6rem" }}>
-                {HERO_BEST_COLOURS.map((c) => (
-                  <span key={c} style={{ width: "2.2rem", height: "2.2rem", borderRadius: "0.6rem", background: c, display: "block" }} />
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="percept-float-card percept-float-shape"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 1.35 }}
-              style={{ position: "absolute", bottom: "-3%", right: "8%", background: "var(--surface)", borderRadius: "1.6rem", padding: "1.4rem 1.6rem", boxShadow: "0 1.6rem 3.2rem -1.2rem var(--shadow-strong)", border: "1px solid var(--line)", textAlign: "center" }}
-            >
-              <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.8rem" }}>Face Shape</p>
-              <svg width="44" height="44" viewBox="0 0 44 44" fill="none" style={{ margin: "0 auto 0.4rem", display: "block" }} aria-hidden>
-                <ellipse cx="22" cy="22" rx="13" ry="17" stroke="var(--rose)" strokeWidth="1.6" />
-                <path d="M13 18q2-2 4 0M27 18q2-2 4 0" stroke="var(--rose)" strokeWidth="1.6" strokeLinecap="round" />
-                <circle cx="15.5" cy="21" r="1.2" fill="var(--rose)" />
-                <circle cx="28.5" cy="21" r="1.2" fill="var(--rose)" />
-              </svg>
-              <p style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--primary)" }}>Oval</p>
-            </motion.div>
+            <Image
+              src="/images/skincare-portraits/portrait-deep-brown.png"
+              alt="Close-up portrait showing clear, healthy skin"
+              fill
+              priority
+              sizes="(max-width: 900px) 100vw, 50vw"
+              style={{ objectFit: "cover", objectPosition: "50% 5%" }}
+            />
           </motion.div>
         </div>
       </section>
@@ -770,8 +707,8 @@ export function HomeClient() {
       <style>{`
         #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
         /* Below this the hamburger carries the login link instead, so the bar
-           stays three controls wide and never wraps. */
-        @media (min-width: 520px) { .site-header-login { display: inline-flex !important; } }
+           stays compact enough for the CTA and theme toggle to fit beside it. */
+        @media (min-width: 520px) { .site-header-login { display: inline-flex !important; align-items: center; } }
         .percept-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .percept-carousel::-webkit-scrollbar { display: none; }
         @media (max-width: 900px) {
@@ -779,16 +716,6 @@ export function HomeClient() {
           .percept-experts-grid { grid-template-columns: 1fr !important; }
           .percept-footer-grid { grid-template-columns: 1fr 1fr !important; row-gap: 3.2rem !important; }
           .percept-footer-brand { grid-column: 1 / -1 !important; }
-          /* The floating stat cards overhang the photo's edges on purpose at
-             desktop widths, where the grid column has slack around it. Below
-             900px the photo becomes the full-width column with no slack, so
-             those same offsets would push cards past the section's edge and
-             get clipped by its overflow:hidden. Pull them back onto the photo. */
-          .percept-float-card { padding: 1.1rem 1.3rem !important; }
-          .percept-float-score { top: 4% !important; right: 4% !important; }
-          .percept-float-type { top: auto !important; bottom: 32% !important; right: 4% !important; }
-          .percept-float-colors { bottom: 14% !important; left: 4% !important; }
-          .percept-float-shape { bottom: 4% !important; right: 4% !important; }
         }
         @media (max-width: 700px) {
           #why { padding-top: 5.6rem !important; padding-bottom: 5.6rem !important; }
