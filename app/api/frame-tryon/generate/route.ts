@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { generateFramePreview, GeminiGenerationError, GeminiEmptyResponseError, GeminiQuotaError } from "@/lib/v2/gemini";
 import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
+import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
 import { replaceImage } from "@/lib/v2/storageUpload";
 
@@ -30,6 +31,13 @@ export async function POST(req: NextRequest) {
 
   if (!(await hasPurchasedModule(supabase, auth.userId, sessionId, "frame"))) {
     return NextResponse.json({ error: "Purchase the Frame Recommendations module to generate try-on previews" }, { status: 403 });
+  }
+  // Unlike the grid routes, a user can legitimately try many different real
+  // frames here, so this is a rate limit (calls per window), not a per-scan
+  // generation budget — just enough to stop a script from looping this into
+  // an unbounded Gemini bill.
+  if (!(await checkRateLimit(supabase, auth.userId, "frame_tryon_generate", 8, 600))) {
+    return NextResponse.json({ error: "Too many requests, try again in a few minutes" }, { status: 429 });
   }
 
   try {

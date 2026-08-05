@@ -123,13 +123,6 @@ export async function generateImageEdit(
   return { mimeType: imagePart.mimeType, base64: imagePart.data };
 }
 
-export function generateHairstylePreview(photoDataUrl: string, stylePrompt: string) {
-  return generateImageEdit(
-    photoDataUrl,
-    `Edit this photo to show the person with the following hairstyle, keeping their face, skin tone, and background unchanged: ${stylePrompt}. Photorealistic, natural lighting, cosmetic preview only.`
-  );
-}
-
 // Shared by every grid generator below (colour/frame/hairstyle/beard) so a
 // reliability tweak — panel count, no repeated looks, consistent expression —
 // only has to change in one place instead of four near-identical copies.

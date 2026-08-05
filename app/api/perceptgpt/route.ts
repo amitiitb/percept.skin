@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { vertexAccessToken, VERTEX_LOCATION, VERTEX_PROJECT } from "@/lib/v2/gemini";
+import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
 import type { ColourAnalysis } from "@/lib/v2/types";
 
@@ -78,14 +79,21 @@ export async function POST(req: NextRequest) {
     const auth = await verifySupabaseUser(req);
     if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const token = req.headers.get("authorization")!.slice(7);
+    const supabase = scopedClient(token);
+
+    // Chat messages are cheap individually but still a real, billed Gemini
+    // call each — generous enough for a real back-and-forth conversation,
+    // tight enough to stop a script from looping this unbounded.
+    if (!(await checkRateLimit(supabase, auth.userId, "perceptgpt_message", 20, 600))) {
+      return NextResponse.json({ error: "Too many messages, try again in a few minutes" }, { status: 429 });
+    }
+
     const body = await req.json() as { sessionId?: string; conversationId?: string; messages?: ChatMessage[] };
     const { sessionId, conversationId, messages } = body;
     if (!sessionId || !conversationId || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "sessionId, conversationId and messages are required" }, { status: 400 });
     }
-
-    const token = req.headers.get("authorization")!.slice(7);
-    const supabase = scopedClient(token);
 
     const { data: conversation } = await supabase
       .from("perceptgpt_conversations_v2")
