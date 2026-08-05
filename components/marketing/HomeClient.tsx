@@ -734,6 +734,7 @@ export function HomeClient() {
           padding: 0.8rem 0.9rem 0.8rem 1.6rem !important;
         }
         .home-header-inner > a:first-child img { height: 3.2rem !important; }
+        .home-header-inner > a:first-child { display: flex !important; align-items: center; align-self: stretch; }
         .home-header-inner > div { gap: 0.7rem !important; }
         .home-header .site-header-cta button {
           height: 3.8rem !important;
