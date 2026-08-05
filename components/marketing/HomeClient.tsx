@@ -326,8 +326,8 @@ export function HomeClient() {
           separate avoids compromising the more spacious desktop hero. */}
       <section className="mobile-first-hero" aria-labelledby="mobile-hero-title">
         <Image
-          src="/images/skincare-portraits/portrait-light-freckled.png"
-          alt="Close-up portrait showing natural skin texture"
+          src="/assets/percept-hero-portrait-v2.png"
+          alt="Editorial close-up portrait showing natural skin texture"
           fill
           priority
           sizes="100vw"
@@ -805,7 +805,7 @@ export function HomeClient() {
         .mobile-hero-copy h1 {
           max-width: 55rem;
           margin: 0 0 1.6rem;
-          font-size: clamp(4.8rem, 5vw, 7.2rem);
+          font-size: clamp(4rem, 4.2vw, 6rem);
           font-weight: 400;
           line-height: 0.98;
           letter-spacing: -0.05em;
@@ -868,7 +868,7 @@ export function HomeClient() {
           .mobile-hero-copy h1 {
             max-width: 34rem;
             margin: 0 0 1rem;
-            font-size: clamp(3.1rem, 9vw, 4.1rem);
+            font-size: clamp(2.7rem, 7.8vw, 3.5rem);
             font-weight: 400;
             line-height: 1.02;
             letter-spacing: -0.045em;
