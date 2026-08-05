@@ -57,7 +57,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
         />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(43,53,48,0.94) 0%, rgba(43,53,48,0.55) 55%, rgba(43,53,48,0.25) 100%)" }} />
         <a href="/splash" style={{ position: "relative", zIndex: 1, textDecoration: "none" }}>
-          <img src="/brand/percept-logo-dark.png" alt="Percept" style={{ display: "block", height: "4rem", width: "auto" }} />
+          <img src="/brand/percept-ai-logo.svg" alt="Percept AI" style={{ display: "block", height: "4rem", width: "auto", background: "#E8E7E5", borderRadius: "0.8rem", padding: "0.2rem 0.6rem" }} />
         </a>
         <motion.div key={headline} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.42 }} style={{ position: "relative", zIndex: 1 }}>
           <h2 style={{ fontSize: "4.4rem", fontWeight: 500, color: "#fff", lineHeight: 1.08, letterSpacing: "-0.025em", marginBottom: "1.6rem" }}>

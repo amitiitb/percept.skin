@@ -7,12 +7,15 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { ScoreReveal } from "@/components/v2/ScoreReveal";
 import ColourAnalysisPanel from "@/components/v2/ColourAnalysisPanel";
 import HairstylePanel from "@/components/v2/HairstylePanel";
+import GroomingPanel from "@/components/v2/GroomingPanel";
 import GlassesVirtualTryOn from "@/components/v2/GlassesVirtualTryOn";
 import FrameAIPanel from "@/components/v2/FrameAIPanel";
 import { FrameGrid } from "@/components/v2/FrameGrid";
 import { MAX_GENERATIONS } from "@/lib/v2/generationBudget";
 import { guideFor } from "@/lib/v2/metricGuide";
 import { trackEvent } from "@/lib/analytics";
+import { logV2 } from "@/lib/v2/log";
+import { HARMONY_METRIC_NAMES, ANGULARITY_METRIC_NAMES } from "@/lib/v2/faceMetricGroups";
 import { IconFaceScan, IconScissors, IconPalette, IconGlasses, IconLock, IconCheck, IconSparkle, IconSun, IconMoon, IconStrands } from "@/components/ui/icons";
 import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
 import type { ModuleId } from "@/lib/v2/reportModules";
@@ -488,7 +491,8 @@ const PHOTO_LABELS: Record<string, string> = {
 
 const SECTION_INTRO: Record<string, string> = {
   Skin: "Texture, tone, and hydration.",
-  Face: "Proportion and symmetry.",
+  Harmony: "How your features balance against each other.",
+  Angularity: "Jawline, cheekbone, and chin definition.",
   "Hair & Scalp": "Density, hairline, and scalp health.",
 };
 
@@ -536,6 +540,10 @@ function TabBar({ tabs, active, onChange, locked }: {
           display: "flex", gap: "0.4rem", overflowX: "auto", scrollbarWidth: "none",
           background: "var(--wash)", borderRadius: "9999px", padding: "0.5rem",
           border: "1px solid var(--line)",
+          // Tabs share the rail's full width equally (flex:1 on each button
+          // below) rather than the rail shrinking to fit them, so there's
+          // never a stretch of empty pill-shaped background on wide screens.
+          width: "100%",
         }}
       >
         {tabs.map((t) => {
@@ -549,7 +557,8 @@ function TabBar({ tabs, active, onChange, locked }: {
               onClick={() => onChange(t)}
               whileTap={{ scale: 0.96 }}
               style={{
-                position: "relative", flex: "0 0 auto", display: "inline-flex", alignItems: "center",
+                position: "relative", flex: "1 1 0", minWidth: 0, display: "inline-flex", alignItems: "center",
+                justifyContent: "center",
                 gap: "0.8rem", padding: "1.1rem 2rem", borderRadius: "9999px", border: "none",
                 background: "none", cursor: "pointer", whiteSpace: "nowrap",
                 fontSize: "1.5rem", fontWeight: 700,
@@ -562,7 +571,7 @@ function TabBar({ tabs, active, onChange, locked }: {
                   aria-hidden
                   style={{
                     position: "absolute", inset: 0, borderRadius: "9999px", background: "var(--panel)",
-                    boxShadow: "0 0.8rem 2rem -0.8rem rgba(0,57,52,0.55)",
+                    boxShadow: "0 0.8rem 2rem -0.8rem rgba(12, 92, 81,0.55)",
                   }}
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
@@ -592,6 +601,71 @@ const ROUTINE_META: Array<{ key: keyof RecommendationSet; label: string; Icon: (
   { key: "hairScalp", label: "Hair & Scalp", Icon: IconStrands, gate: "hair" },
 ];
 
+// Tabbed instead of one card per block side by side — with only 2-3 blocks a
+// grid left one lonely half-width card (skin's 3 blocks on a 2-col grid) or
+// wasted width (hair's single block). A tab per block plus one centered
+// content panel reads as one routine with sections, not a scattered card wall.
+function RoutinePanel({ gate, recommendations }: { gate: "skin" | "hair"; recommendations: RecommendationSet | null }) {
+  const blocks = recommendations ? ROUTINE_META.filter((r) => r.gate === gate).filter((r) => recommendations[r.key]?.length) : [];
+  const [active, setActive] = useState(0);
+  if (blocks.length === 0) return null;
+  const current = blocks[Math.min(active, blocks.length - 1)];
+
+  return (
+    <div style={{ marginBottom: "3.2rem" }}>
+      <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.6rem", textAlign: "center" }}>
+        {gate === "skin" ? "Your Personalized Routine" : "Your Hair & Scalp Routine"}
+      </h2>
+      <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2.4rem", maxWidth: "60rem", textAlign: "center", marginLeft: "auto", marginRight: "auto" }}>
+        Based on what we saw in your photos and the concerns you shared.
+      </p>
+
+      {blocks.length > 1 && (
+        <div
+          role="tablist"
+          aria-label={`${gate === "skin" ? "Routine" : "Hair routine"} sections`}
+          style={{
+            display: "flex", gap: "0.4rem", background: "var(--wash)", borderRadius: "9999px",
+            padding: "0.5rem", border: "1px solid var(--line)", width: "fit-content", margin: "0 auto 2.4rem",
+          }}
+        >
+          {blocks.map((b, i) => {
+            const on = i === active;
+            return (
+              <button
+                key={b.key}
+                role="tab"
+                aria-selected={on}
+                onClick={() => setActive(i)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.8rem", padding: "1rem 2rem",
+                  borderRadius: "9999px", border: "none", background: on ? "var(--panel)" : "none",
+                  color: on ? "#fff" : "var(--secondary)", fontSize: "1.4rem", fontWeight: 700, cursor: "pointer",
+                  boxShadow: on ? "0 0.8rem 2rem -0.8rem rgba(12, 92, 81,0.55)" : "none", transition: "color 0.2s, background 0.2s",
+                }}
+              >
+                <span style={{ display: "flex", color: on ? "var(--rose)" : "var(--muted)" }}><b.Icon size={1.7} /></span>
+                {b.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem 3.2rem", maxWidth: "60rem", margin: "0 auto" }}>
+        <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+          {(recommendations?.[current.key] ?? []).map((s, i) => (
+            <li key={i} style={{ display: "flex", gap: "1rem", fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55, textAlign: "left" }}>
+              <span style={{ color: "var(--rose)", fontWeight: 600, flexShrink: 0 }}>{i + 1}.</span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+}
+
 export default function V2ReportPage() {
   const router = useRouter();
   const params = useParams();
@@ -616,17 +690,44 @@ export default function V2ReportPage() {
   // billed a fresh generation of an image the user had already paid for.
   const [hairGridPath, setHairGridPath] = useState<string | null>(null);
   const [frameGridPath, setFrameGridPath] = useState<string | null>(null);
+  const [beardGridPath, setBeardGridPath] = useState<string | null>(null);
   // Row counts double as the generation counters, so redos left is derived
   // rather than stored. The routes re-check this, so it is only for the button.
   const [hairUsed, setHairUsed] = useState(0);
   const [frameUsed, setFrameUsed] = useState(0);
+  const [beardUsed, setBeardUsed] = useState(0);
   // Guards report_generated against firing again on every 4s poll tick once
   // status has already flipped to complete.
   const reportedRef = useRef(false);
 
   async function load(): Promise<string | undefined> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.replace(`/auth/login?next=/report/${sessionId}`); return; }
+    // A hard timeout around the auth check specifically: if getUser() hangs
+    // (a stale/corrupted refresh token in localStorage can do this — the
+    // Supabase client retries internally rather than rejecting quickly) the
+    // page previously had no fallback and sat on the blank loading screen
+    // forever, with no redirect and no error shown. Any failure here now
+    // sends the user to login instead, which is always a safe recovery.
+    let user;
+    try {
+      const authResult = await Promise.race([
+        supabase.auth.getUser(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("auth check timed out")), 8000)),
+      ]);
+      user = authResult.data.user;
+    } catch {
+      router.replace(`/auth/login?next=/report/${sessionId}`);
+      setLoading(false);
+      return;
+    }
+    if (!user) { router.replace(`/auth/login?next=/report/${sessionId}`); setLoading(false); return; }
+
+    // Everything below this point used to be unguarded — any unexpected
+    // failure (a dropped connection mid-fetch, a storage signing error) threw
+    // an unhandled rejection and left the page on the blank loading screen
+    // forever, the same silent-stuck failure as the auth check above. Same
+    // fix: fall back to a visible state (reuses the existing "not found" UI,
+    // which already has a way back to the dashboard) rather than hang.
+    try {
 
     const [{ data: sess }, { data: purchase }, { data: metricRows }, { data: photoRows }, { data: colourRow }] = await Promise.all([
       supabase.from("analysis_sessions_v2").select("id, status, overall_score, skin_age, created_at, stage, fail_reason").eq("id", sessionId).eq("user_id", user.id).maybeSingle(),
@@ -640,16 +741,20 @@ export default function V2ReportPage() {
 
     // Newest row wins: the grid routes insert rather than upsert, so a
     // regeneration leaves the older row in place.
-    const [{ data: hairGrids }, { data: frameGrids }] = await Promise.all([
+    const [{ data: hairGrids }, { data: frameGrids }, { data: beardGrids }] = await Promise.all([
       supabase.from("hairstyle_generations_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id)
         .eq("style_name", "Style grid").order("created_at", { ascending: false }),
       supabase.from("frame_generations_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id)
         .eq("frame_name", "Frame grid").order("created_at", { ascending: false }),
+      supabase.from("grooming_generations_v2").select("storage_path").eq("session_id", sessionId).eq("user_id", user.id)
+        .eq("kind", "beard").order("created_at", { ascending: false }),
     ]);
     setHairGridPath(hairGrids?.[0]?.storage_path ?? null);
     setFrameGridPath(frameGrids?.[0]?.storage_path ?? null);
+    setBeardGridPath(beardGrids?.[0]?.storage_path ?? null);
     setHairUsed(hairGrids?.length ?? 0);
     setFrameUsed(frameGrids?.length ?? 0);
+    setBeardUsed(beardGrids?.length ?? 0);
 
     // Bundle-first model: no purchase record means nothing was bought yet —
     // used to hard-redirect to the paywall here. Now renders a teaser instead
@@ -706,6 +811,12 @@ export default function V2ReportPage() {
 
     setLoading(false);
     return sess.status;
+    } catch (err) {
+      logV2.error("v2_report_load_failed", { message: err instanceof Error ? err.message : String(err), session_id: sessionId });
+      setNotFound(true);
+      setLoading(false);
+      return undefined;
+    }
   }
 
   useEffect(() => {
@@ -797,6 +908,8 @@ export default function V2ReportPage() {
     const score = session.overall_score ?? 0;
     const skinMetrics = metrics.filter((m) => m.category === "skin");
     const faceMetrics = metrics.filter((m) => m.category === "face");
+    const harmonyMetrics = faceMetrics.filter((m) => (HARMONY_METRIC_NAMES as string[]).includes(m.metricName));
+    const angularityMetrics = faceMetrics.filter((m) => (ANGULARITY_METRIC_NAMES as string[]).includes(m.metricName));
     const hairMetrics = metrics.filter((m) => m.category === "hair");
 
     // Lowest scores first, so the free rows are the ones actually worth acting
@@ -874,7 +987,8 @@ export default function V2ReportPage() {
                 accent={TAB_LABELS.skin.accent}
                 onUnlock={unlock}
               />
-              <FreeSkinSection title="Face" intro={SECTION_INTRO.Face} free={[]} locked={faceMetrics} accent="#D9A62E" onUnlock={unlock} />
+              <FreeSkinSection title="Harmony" intro={SECTION_INTRO.Harmony} free={[]} locked={harmonyMetrics} accent="#D9A62E" onUnlock={unlock} />
+              <FreeSkinSection title="Angularity" intro={SECTION_INTRO.Angularity} free={[]} locked={angularityMetrics} accent="#C8503A" onUnlock={unlock} />
               <FreeSkinSection title="Hair & Scalp" intro={SECTION_INTRO["Hair & Scalp"]} free={[]} locked={hairMetrics} accent="#E8604F" onUnlock={unlock} />
             </div>
 
@@ -951,6 +1065,8 @@ export default function V2ReportPage() {
 
   const skinMetrics = hasSkin ? metrics.filter((m) => m.category === "skin") : [];
   const faceMetrics = hasSkin ? metrics.filter((m) => m.category === "face") : [];
+  const harmonyMetrics = faceMetrics.filter((m) => (HARMONY_METRIC_NAMES as string[]).includes(m.metricName));
+  const angularityMetrics = faceMetrics.filter((m) => (ANGULARITY_METRIC_NAMES as string[]).includes(m.metricName));
   const hairMetrics = hasHairstyle ? metrics.filter((m) => m.category === "hair") : [];
   const score = session.overall_score ?? 0;
 
@@ -973,7 +1089,6 @@ export default function V2ReportPage() {
   // show them if the user actually bought at least one of skin/hairstyle
   // (same access boundary the metric sections use).
   const hasContentAccess = hasSkin || hasHairstyle;
-  const positiveObservations = hasContentAccess ? (session.positive_observations ?? []) : [];
   const limitations = hasContentAccess ? (session.limitations ?? []) : [];
   const recommendations = hasContentAccess ? session.recommendations : null;
 
@@ -984,7 +1099,8 @@ export default function V2ReportPage() {
   const isPart = (p: unknown): p is Part => Boolean(p) && (p as Part).metrics.length > 0;
   const skinParts = [
     hasSkin && { id: "skin", title: "Skin", metrics: skinMetrics },
-    hasSkin && { id: "face", title: "Face", metrics: faceMetrics },
+    hasSkin && { id: "harmony", title: "Harmony", metrics: harmonyMetrics },
+    hasSkin && { id: "angularity", title: "Angularity", metrics: angularityMetrics },
   ].filter(isPart);
   const hairParts = [
     hasHairstyle && { id: "hair", title: "Hair & Scalp", metrics: hairMetrics },
@@ -1002,40 +1118,6 @@ export default function V2ReportPage() {
   // meaningful where a tab actually renders scored rows.
   const filterableMetrics = activeTab === "skin" ? [...skinMetrics, ...faceMetrics]
     : activeTab === "hairstyle" ? hairMetrics : [];
-
-  function routineFor(gate: "skin" | "hair") {
-    if (!recommendations) return null;
-    const blocks = ROUTINE_META.filter((r) => r.gate === gate).filter((r) => recommendations[r.key]?.length);
-    if (blocks.length === 0) return null;
-    return (
-      <div style={{ marginBottom: "3.2rem" }}>
-        <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.6rem" }}>
-          {gate === "skin" ? "Your Personalized Routine" : "Your Hair & Scalp Routine"}
-        </h2>
-        <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2rem", maxWidth: "60rem" }}>
-          Based on what we saw in your photos and the concerns you shared.
-        </p>
-        <div className="v2-routine-grid" style={{ display: "grid", gridTemplateColumns: blocks.length > 1 ? "1fr 1fr" : "1fr", gap: "1.6rem" }}>
-          {blocks.map(({ key, label, Icon }) => (
-            <div key={key} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.8rem" }}>
-                <span style={{ display: "flex", color: "var(--rose)" }}><Icon size={2} /></span>
-                <h3 style={{ fontSize: "1.7rem", fontWeight: 500, color: "var(--primary)", margin: 0 }}>{label}</h3>
-              </div>
-              <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-                {(recommendations[key] ?? []).map((s, i) => (
-                  <li key={i} style={{ display: "flex", gap: "1rem", fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55 }}>
-                    <span style={{ color: "var(--rose)", fontWeight: 600, flexShrink: 0 }}>{i + 1}.</span>
-                    <span>{s}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
@@ -1057,13 +1139,13 @@ export default function V2ReportPage() {
             personal consultation, not a bare number) */}
         <div className="v2-hero-grid" style={{ display: "grid", gridTemplateColumns: photo ? "30rem 1fr" : "1fr", gap: "4.8rem", alignItems: "center", marginBottom: "3.2rem" }}>
           {photo && (
-            <div style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2rem", overflow: "hidden", boxShadow: "0 2.4rem 4.8rem -1.2rem rgba(0,57,52,0.28)" }}>
+            <div style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2rem", overflow: "hidden", boxShadow: "0 2.4rem 4.8rem -1.2rem rgba(12, 92, 81,0.28)" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photo} alt="Your guided-capture photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
           )}
-          <div style={{ textAlign: photo ? "left" : "center" }}>
-            <div style={{ margin: photo ? "0" : "0 auto" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ margin: "0 auto" }}>
               <ScoreReveal score={score} />
             </div>
             <p style={{ fontSize: "2.4rem", fontWeight: 700, color: "var(--primary)", marginTop: "1.6rem" }}>{verdictFor(score)} · Percept Score</p>
@@ -1074,7 +1156,7 @@ export default function V2ReportPage() {
               </div>
             )}
             {sorted.length > 0 && (
-              <div style={{ display: "flex", gap: "3.2rem", justifyContent: photo ? "flex-start" : "center", marginTop: "2.4rem", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "3.2rem", justifyContent: "center", marginTop: "2.4rem", flexWrap: "wrap" }}>
                 <div>
                   <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Strongest</p>
                   <p style={{ fontSize: "1.5rem", color: "var(--primary)" }}>{strongest.join(" · ")}</p>
@@ -1102,22 +1184,6 @@ export default function V2ReportPage() {
                     <img src={p.url} alt={PHOTO_LABELS[p.photoType] ?? p.photoType} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </div>
                   <p style={{ fontSize: "1.2rem", color: "var(--secondary)", marginTop: "0.6rem", textAlign: "center" }}>{PHOTO_LABELS[p.photoType] ?? p.photoType}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* What's working well — the AI's positive observations, previously
-            generated on every analysis but never surfaced anywhere. */}
-        {positiveObservations.length > 0 && (
-          <div style={{ background: "var(--panel)", borderRadius: "1.6rem", padding: "3.2rem 3.6rem", marginBottom: "4.8rem" }}>
-            <p style={{ fontSize: "1.2rem", color: "var(--on-dark)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1.8rem", opacity: 0.8 }}>What&apos;s working well</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-              {positiveObservations.slice(0, 3).map((p, i) => (
-                <div key={i} style={{ display: "flex", gap: "1.2rem", alignItems: "flex-start" }}>
-                  <span style={{ color: "var(--rose)", flexShrink: 0, display: "flex", marginTop: "0.4rem" }}><IconSparkle size={1.7} /></span>
-                  <p style={{ fontSize: "1.6rem", color: "#fff", lineHeight: 1.6, margin: 0 }}>{p}</p>
                 </div>
               ))}
             </div>
@@ -1152,7 +1218,7 @@ export default function V2ReportPage() {
               {skinParts.map((p, i) => (
                 <Section key={p.id} index={i + 1} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
               ))}
-              <div style={{ marginTop: "3.2rem" }}>{routineFor("skin")}</div>
+              <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="skin" recommendations={recommendations} /></div>
             </div>
           )}
 
@@ -1161,7 +1227,7 @@ export default function V2ReportPage() {
               {hairParts.map((p, i) => (
                 <Section key={p.id} index={i + 1} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
               ))}
-              <div style={{ marginTop: "3.2rem" }}>{routineFor("hair")}</div>
+              <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="hair" recommendations={recommendations} /></div>
               <HairstylePanel
                 sessionId={sessionId}
                 photo={photo}
@@ -1169,6 +1235,14 @@ export default function V2ReportPage() {
                 onRequirePremium={() => {}}
                 initialPath={hairGridPath}
                 initialRemaining={Math.max(0, MAX_GENERATIONS - hairUsed)}
+              />
+              <GroomingPanel
+                sessionId={sessionId}
+                photo={photo}
+                isPremium
+                onRequirePremium={() => {}}
+                initialBeardPath={beardGridPath}
+                initialBeardRemaining={Math.max(0, MAX_GENERATIONS - beardUsed)}
               />
             </div>
           )}
@@ -1220,7 +1294,6 @@ export default function V2ReportPage() {
            wrapping to two rows, so the sticky header stays one line tall. */
         .v2-tabbar [role="tablist"]::-webkit-scrollbar { display: none; }
         @media (max-width: 600px) {
-          .v2-routine-grid { grid-template-columns: 1fr !important; }
           /* Segments share the width equally and the decorative icons and long
              labels drop out, so all four fit the rail exactly. Previously the
              rail scrolled and clipped the last tab mid-word. */

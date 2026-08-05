@@ -362,7 +362,12 @@ export default function V2CapturePage() {
   }, [autoCapture, showPhaseTransition, captured, cameraError, step, facingMode]);
 
   const ensureSession = useCallback(async (): Promise<string> => {
-    const { data: { user } } = await supabase.auth.getUser();
+    let { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const { data, error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+      user = data.user;
+    }
     if (!user) throw new Error("Not authenticated");
 
     if (currentSessionId) {
@@ -493,7 +498,7 @@ export default function V2CapturePage() {
       setSaving(false);
       setSaveError(
         /row-level security|permission/i.test(message)
-          ? "Couldn't save that photo. Please retry — if it keeps happening, contact support."
+          ? "Couldn't save that photo. Please retry. If it keeps happening, contact support."
           : `Upload failed: ${message || "check your connection and retry."}`
       );
     }

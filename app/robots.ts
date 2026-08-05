@@ -22,6 +22,8 @@ export default function robots(): MetadataRoute.Robots {
       // Explicit entries for AI/answer-engine crawlers so GEO intent is
       // legible in the file itself, not just inherited from the "*" group.
       { userAgent: "GPTBot", allow: "/", disallow: PRIVATE_PATHS },
+      { userAgent: "OAI-SearchBot", allow: "/", disallow: PRIVATE_PATHS },
+      { userAgent: "ChatGPT-User", allow: "/", disallow: PRIVATE_PATHS },
       { userAgent: "ClaudeBot", allow: "/", disallow: PRIVATE_PATHS },
       { userAgent: "PerplexityBot", allow: "/", disallow: PRIVATE_PATHS },
       { userAgent: "Google-Extended", allow: "/", disallow: PRIVATE_PATHS },

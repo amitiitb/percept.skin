@@ -117,8 +117,12 @@ function PerceptGPTInner() {
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column" }}>
       <div style={{ borderBottom: "1px solid var(--line)", padding: "1.6rem 2.4rem", display: "flex", alignItems: "center", gap: "1.2rem", flexShrink: 0 }}>
         <button
-          onClick={() => router.back()}
-          aria-label="Back"
+          // A deterministic destination rather than router.back() — back()
+          // depends on the browser's history stack, and if that stack has an
+          // old /auth/login redirect in it (e.g. from before the user signed
+          // in), back() replays that instead of returning to the dashboard.
+          onClick={() => router.push("/dashboard")}
+          aria-label="Back to dashboard"
           style={{ width: "4rem", height: "4rem", borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, color: "var(--secondary)" }}
         >
           <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>

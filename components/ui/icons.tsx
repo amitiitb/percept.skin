@@ -205,3 +205,23 @@ export function IconStrands(p: IconProps) {
     </Svg>
   );
 }
+
+/** Trust badge: a shield, for privacy/security claims. */
+export function IconShield(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M12 3l7 3v5.5c0 4.6-3 8.4-7 9.5-4-1.1-7-4.9-7-9.5V6l7-3z" />
+      <path d="M9 12l2 2 4-4" />
+    </Svg>
+  );
+}
+
+/** Trust badge: a clock, for time-to-complete claims. */
+export function IconClock(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </Svg>
+  );
+}

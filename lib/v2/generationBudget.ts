@@ -14,20 +14,21 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  */
 export const MAX_GENERATIONS = 3;
 
-type GridTable = "hairstyle_generations_v2" | "frame_generations_v2";
+type GridTable = "hairstyle_generations_v2" | "frame_generations_v2" | "grooming_generations_v2";
 
 /**
  * Counts generations already produced for a scan.
  *
- * Both grid tables insert one row per generation (they do not upsert), so the
- * row count is the usage count. Rows are filtered by the fixed label the grid
- * routes write, so per-style generations in the same table are not counted
- * against the grid's budget.
+ * All three grid tables insert one row per generation (they do not upsert),
+ * so the row count is the usage count. Rows are filtered by the fixed label
+ * the grid routes write (or, for grooming_generations_v2, by `kind` — "beard"
+ * or "eyebrow" — since that table holds both under one roof), so per-style
+ * generations in the same table are not counted against the grid's budget.
  */
 export async function gridGenerationsUsed(
   supabase: SupabaseClient,
   table: GridTable,
-  labelColumn: "style_name" | "frame_name",
+  labelColumn: "style_name" | "frame_name" | "kind",
   label: string,
   userId: string,
   sessionId: string,

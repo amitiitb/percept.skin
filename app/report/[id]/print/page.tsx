@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
 import type { ModuleId } from "@/lib/v2/reportModules";
 
@@ -69,6 +71,8 @@ export default function V2ReportPrintPage() {
   const [photos, setPhotos] = useState<Array<{ type: string; url: string }>>([]);
   const [colour, setColour] = useState<ColourAnalysis | null>(null);
   const [images, setImages] = useState<{ colour?: string; hair?: string; frame?: string }>({});
+  const [generating, setGenerating] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -95,8 +99,6 @@ export default function V2ReportPrintPage() {
       const analysis = (colourRow?.data as ColourAnalysis | undefined) ?? null;
       setColour(analysis);
 
-      // Sign everything in one pass so the render has final URLs and the images
-      // start loading immediately.
       async function sign(path?: string | null) {
         if (!path) return undefined;
         const { data } = await supabase.storage.from("photos_v2").createSignedUrl(path, 60 * 60);
@@ -115,26 +117,34 @@ export default function V2ReportPrintPage() {
       setImages({ colour: colourUrl, hair: hairUrl, frame: frameUrl });
       setLoading(false);
     });
-  }, [sessionId]);
+  }, [sessionId, supabase]);
 
-  // Wait for every image to finish loading before opening the print dialog,
-  // with a ceiling so one slow or broken image cannot block the download.
-  useEffect(() => {
-    if (loading) return;
-    let done = false;
-    const go = () => { if (!done) { done = true; window.print(); } };
-    const imgs = Array.from(document.images);
-    Promise.all(imgs.map((img) => img.complete ? Promise.resolve() : new Promise<void>((res) => {
-      img.addEventListener("load", () => res(), { once: true });
-      img.addEventListener("error", () => res(), { once: true });
-    }))).then(() => setTimeout(go, 300));
-    const ceiling = setTimeout(go, 12000);
-    return () => clearTimeout(ceiling);
-  }, [loading]);
-
-  // "skin" covers skin+face categories; "hairstyle" covers hair, same merge as the report page.
   const categoryAllowed = (cat: MetricCategory) =>
     (cat === "skin" || cat === "face") ? purchased.has("skin") : purchased.has("hairstyle");
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const downloadPdf = async () => {
+    if (!reportRef.current) return;
+    setGenerating(true);
+    try {
+      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [canvas.width / 2, canvas.height / 2]
+      });
+      pdf.addImage(imgData, "JPEG", 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`Percept_Report_${sessionId}.pdf`);
+    } catch (e) {
+      console.error("PDF generation failed", e);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   if (loading || !session) return <p style={{ padding: "4rem", fontFamily: "sans-serif" }}>Preparing your report…</p>;
 
@@ -148,7 +158,28 @@ export default function V2ReportPrintPage() {
   const BLOCK: React.CSSProperties = { marginBottom: "2.6rem", pageBreakInside: "avoid" };
 
   return (
-    <div style={{ maxWidth: "74rem", margin: "0 auto", padding: "4rem 2rem", fontFamily: "system-ui, sans-serif", color: "#1a2320" }}>
+    <>
+      <div className="no-print" style={{
+        position: "fixed", top: "2rem", right: "2rem", display: "flex", gap: "1.2rem",
+        background: "#fff", padding: "1.2rem", borderRadius: "1.2rem", boxShadow: "0 1rem 3rem rgba(0,0,0,0.1)",
+        zIndex: 100
+      }}>
+        <button onClick={handlePrint} style={{
+          padding: "0.8rem 1.6rem", borderRadius: "0.8rem", border: "1px solid #ccc", background: "#f9f9f9",
+          fontSize: "1.4rem", fontWeight: 500, cursor: "pointer", color: "#333"
+        }}>
+          Print
+        </button>
+        <button onClick={downloadPdf} disabled={generating} style={{
+          padding: "0.8rem 1.6rem", borderRadius: "0.8rem", border: "none", background: "#003934",
+          fontSize: "1.4rem", fontWeight: 500, cursor: generating ? "not-allowed" : "pointer", color: "#fff",
+          opacity: generating ? 0.7 : 1
+        }}>
+          {generating ? "Generating..." : "Download PDF"}
+        </button>
+      </div>
+
+      <div ref={reportRef} style={{ maxWidth: "74rem", margin: "0 auto", padding: "4rem 2rem", fontFamily: "system-ui, sans-serif", color: "#1a2320", background: "#fff" }}>
 
       <header style={{ marginBottom: "2.4rem" }}>
         <h1 style={{ fontSize: "2.4rem", margin: "0 0 0.3rem", color: "#003934" }}>Percept Report</h1>
@@ -281,12 +312,14 @@ export default function V2ReportPrintPage() {
         Generated previews are illustrative. Percept offers cosmetic and wellness insights, not a medical diagnosis. Consult a qualified dermatologist for any concerning visible change.
       </p>
 
+      </div>
       <style>{`
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .no-print { display: none !important; }
           @page { margin: 14mm; }
         }
       `}</style>
-    </div>
+    </>
   );
 }

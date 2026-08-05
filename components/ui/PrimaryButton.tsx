@@ -29,7 +29,7 @@ const VARIANT: Record<string, CSSProperties> = {
   primary: { background: "var(--btn-fill)", color: "var(--btn-fill-ink)", borderColor: "var(--btn-fill)" },
   outline: { background: "transparent",   color: "var(--primary)", borderColor: "var(--line-strong)" },
   ghost:   { background: "transparent",   color: "var(--secondary)", borderColor: "transparent"   },
-  onDark:  { background: "#fff",          color: "#003934",        borderColor: "#fff"            },
+  onDark:  { background: "#fff",          color: "#0C5C51",        borderColor: "#fff"            },
 };
 
 const HOVER: Record<string, CSSProperties> = {

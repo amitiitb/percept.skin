@@ -4,17 +4,24 @@ import Image from "next/image";
 import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
-import { HeaderAuth } from "@/components/marketing/HeaderAuth";
 import { WhatYouGet } from "@/components/marketing/WhatYouGet";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Logo } from "@/components/ui/Logo";
-import { IconCheck, IconClose } from "@/components/ui/icons";
+import { IconCheck, IconClose, IconSparkle, IconShield, IconClock } from "@/components/ui/icons";
 import { MODULES, BUNDLE_PRICE, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 import { FAQS } from "@/lib/v2/homeFaqs";
+import { OPEN_COOKIE_PREFS_EVENT } from "@/components/ConsentBanner";
 
 const GOLD = "#D9A62E";
 const CORAL = "#E8604F";
 const ACCENTS = [GOLD, CORAL, "var(--rose)"];
+
+const HEADLINE_WORDS = "See your skin, face, and hair more clearly".split(" ");
+
+const TRUST_BADGES = [
+  { Icon: IconShield, label: "Private & Secure" },
+  { Icon: IconSparkle, label: "AI-Powered Analysis" },
+  { Icon: IconClock, label: "Under 2 minutes" },
+] as const;
 
 // Curved section boundary instead of a hard straight edge where two
 // contrasting section backgrounds meet. Three different curve shapes so
@@ -273,13 +280,21 @@ function FaqRow({ q, a }: { q: string; a: string }) {
 
 export function HomeClient() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    const updateHeader = () => setHeaderScrolled(window.scrollY > 32);
+    updateHeader();
+    window.addEventListener("scroll", updateHeader, { passive: true });
+    return () => window.removeEventListener("scroll", updateHeader);
+  }, []);
 
   return (
     <div style={{ background: "var(--canvas)", minHeight: "100dvh" }}>
       <SiteMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <header style={{ position: "sticky", top: "1.6rem", zIndex: 40, padding: "0 1.6rem", marginBottom: "1.6rem" }}>
-        <div style={{
+      <header className={`home-header${headerScrolled ? " is-scrolled" : ""}`} style={{ position: "fixed", top: "1.6rem", left: 0, right: 0, zIndex: 40, padding: "0 1.6rem" }}>
+        <div className="home-header-inner" style={{
           maxWidth: "128rem", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "1.2rem 1.2rem 1.2rem 2.4rem", borderRadius: "9999px", border: "1px solid var(--line)",
           background: "var(--header-bg)", backdropFilter: "blur(10px)",
@@ -287,90 +302,113 @@ export function HomeClient() {
           <a href="/" style={{ display: "block" }}>
             <Logo height="clamp(2.6rem, 7vw, 4.2rem)" />
           </a>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
-            <HeaderAuth />
-            <ThemeToggle compact />
+          <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
+            {/* Previously the only "Try Free" CTA lived in the hero, so it
+                scrolled out of view immediately — someone reading further down
+                the page had no way to start without scrolling back up or
+                opening the menu. Sticky, so it's reachable from anywhere on
+                the page, on mobile and desktop alike. */}
+            <a href="/splash" className="site-header-cta">
+              <PrimaryButton size="sm" fullWidth={false}>Try Free</PrimaryButton>
+            </a>
             <button
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
-              style={{ width: "4.4rem", height: "4.4rem", borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              style={{ width: "4.4rem", height: "4.4rem", border: 0, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
             >
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" d="M4 8h16M4 16h16" /></svg>
             </button>
           </div>
         </div>
       </header>
 
+      {/* Mobile gets a dedicated, image-led first impression. Keeping it
+          separate avoids compromising the more spacious desktop hero. */}
+      <section className="mobile-first-hero" aria-labelledby="mobile-hero-title">
+        <Image
+          src="/assets/percept-hero-portrait-v2.png"
+          alt="Editorial close-up portrait showing natural skin texture"
+          fill
+          priority
+          sizes="100vw"
+          className="mobile-hero-image"
+        />
+        <div className="mobile-hero-shade" />
+        <motion.div
+          className="mobile-hero-copy"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.15 }}
+        >
+          <p className="mobile-hero-kicker">Personal beauty analysis</p>
+          <h1 id="mobile-hero-title">Understand your features.<br />Improve what matters.</h1>
+          <p className="mobile-hero-sub">A private AI-guided scan for clearer skin, face, hair and colour insights, personalized to you.</p>
+          <div className="mobile-hero-actions">
+            <a href="/splash">Start my plan</a>
+            <a href="#what-you-get">How it works</a>
+          </div>
+        </motion.div>
+      </section>
+
       {/* ── Hero ── */}
-      <section style={{ position: "relative", overflow: "hidden", padding: "6.4rem 3.2rem 8rem" }}>
-        <div aria-hidden style={{ position: "absolute", top: "-20%", left: "10%", width: "56rem", height: "56rem", borderRadius: "50%", background: "radial-gradient(circle, var(--rose) 0%, transparent 70%)", opacity: 0.06, filter: "blur(60px)", pointerEvents: "none" }} />
+      <section className="desktop-home-hero" style={{ position: "relative", padding: "6.4rem 3.2rem 8rem" }}>
         <div className="percept-hero-grid" style={{ position: "relative", maxWidth: "120rem", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "5.6rem", alignItems: "center" }}>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
               Personal beauty analysis
             </p>
             <h1 style={{ fontSize: "clamp(3.4rem, 5.5vw, 5.6rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.05, letterSpacing: "-0.02em", marginBottom: "2.4rem" }}>
-              See your skin, face, and hair more clearly
+              {HEADLINE_WORDS.map((word, i) => {
+                const isLast = i === HEADLINE_WORDS.length - 1;
+                return (
+                  <span key={i} style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top" }}>
+                    <motion.span
+                      style={{ display: "inline-block", color: isLast ? "var(--rose)" : undefined }}
+                      initial={{ y: "110%" }}
+                      animate={{ y: "0%" }}
+                      transition={{ duration: 0.6, delay: 0.15 + i * 0.07, ease: [0.24, 0.43, 0.15, 0.97] }}
+                    >
+                      {word}&nbsp;
+                    </motion.span>
+                  </span>
+                );
+              })}
             </h1>
-            <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "48rem", marginBottom: "4rem" }}>
-              A guided photo scan, understood by AI. No lab visit, no appointment, just a clear, specific report you can act on and track over time.
+            <p style={{ fontSize: "1.8rem", color: "var(--secondary)", lineHeight: 1.6, maxWidth: "48rem", marginBottom: "2.8rem" }}>
+              A guided photo scan, read by AI. Clear, specific, and easy to track over time.
             </p>
-            <div style={{ display: "flex", gap: "1.2rem", flexWrap: "nowrap" }}>
-              <a href="/splash"><PrimaryButton size="sm" fullWidth={false}>Start free →</PrimaryButton></a>
+            <div style={{ display: "flex", alignItems: "center", gap: "1.4rem", flexWrap: "wrap", marginBottom: "3.2rem" }}>
+              {TRUST_BADGES.map(({ Icon, label }, i) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: "1.4rem" }}>
+                  {i > 0 && <span aria-hidden style={{ width: "0.4rem", height: "0.4rem", borderRadius: "50%", background: "var(--line-strong)", flexShrink: 0 }} />}
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "1.4rem", fontWeight: 500, color: "var(--secondary)" }}>
+                    <Icon size={1.5} strokeWidth={1.75} />
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: "1.2rem", flexWrap: "wrap" }}>
+              <a href="/splash"><PrimaryButton size="sm" fullWidth={false}>Start my journey →</PrimaryButton></a>
               <a href="#why"><PrimaryButton size="sm" variant="outline" fullWidth={false}>Why Percept</PrimaryButton></a>
             </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}
-            style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2.4rem", overflow: "hidden" }}
+            style={{ position: "relative" }}
           >
+            {/* Natural aspect ratio (1024x1536, 2:3), not force-cropped into a
+                4:5 box — cover was cutting off her hair and hands. */}
             <Image
               src="/images/skincare-portraits/portrait-deep-brown.png"
               alt="Close-up portrait showing clear, healthy skin"
-              fill
+              width={1024}
+              height={1536}
               priority
               sizes="(max-width: 900px) 100vw, 50vw"
-              style={{ objectFit: "cover", objectPosition: "50% 5%" }}
+              style={{ width: "100%", height: "auto", display: "block" }}
             />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Report preview — the actual product, not a promised outcome ── */}
-      <section style={{ padding: "8rem 3.2rem", position: "relative" }}>
-        <div className="percept-hero-grid" style={{ maxWidth: "108rem", margin: "0 auto", display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: "5.6rem", alignItems: "center" }}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
-            style={{ position: "relative", aspectRatio: "3/4", maxWidth: "36rem", margin: "0 auto" }}
-          >
-            <Image
-              src="/assets/report-preview-mockup.png"
-              alt="Percept skin report screen showing an overall score and individual metrics"
-              fill
-              sizes="(max-width: 900px) 80vw, 36rem"
-              style={{ objectFit: "contain" }}
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6 }}
-          >
-            <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
-              What you get
-            </p>
-            <h2 style={{ fontSize: "clamp(2.6rem, 5vw, 3.6rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.15, marginBottom: "2rem" }}>
-              Your actual report, not a promised outcome
-            </h2>
-            <p style={{ fontSize: "1.7rem", color: "var(--secondary)", lineHeight: 1.6, marginBottom: "2.8rem" }}>
-              An overall score plus every metric broken out individually, texture, tone, pores, hydration, clarity, firmness, so you know exactly what&apos;s driving the number, not just the number itself.
-            </p>
-            <a href="/splash"><PrimaryButton fullWidth={false}>Start your scan →</PrimaryButton></a>
           </motion.div>
         </div>
       </section>
@@ -539,14 +577,14 @@ export function HomeClient() {
                 ⭐ Percept bundle
               </p>
               {MODULES.map((m) => (
-                <div key={m.id} style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(0,57,52,0.15)" }}>
+                <div key={m.id} style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem 0", borderBottom: "1px solid rgba(12, 92, 81,0.15)" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500 }}>
                     <span aria-hidden style={{ display: "flex" }}><IconCheck size={1.5} strokeWidth={2.4} /></span> {m.label}
                   </span>
                 </div>
               ))}
               <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingTop: "1.6rem" }}>
-                <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(0,57,52,0.6)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</span>
+                <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(12, 92, 81,0.6)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</span>
                 <span style={{ fontSize: "3.2rem", fontWeight: 800, color: "var(--primary)" }}>${BUNDLE_PRICE}</span>
               </div>
             </motion.div>
@@ -637,7 +675,7 @@ export function HomeClient() {
         <div style={{ maxWidth: "128rem", margin: "0 auto" }}>
           <div className="percept-footer-grid" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: "4rem", paddingBottom: "4rem", borderBottom: "1px solid rgba(255,255,255,0.14)" }}>
             <div className="percept-footer-brand">
-              <img src="/brand/percept-logo-dark.png" alt="Percept" style={{ display: "block", height: "3.6rem", width: "auto" }} />
+              <img src="/brand/percept-ai-logo.svg" alt="Percept AI" style={{ display: "block", height: "3.6rem", width: "auto", background: "#E8E7E5", borderRadius: "0.8rem", padding: "0.2rem 0.6rem" }} />
               <p style={{ fontSize: "1.4rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginTop: "1.6rem", maxWidth: "32rem" }}>
                 A guided photo scan, understood by AI. Skin, face, and hair insight in a few minutes, no lab visit.
               </p>
@@ -660,6 +698,13 @@ export function HomeClient() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
                   <a href="/privacy" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Privacy Policy</a>
                   <a href="/terms" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Terms of Service</a>
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_PREFS_EVENT))}
+                    style={{ fontSize: "1.4rem", color: "var(--on-dark)", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", font: "inherit" }}
+                  >
+                    Cookie Preferences
+                  </button>
                 </div>
               </div>
 
@@ -683,10 +728,105 @@ export function HomeClient() {
       </footer>
 
       <style>{`
+        .desktop-home-hero { display: none !important; }
+        .home-header-inner { transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, padding 0.25s ease; }
+        .home-header-inner {
+          position: relative;
+          padding: 0.8rem 0.9rem 0.8rem 1.6rem !important;
+        }
+        .home-header-inner > a:first-child img { height: 3.2rem !important; }
+        .home-header-inner > a:first-child {
+          position: absolute;
+          left: 1.6rem;
+          top: 50%;
+          transform: translateY(-50%);
+          display: flex !important;
+          align-items: center;
+        }
+        .home-header-inner > div { margin-left: auto; gap: 0.7rem !important; }
+        @media (min-width: 701px) {
+          .home-header-inner > a:first-child { top: calc(50% + 0.2rem); }
+        }
+        .home-header .site-header-cta button {
+          height: 3.8rem !important;
+          padding: 0 1.6rem !important;
+          font-size: 1.25rem !important;
+        }
+        .home-header button[aria-label="Open menu"] {
+          width: 3.8rem !important;
+          height: 3.8rem !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          background: transparent !important;
+        }
+        .home-header button[aria-label="Open menu"] svg { width: 1.6rem; height: 1.6rem; }
+        .home-header:not(.is-scrolled) .home-header-inner {
+          background: transparent !important;
+          border-color: transparent !important;
+          box-shadow: none !important;
+          backdrop-filter: none !important;
+        }
+        .home-header:not(.is-scrolled) .home-header-inner > a:first-child img {
+          filter: brightness(0) invert(1) drop-shadow(0 0.2rem 0.45rem rgba(0,0,0,0.42));
+        }
+        .home-header.is-scrolled .home-header-inner > a:first-child img { filter: none; }
+        .home-header:not(.is-scrolled) button[aria-label="Open menu"] {
+          color: #fff !important;
+        }
+        .home-header:not(.is-scrolled) button[aria-label="Open menu"] svg {
+          filter: drop-shadow(0 0.2rem 0.35rem rgba(0,0,0,0.55));
+          stroke-width: 3;
+        }
+        .home-header.is-scrolled button[aria-label="Open menu"] svg { filter: none; stroke-width: 2.6; }
+        .home-header.is-scrolled button[aria-label="Open menu"] { color: var(--primary) !important; }
+        .home-header.is-scrolled .home-header-inner { box-shadow: 0 0.8rem 2.4rem rgba(8,32,29,0.12); }
+        .mobile-first-hero {
+          position: relative;
+          display: block;
+          min-height: 100svh;
+          overflow: hidden;
+          background: #9aacae;
+        }
+        .mobile-hero-image { object-fit: cover; object-position: center 26%; }
+        .mobile-hero-shade {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, rgba(3,10,9,0.72) 0%, rgba(3,10,9,0.3) 46%, rgba(3,10,9,0.05) 72%), linear-gradient(180deg, transparent 48%, rgba(2,7,6,0.74) 100%);
+        }
+        .mobile-hero-copy {
+          position: absolute;
+          z-index: 2;
+          left: max(3.2rem, calc((100vw - 120rem) / 2));
+          bottom: 3.2rem;
+          width: min(55rem, calc(100vw - 6.4rem));
+          color: #fff;
+        }
+        .mobile-hero-kicker { margin-bottom: 1.2rem; font-size: 1.4rem; font-weight: 500; color: rgba(255,255,255,0.9); }
+        .mobile-hero-copy h1 {
+          max-width: 55rem;
+          margin: 0 0 1.6rem;
+          font-size: clamp(4rem, 4.2vw, 6rem);
+          font-weight: 400;
+          line-height: 0.98;
+          letter-spacing: -0.05em;
+        }
+        .mobile-hero-sub { max-width: 50rem; margin-bottom: 2.8rem; font-size: 1.6rem; line-height: 1.5; color: rgba(255,255,255,0.78); }
+        .mobile-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 40rem; }
+        .mobile-hero-actions a {
+          min-height: 5.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 1.8rem;
+          border-radius: 999px;
+          background: #fff;
+          color: #123f39;
+          font-size: 1.45rem;
+          font-weight: 700;
+          text-align: center;
+        }
+        .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
         #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
-        /* Below this the hamburger carries the login link instead, so the bar
-           stays three controls wide and never wraps. */
-        @media (min-width: 520px) { .site-header-login { display: inline-flex !important; } }
         .percept-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .percept-carousel::-webkit-scrollbar { display: none; }
         @media (max-width: 900px) {
@@ -696,6 +836,65 @@ export function HomeClient() {
           .percept-footer-brand { grid-column: 1 / -1 !important; }
         }
         @media (max-width: 700px) {
+          .home-header {
+            position: fixed !important;
+            inset: 1.6rem 0 auto 0 !important;
+            margin: 0 !important;
+          }
+          .mobile-first-hero { min-height: min(92svh, 88rem); }
+          .mobile-hero-image {
+            object-fit: cover;
+            object-position: center 18%;
+          }
+          .mobile-hero-shade {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(3,12,11,0.06) 36%, rgba(3,10,9,0.52) 66%, rgba(2,7,6,0.96) 100%);
+          }
+          .mobile-hero-copy {
+            position: absolute;
+            z-index: 2;
+            left: 2rem;
+            right: 2rem;
+            bottom: 2rem;
+            color: #fff;
+          }
+          .mobile-hero-kicker {
+            margin-bottom: 0.8rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+          }
+          .mobile-hero-copy h1 {
+            max-width: 34rem;
+            margin: 0 0 1rem;
+            font-size: clamp(2.7rem, 7.8vw, 3.5rem);
+            font-weight: 400;
+            line-height: 1.02;
+            letter-spacing: -0.045em;
+          }
+          .mobile-hero-sub {
+            max-width: 36rem;
+            margin-bottom: 2.4rem;
+            font-size: 1.35rem;
+            line-height: 1.45;
+            color: rgba(255,255,255,0.78);
+          }
+          .mobile-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+          .mobile-hero-actions a {
+            min-height: 4.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 1.4rem;
+            border-radius: 999px;
+            background: #fff;
+            color: #123f39;
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+          }
+          .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
           #why { padding-top: 5.6rem !important; padding-bottom: 5.6rem !important; }
           .percept-why-heading { margin-bottom: 3.2rem !important; }
         }

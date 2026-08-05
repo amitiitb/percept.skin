@@ -16,7 +16,7 @@ export function Card({ children, eyebrow }: { children: React.ReactNode; eyebrow
       )}
       <div style={{
         background: "var(--surface)", borderRadius: "1.8rem", padding: "2.4rem",
-        boxShadow: "0 1.2rem 2.8rem -1.6rem rgba(0,57,52,0.22)", border: "1px solid var(--line)",
+        boxShadow: "0 1.2rem 2.8rem -1.6rem rgba(12, 92, 81,0.22)", border: "1px solid var(--line)",
       }}>
         {children}
       </div>

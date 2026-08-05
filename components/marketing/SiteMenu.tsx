@@ -1,6 +1,9 @@
 "use client";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "@/components/ui/Logo";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { createClient } from "@/lib/supabase/client";
 
 interface MenuLink {
   label: string;
@@ -24,6 +27,17 @@ interface Props {
 // footer credit. Layout pattern only; palette/type are Percept's own
 // tokens (app/globals.css), not the reference site's.
 export function SiteMenu({ open, onClose }: Props) {
+  // Signed-out visitors get "Log in"; signed-in ones get "Dashboard", same
+  // reasoning as the header link this replaced — sending an authenticated
+  // user to the login form is a dead end they have to back out of.
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    const supabase = createClient();
+    let alive = true;
+    supabase.auth.getUser().then(({ data }) => { if (alive) setSignedIn(Boolean(data.user)); });
+    return () => { alive = false; };
+  }, []);
+
   function go(href: string) {
     onClose();
     document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
@@ -53,13 +67,16 @@ export function SiteMenu({ open, onClose }: Props) {
             <a href="/" style={{ display: "block" }}>
               <Logo height="clamp(2.6rem, 7vw, 4.2rem)" />
             </a>
-            <button
-              onClick={onClose}
-              aria-label="Close menu"
-              style={{ width: "4.4rem", height: "4.4rem", borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            >
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
+              <ThemeToggle compact />
+              <button
+                onClick={onClose}
+                aria-label="Close menu"
+                style={{ width: "4.4rem", height: "4.4rem", borderRadius: "50%", border: "1px solid var(--line)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              >
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
           </div>
 
           <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", maxWidth: "56rem", width: "100%", margin: "0 auto", padding: "0 3.2rem", position: "relative" }}>
@@ -104,13 +121,18 @@ export function SiteMenu({ open, onClose }: Props) {
               </span>
             </a>
 
-            {/* On a phone the hamburger is the only nav, so the account route
-                has to live here too — not just in the desktop header bar. */}
+            {/* The account route and theme toggle live only here — the header
+                bar itself is just the logo, the "Try Free" CTA, and this
+                menu button. */}
             <a
-              href="/auth/login"
+              href={signedIn ? "/dashboard" : "/auth/login"}
               style={{ marginTop: "2rem", width: "fit-content", fontSize: "1.7rem", fontWeight: 500, color: "var(--secondary)" }}
             >
-              Already have an account? <span style={{ color: "var(--primary)", fontWeight: 700 }}>Log in</span>
+              {signedIn ? (
+                <span style={{ color: "var(--primary)", fontWeight: 700 }}>Go to dashboard</span>
+              ) : (
+                <>Already have an account? <span style={{ color: "var(--primary)", fontWeight: 700 }}>Log in</span></>
+              )}
             </a>
           </div>
 

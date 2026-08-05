@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { vertexAccessToken, VERTEX_LOCATION, VERTEX_PROJECT } from "./gemini";
 import type { AnalysisMetric, AnalysisResultV2, MetricCategory, SkinConcern, UserProfileV2 } from "./types";
+import { FACE_METRIC_NAMES } from "./faceMetricGroups";
 
 export class SchemaParseError extends Error {}
 export class SchemaValidationError extends Error {}
@@ -47,9 +48,6 @@ const SKIN_METRIC_NAMES = [
   "Skin texture", "Fine lines", "Pore visibility", "Dark spots & pigmentation",
   "Uneven skin tone", "Redness appearance", "Dryness indicators", "Under-eye appearance",
   "Facial hydration estimate", "Sun-damage appearance",
-];
-const FACE_METRIC_NAMES = [
-  "Facial symmetry", "Jawline definition", "Cheek balance", "Forehead proportion", "Overall facial harmony",
 ];
 const HAIR_METRIC_NAMES = [
   "Hair density estimate", "Hairline pattern", "Scalp visibility", "Hair part width", "Overall hair health",
@@ -258,6 +256,7 @@ Return ONLY valid JSON (no markdown fences, no extra text) with exactly this sha
   "recommendations": {"morning":["string",...],"evening":["string",...],"weekly":["string",...],"hairScalp":["string",...]},
   "limitations": ["string", ...]
 }
+For "Jawline definition", "Cheekbone definition", and "Chin projection" (the Angularity group), you may reference real anatomical/aesthetic terminology where it genuinely helps explain what you observed (e.g. gonial angle, zygomatic prominence, facial thirds, canthal tilt) — this should read as informative, not clinical. Never use ranking/tier language (no "tier", "mogging", numeric-scale comparisons to other people, or similar) and never frame a lower score as a flaw to fix at any cost; every explanation should stay encouraging and observational, consistent with the cosmetic/wellness framing everywhere else in this report.
 Every key listed above under skinMetrics/faceMetrics/hairMetrics must be present. "explanation" and "confidence" must be 1-2 sentences each, specific to what you actually observe in the photos, not generic filler. If a relevant photo is missing or too unclear to assess a metric, give it a lower confidence description and note it in "limitations" rather than guessing wildly. If a metric truly cannot be judged because the photo that would show it was not provided or is unusable, set that metric's "score" to null rather than inventing a number — do not guess a numeric score you have no visual basis for. This is cosmetic and wellness guidance only, never a medical or dermatological diagnosis.`;
 
   return { images, missing, userPrompt };

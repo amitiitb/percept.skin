@@ -130,6 +130,16 @@ export function generateHairstylePreview(photoDataUrl: string, stylePrompt: stri
   );
 }
 
+// Shared by every grid generator below (colour/frame/hairstyle/beard) so a
+// reliability tweak — panel count, no repeated looks, consistent expression —
+// only has to change in one place instead of four near-identical copies.
+const GRID_CONSISTENCY_RULES =
+  `Return EXACTLY 6 panels arranged in a grid 3 panels wide and 2 panels tall, and fill every one of the 6 cells. ` +
+  `Never leave a cell blank, grey or empty, and never pad the grid with a duplicate. ` +
+  `Not one of the 6 panels may be the original unedited photograph: every panel must show a real, visible change. ` +
+  `All 6 panels must be clearly different from every other panel — before drawing each panel, check it against the ones already drawn, and if it would repeat an earlier look, draw a different variation instead; a repeated panel is a failure. ` +
+  `Keep the exact same neutral facial expression, head angle, and eye direction in every single panel — do not let the face's expression shift from panel to panel, only the styling changes. `;
+
 // One composite grid rather than one call per colour. Measured on real runs:
 // a single grid costs ~1/6th of six separate generations, returns in ~10s
 // instead of ~17s, and reads as more cohesive because every panel is lit and
@@ -162,11 +172,7 @@ export function generateColourGrid(photoDataUrl: string, colourNames: string[]) 
     `Create a single clean grid collage image of THIS EXACT person: same face, same hair, same neutral background in every panel. ` +
     `Each panel shows them dressed for a different occasion, in this exact order: ${COLOUR_OCCASIONS.join("; then ")}. ` +
     `Every outfit must use colours drawn from this palette: ${colourNames.join(", ")}. ` +
-    `Return EXACTLY 6 panels arranged in a grid 3 panels wide and 2 panels tall, and fill every one of the 6 cells. ` +
-    `Never leave a cell blank, grey or empty, and never pad the grid with a duplicate. ` +
-    `Not one of the 6 panels may be the original unedited photograph: every panel must show a real, visible change. ` +
-    `All 6 panels must differ clearly from one another. ` +
-
+    GRID_CONSISTENCY_RULES +
     `Photorealistic studio portraits, identical framing, pose and lighting in every panel, thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters, no labels and no colour names anywhere in the image.`
   );
@@ -191,11 +197,7 @@ export function generateFrameGrid(photoDataUrl: string, _frameNames: string[]) {
     `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same hair, same neutral background and same clothing in every panel. ` +
     `Each panel shows them wearing a CLEARLY DIFFERENT pair of eyeglasses suited to a different occasion, in this exact order: ${FRAME_OCCASIONS.join("; then ")}. ` +
     `Every panel must show a visibly distinct frame shape and material, never the same design twice. ` +
-    `Return EXACTLY 6 panels arranged in a grid 3 panels wide and 2 panels tall, and fill every one of the 6 cells. ` +
-    `Never leave a cell blank, grey or empty, and never pad the grid with a duplicate. ` +
-    `Not one of the 6 panels may be the original unedited photograph: every panel must show a real, visible change. ` +
-    `All 6 panels must differ clearly from one another. ` +
-
+    GRID_CONSISTENCY_RULES +
     `In each panel the glasses must sit correctly on the face: temple width matching face width, bridge centred on the nose, ` +
     `a subtle realistic shadow on the nose bridge and under the brow, and a faint lens sheen rather than flat opaque glass. ` +
     `No warping, no floating frames, no misaligned temples. ` +
@@ -219,11 +221,7 @@ export function generateHairstyleGrid(photoDataUrl: string, _styleNames: string[
     `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same neutral background and same clothing in every panel. ` +
     `Each panel shows a different hairstyle suited to a different occasion, in this exact order: ${HAIRSTYLE_OCCASIONS.join("; then ")}. ` +
     `Every panel must show a visibly distinct cut and styling, never the same look twice. ` +
-    `Return EXACTLY 6 panels arranged in a grid 3 panels wide and 2 panels tall, and fill every one of the 6 cells. ` +
-    `Never leave a cell blank, grey or empty, and never pad the grid with a duplicate. ` +
-    `Not one of the 6 panels may be the original unedited photograph: every panel must show a real, visible change. ` +
-    `All 6 panels must differ clearly from one another. ` +
-
+    GRID_CONSISTENCY_RULES +
     `Keep the person's own hair colour and hairline. ` +
     `Photorealistic, identical framing and lighting in every panel, thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters and no labels anywhere in the image.`
@@ -240,5 +238,39 @@ export function generateFramePreview(photoDataUrl: string, framePrompt: string) 
     `show correct material rendering (metal frames must have visible specular highlights, acetate frames must look matte/glossy as appropriate), ` +
     `and render lenses with a faint realistic reflection/sheen rather than flat opaque glass. ` +
     `No warping, no floating frame, no misaligned temples. Photorealistic, natural studio lighting, cosmetic preview only — not a cartoon or sketch.`
+  );
+}
+
+// "Simulate" grooming previews — deliberately scoped to styling choices
+// (beard shape), never bone-structure reshaping. A user can grow or shave a
+// beard; that implies no surgical or medical outcome, unlike a simulated
+// nose/cheekbone/chin change would. Same 6-panel grid mechanism as
+// hairstyle/frame/colour.
+//
+// An eyebrow-shape version of this (EYEBROW_STYLES/generateEyebrowGrid) was
+// built and tried, then removed: two real generation rounds, including a
+// prompt explicitly demanding exaggerated differences, both came back with
+// all 6 panels showing near-identical brows. Beard presence/coverage is a
+// large, reliable edit for this model; eyebrow shape is not — that appears to
+// be a capability limit, not a prompt-wording problem.
+export const BEARD_STYLES = [
+  "fully clean-shaven",
+  "light stubble, a few days of growth",
+  "short boxed beard, neatly lined",
+  "full classic beard, moderate length",
+  "goatee with a trimmed mustache",
+  "mustache only, no beard",
+] as const;
+
+export function generateBeardGrid(photoDataUrl: string, _styleNames: string[]) {
+  return generateImageEdit(
+    photoDataUrl,
+    `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same hairstyle, same neutral background and same clothing in every panel. ` +
+    `Each panel shows a different facial hair style, in this exact order: ${BEARD_STYLES.join("; then ")}. ` +
+    `Every panel must show a visibly distinct facial hair style, never the same look twice. ` +
+    GRID_CONSISTENCY_RULES +
+    `Keep the person's own hair colour, jawline, and bone structure completely unchanged, only the facial hair itself changes. ` +
+    `Photorealistic, identical framing and lighting in every panel, thin white gutters between panels. ` +
+    `Absolutely no text, no words, no letters and no labels anywhere in the image.`
   );
 }

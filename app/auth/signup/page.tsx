@@ -23,6 +23,7 @@ function SignupForm() {
   const [name, setName] = useState("");
   const [email, setEmailLocal] = useState("");
   const [password, setPassword] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -57,6 +58,7 @@ function SignupForm() {
     e.preventDefault();
     setError("");
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (!agreed) { setError("Please confirm you're 18+ and agree to the Terms and Privacy Policy."); return; }
     setLoading(true);
 
     const supabase = createClient();
@@ -150,6 +152,29 @@ function SignupForm() {
             required
           />
 
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={agreed}
+            onClick={() => setAgreed((v) => !v)}
+            style={{ display: "flex", gap: "1.1rem", cursor: "pointer", background: "none", border: "none", padding: 0, textAlign: "left" }}
+          >
+            <span aria-hidden style={{
+              flexShrink: 0, marginTop: "0.2rem", width: "1.9rem", height: "1.9rem", borderRadius: "0.4rem",
+              border: `2px solid ${agreed ? "var(--btn-fill)" : "var(--line-strong)"}`,
+              background: agreed ? "var(--btn-fill)" : "transparent",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              {agreed && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+            </span>
+            <span style={{ fontSize: "1.3rem", color: "var(--secondary)", lineHeight: 1.55 }}>
+              I'm 18 or older and agree to Percept's{" "}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: "var(--primary)", fontWeight: 500 }}>Terms of Service</a>
+              {" "}and{" "}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: "var(--primary)", fontWeight: 500 }}>Privacy Policy</a>.
+            </span>
+          </button>
+
           <AnimatePresence>
             {error && (
               <motion.p
@@ -165,8 +190,8 @@ function SignupForm() {
 
           <motion.button
             type="submit"
-            disabled={loading}
-            whileTap={!loading ? { scale: 0.985 } : {}}
+            disabled={loading || !agreed}
+            whileTap={!loading && agreed ? { scale: 0.985 } : {}}
             style={{
               marginTop: "0.8rem",
               height: "6rem",
@@ -176,12 +201,13 @@ function SignupForm() {
               borderRadius: "9999px",
               fontSize: "1.8rem",
               fontWeight: 500,
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: loading || !agreed ? "not-allowed" : "pointer",
+              opacity: !agreed && !loading ? 0.5 : 1,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: "0.8rem",
-              transition: "background 0.2s",
+              transition: "background 0.2s, opacity 0.2s",
             }}
           >
             {loading ? (
@@ -201,7 +227,7 @@ function SignupForm() {
         </p>
 
         <p style={{ marginTop: "2rem", fontSize: "1.2rem", color: "var(--muted)", textAlign: "center" }}>
-          <IconLock size={1.4} /> Your data is encrypted and never shared.
+          <IconLock size={1.4} /> Your photos are stored privately and only used to build your report.
         </p>
       </motion.div>
     </div>
