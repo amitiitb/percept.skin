@@ -5,12 +5,11 @@ import { motion, useMotionValue, animate, AnimatePresence } from "framer-motion"
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { WhatYouGet } from "@/components/marketing/WhatYouGet";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/ui/Logo";
 import { IconCheck, IconClose, IconSparkle, IconShield, IconClock } from "@/components/ui/icons";
 import { MODULES, BUNDLE_PRICE, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 import { FAQS } from "@/lib/v2/homeFaqs";
+import { OPEN_COOKIE_PREFS_EVENT } from "@/components/ConsentBanner";
 
 const GOLD = "#D9A62E";
 const CORAL = "#E8604F";
@@ -281,17 +280,6 @@ function FaqRow({ q, a }: { q: string; a: string }) {
 
 export function HomeClient() {
   const [menuOpen, setMenuOpen] = useState(false);
-  // Signed-out visitors get "Log in"; signed-in ones get "Dashboard" —
-  // sending an authenticated user to the login form is a dead end they have
-  // to back out of. Checked client-side after paint, so this renders as
-  // "Log in" first and swaps if a session turns up.
-  const [signedIn, setSignedIn] = useState(false);
-  useEffect(() => {
-    const supabase = createClient();
-    let alive = true;
-    supabase.auth.getUser().then(({ data }) => { if (alive) setSignedIn(Boolean(data.user)); });
-    return () => { alive = false; };
-  }, []);
 
   return (
     <div style={{ background: "var(--canvas)", minHeight: "100dvh" }}>
@@ -307,17 +295,6 @@ export function HomeClient() {
             <Logo height="clamp(2.6rem, 7vw, 4.2rem)" />
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
-            {/* Hidden below 520px — the hamburger menu carries the same
-                signed-in/out link there instead, so the bar stays compact
-                enough to fit next to the CTA and theme toggle on a phone. */}
-            <a
-              href={signedIn ? "/dashboard" : "/auth/login"}
-              className="site-header-login"
-              style={{ display: "none", fontSize: "1.5rem", fontWeight: 600, color: "var(--secondary)", whiteSpace: "nowrap" }}
-            >
-              {signedIn ? "Dashboard" : "Login"}
-            </a>
-            <ThemeToggle compact />
             {/* Previously the only "Start free" CTA lived in the hero, so it
                 scrolled out of view immediately — someone reading further down
                 the page had no way to start without scrolling back up or
@@ -383,15 +360,18 @@ export function HomeClient() {
 
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}
-            style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2.4rem", overflow: "hidden" }}
+            style={{ position: "relative" }}
           >
+            {/* Natural aspect ratio (1024x1536, 2:3), not force-cropped into a
+                4:5 box — cover was cutting off her hair and hands. */}
             <Image
               src="/images/skincare-portraits/portrait-deep-brown.png"
               alt="Close-up portrait showing clear, healthy skin"
-              fill
+              width={1024}
+              height={1536}
               priority
               sizes="(max-width: 900px) 100vw, 50vw"
-              style={{ objectFit: "cover", objectPosition: "50% 5%" }}
+              style={{ width: "100%", height: "auto", display: "block" }}
             />
           </motion.div>
         </div>
@@ -682,6 +662,13 @@ export function HomeClient() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
                   <a href="/privacy" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Privacy Policy</a>
                   <a href="/terms" style={{ fontSize: "1.4rem", color: "var(--on-dark)" }}>Terms of Service</a>
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_PREFS_EVENT))}
+                    style={{ fontSize: "1.4rem", color: "var(--on-dark)", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", font: "inherit" }}
+                  >
+                    Cookie Preferences
+                  </button>
                 </div>
               </div>
 
@@ -706,9 +693,6 @@ export function HomeClient() {
 
       <style>{`
         #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
-        /* Below this the hamburger carries the login link instead, so the bar
-           stays compact enough for the CTA and theme toggle to fit beside it. */
-        @media (min-width: 520px) { .site-header-login { display: inline-flex !important; align-items: center; } }
         .percept-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .percept-carousel::-webkit-scrollbar { display: none; }
         @media (max-width: 900px) {
