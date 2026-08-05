@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { IconRefresh } from "@/components/ui/icons";
 
@@ -59,20 +59,6 @@ function GroomingGrid({ sessionId, photo, isPremium, onRequirePremium, kind, end
       setState("error");
     }
   }
-
-  // Now fires on its own once the hairstyle module is purchased, same as
-  // the hairstyle grid above it — previously required an explicit click
-  // ("Generate" button was opt-in) because it was a second real-money
-  // generation added silently to every existing report view. That's no
-  // longer the concern here. Ref guard prevents React's dev double-mount
-  // from billing two generations.
-  const kicked = useRef(false);
-  useEffect(() => {
-    if (kicked.current || url || initialPath || !photo || !isPremium) return;
-    kicked.current = true;
-    generate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photo, isPremium, initialPath]);
 
   return (
     <div style={{ marginBottom: "3.2rem" }}>
