@@ -53,22 +53,21 @@ export function ConsentBanner() {
           role="dialog"
           aria-label="Cookie preferences"
           style={{
-            position: "fixed", right: "1.6rem", bottom: "1.6rem", zIndex: 1000,
-            width: "min(56rem, calc(100vw - 3.2rem))",
-            background: "rgba(5, 12, 11, 0.82)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "1.8rem",
-            padding: "2rem", boxShadow: "0 1.6rem 4rem rgba(0,0,0,0.28)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)",
+            position: "fixed", right: "1.4rem", bottom: "1.4rem", zIndex: 1000,
+            width: "min(42rem, calc(100vw - 2.8rem))",
+            background: "rgba(5, 12, 11, 0.66)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "1.6rem",
+            padding: "1.5rem", boxShadow: "0 1.2rem 3.2rem rgba(0,0,0,0.24)", backdropFilter: "blur(24px) saturate(115%)", WebkitBackdropFilter: "blur(24px) saturate(115%)",
           }}
         >
-          <p style={{ fontSize: "1.35rem", color: "rgba(255,255,255,0.9)", lineHeight: 1.55, margin: "0 0 1.8rem" }}>
-            We use cookies to keep Percept working, improve your report experience, and remember your preferences.
-            You control everything but the essentials. Read our <a href="/privacy" style={{ color: "#fff", textDecoration: "underline", textUnderlineOffset: "0.2em" }}>Privacy Policy</a>.
+          <p style={{ fontSize: "1.15rem", color: "rgba(255,255,255,0.9)", lineHeight: 1.45, margin: "0 0 1.2rem" }}>
+            We use cookies to keep Percept working and remember your preferences. Optional analytics help us improve the experience. Read our <a href="/privacy" style={{ color: "#fff", textDecoration: "underline", textUnderlineOffset: "0.2em" }}>Privacy Policy</a>.
           </p>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
             <button
               type="button"
               onClick={() => choose("denied")}
               style={{
-                height: "4rem", padding: "0", borderRadius: "9999px", fontSize: "1.3rem", fontWeight: 500,
+                height: "3.5rem", padding: "0", borderRadius: "9999px", fontSize: "1.1rem", fontWeight: 500,
                 background: "transparent", color: "rgba(255,255,255,0.82)", border: "0", textDecoration: "underline", textUnderlineOffset: "0.25em", cursor: "pointer",
               }}
             >
@@ -78,7 +77,7 @@ export function ConsentBanner() {
               type="button"
               onClick={() => choose("granted")}
               style={{
-                height: "4rem", minWidth: "11rem", padding: "0 1.8rem", borderRadius: "9999px", fontSize: "1.35rem", fontWeight: 500,
+                height: "3.5rem", minWidth: "9rem", padding: "0 1.5rem", borderRadius: "9999px", fontSize: "1.15rem", fontWeight: 500,
                 background: "#fff", color: "#123f39", border: "1px solid rgba(255,255,255,0.8)", cursor: "pointer",
               }}
             >
