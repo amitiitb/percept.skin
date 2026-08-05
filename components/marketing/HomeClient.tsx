@@ -6,7 +6,7 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { WhatYouGet } from "@/components/marketing/WhatYouGet";
 import { Logo } from "@/components/ui/Logo";
-import { IconCheck, IconClose, IconSparkle, IconShield, IconClock } from "@/components/ui/icons";
+import { IconCheck, IconClose, IconSparkle, IconShield, IconClock, IconPhoto, IconFaceScan, IconRefresh } from "@/components/ui/icons";
 import { MODULES, BUNDLE_PRICE, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 import { FAQS } from "@/lib/v2/homeFaqs";
 import { OPEN_COOKIE_PREFS_EVENT } from "@/components/ConsentBanner";
@@ -221,16 +221,25 @@ const RESEARCH_SLIDES: ResearchSlide[] = [
 
 const WHY_ITEMS = [
   {
-    line: "Guided photos, read by real AI: no lab visit, no appointment.",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l2-2h6l2 2h3v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8z M12 17a4 4 0 100-8 4 4 0 000 8z" />,
+    title: "Guided capture",
+    description: "Clear prompts help you photograph each angle consistently. No appointment or extra hardware required.",
+    field: "Capture",
+    value: "Guided photo set",
+    Icon: IconPhoto,
   },
   {
-    line: "20 metrics scored individually, not one vague grade.",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v18M15 3v18M3 9h18M3 15h18" />,
+    title: "Specific analysis",
+    description: "Visible areas are reviewed separately across skin, face and hair instead of being reduced to one vague grade.",
+    field: "Output",
+    value: "20+ visual metrics",
+    Icon: IconFaceScan,
   },
   {
-    line: "Every scan saved, so you can watch it actually change.",
-    icon: <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 2M21 12a9 9 0 11-9-9 9 9 0 019 9z" />,
+    title: "Progress over time",
+    description: "Completed scans stay in your history, making it easier to compare changes and refine your routine.",
+    field: "Compare",
+    value: "Scan to scan",
+    Icon: IconRefresh,
   },
 ];
 
@@ -326,6 +335,14 @@ export function HomeClient() {
           separate avoids compromising the more spacious desktop hero. */}
       <section className="mobile-first-hero" aria-labelledby="mobile-hero-title">
         <Image
+          src="/assets/percept-hero-desktop-v3.png"
+          alt="Editorial portrait showing natural skin texture"
+          fill
+          priority
+          sizes="100vw"
+          className="hero-desktop-image"
+        />
+        <Image
           src="/assets/percept-hero-portrait-v2.png"
           alt="Editorial close-up portrait showing natural skin texture"
           fill
@@ -340,12 +357,17 @@ export function HomeClient() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.15 }}
         >
-          <p className="mobile-hero-kicker">Personal beauty analysis</p>
+          <p className="mobile-hero-kicker">AI skin, face and hair analysis</p>
           <h1 id="mobile-hero-title">Understand your features.<br />Improve what matters.</h1>
           <p className="mobile-hero-sub">A private AI-guided scan for clearer skin, face, hair and colour insights, personalized to you.</p>
           <div className="mobile-hero-actions">
             <a href="/splash">Start my plan</a>
             <a href="#what-you-get">How it works</a>
+          </div>
+          <div className="hero-proof-points" aria-label="Key product benefits">
+            <div><strong>20+ visual metrics</strong><span>Skin, face and hair insights</span></div>
+            <div><strong>Personal to you</strong><span>Guidance shaped by your features</span></div>
+            <div><strong>Track progress</strong><span>Compare results across scans</span></div>
           </div>
         </motion.div>
       </section>
@@ -417,39 +439,46 @@ export function HomeClient() {
 
       {/* ── Why Percept ── */}
       <section id="why" style={{ padding: "8rem 3.2rem", background: "var(--surface)", position: "relative" }}>
-        <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
-          <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.2rem", textAlign: "center" }}>
-            Why Percept
-          </p>
-          <h2 className="percept-why-heading" style={{ fontSize: "clamp(2.8rem, 5vw, 4rem)", fontWeight: 400, color: "var(--primary)", textAlign: "center", marginBottom: "4.8rem", maxWidth: "56rem", marginLeft: "auto", marginRight: "auto" }}>
-            Specific insight, not a guess
-          </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(28rem, 1fr))", gap: "3.2rem", maxWidth: "108rem", margin: "0 auto" }}>
+        <div style={{ maxWidth: "112rem", margin: "0 auto" }}>
+          <div className="why-section-heading" style={{ display: "grid", gridTemplateColumns: "0.8fr 1.2fr", gap: "4rem", alignItems: "end", marginBottom: "5.6rem" }}>
+            <div>
+              <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--rose)", textTransform: "uppercase", letterSpacing: "0.16em", marginBottom: "1.2rem" }}>
+                Why Percept
+              </p>
+              <h2 className="percept-why-heading" style={{ fontSize: "clamp(3.2rem, 4vw, 5rem)", fontWeight: 400, color: "var(--primary)", lineHeight: 1.02, letterSpacing: "-0.04em", margin: 0 }}>
+                Specific insight,<br />not a guess
+              </h2>
+            </div>
+            <p style={{ maxWidth: "48rem", justifySelf: "end", fontSize: "1.6rem", lineHeight: 1.6, color: "var(--secondary)", margin: 0 }}>
+              A structured view of what is visible today, what may be worth focusing on, and how your results change over time.
+            </p>
+          </div>
+          <div className="why-card-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.6rem" }}>
             {WHY_ITEMS.map((item, i) => (
               <motion.div
-                key={item.line}
+                key={item.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 style={{
-                  display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-                  background: "var(--canvas)", padding: "4.8rem 3.2rem", borderRadius: "2.4rem",
-                  boxShadow: "0 1.2rem 3.2rem -0.8rem rgba(0,0,0,0.06)", border: "1px solid var(--line)"
+                  display: "flex", flexDirection: "column", minHeight: "34rem",
+                  background: "var(--canvas)", padding: "2.4rem", borderRadius: "2rem",
+                  boxShadow: "0 1.2rem 3.2rem -1.6rem rgba(12,92,81,0.2)", border: "1px solid var(--line)"
                 }}
               >
-                <div style={{
-                  width: "8rem", height: "8rem", borderRadius: "2rem",
-                  background: `linear-gradient(135deg, ${ACCENTS[i % ACCENTS.length]} 0%, transparent 100%)`,
-                  display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "3.2rem",
-                  boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.4), 0 1.6rem 3.2rem -1.2rem ${ACCENTS[i % ACCENTS.length]}`,
-                  position: "relative", overflow: "hidden"
-                }}>
-                  <div style={{ position: "absolute", inset: "1px", borderRadius: "1.9rem", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke={ACCENTS[i % ACCENTS.length]} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{item.icon}</svg>
-                  </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "5rem" }}>
+                  <span style={{ width: "4.8rem", height: "4.8rem", borderRadius: "1.4rem", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(26,158,143,0.1)", color: "var(--primary)", border: "1px solid rgba(26,158,143,0.16)" }}>
+                    <item.Icon size={2.2} strokeWidth={1.6} />
+                  </span>
+                  <span style={{ fontSize: "1.1rem", color: "var(--muted)", letterSpacing: "0.12em" }}>0{i + 1}</span>
                 </div>
-                <p style={{ fontSize: "1.8rem", color: "var(--primary)", lineHeight: 1.5, margin: 0, fontWeight: 500 }}>{item.line}</p>
+                <h3 style={{ fontSize: "2.1rem", color: "var(--primary)", lineHeight: 1.2, margin: "0 0 1.2rem", fontWeight: 500 }}>{item.title}</h3>
+                <p style={{ fontSize: "1.35rem", color: "var(--secondary)", lineHeight: 1.55, margin: "0 0 2.4rem" }}>{item.description}</p>
+                <div style={{ marginTop: "auto", paddingTop: "1.6rem", borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.2rem" }}>
+                  <span style={{ fontSize: "1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>{item.field}</span>
+                  <span style={{ fontSize: "1.15rem", fontWeight: 600, color: "var(--primary)" }}>{item.value}</span>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -785,9 +814,15 @@ export function HomeClient() {
           display: block;
           min-height: 100svh;
           overflow: hidden;
-          background: #9aacae;
+          background: #909ca4;
         }
-        .mobile-hero-image { object-fit: cover; object-position: center 26%; }
+        .hero-desktop-image {
+          object-fit: cover;
+          object-position: center;
+        }
+        .mobile-hero-image {
+          display: none;
+        }
         .mobile-hero-shade {
           position: absolute;
           inset: 0;
@@ -796,8 +831,9 @@ export function HomeClient() {
         .mobile-hero-copy {
           position: absolute;
           z-index: 2;
-          left: max(3.2rem, calc((100vw - 120rem) / 2));
-          bottom: 3.2rem;
+          left: clamp(5.2rem, 7.5vw, 15.4rem);
+          top: 24%;
+          bottom: auto;
           width: min(55rem, calc(100vw - 6.4rem));
           color: #fff;
         }
@@ -826,12 +862,30 @@ export function HomeClient() {
           text-align: center;
         }
         .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
+        .hero-proof-points {
+          position: absolute;
+          top: 64svh;
+          left: 0;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0;
+          width: min(58rem, calc(100vw - 6.4rem));
+          max-width: calc(100vw - 6.4rem);
+          margin-top: 0;
+        }
+        .hero-proof-points > div { min-width: 0; padding: 0 1.6rem; border-left: 1px solid rgba(255,255,255,0.24); }
+        .hero-proof-points > div:first-child { padding-left: 0; border-left: 0; }
+        .hero-proof-points strong { display: block; font-size: 1.2rem; font-weight: 500; line-height: 1.2; color: #fff; white-space: nowrap; }
+        .hero-proof-points span { display: block; margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.25; color: rgba(255,255,255,0.62); white-space: nowrap; }
         #why, #experts, #pricing, #faq { scroll-margin-top: 8rem; }
         .percept-carousel { scrollbar-width: none; -ms-overflow-style: none; }
         .percept-carousel::-webkit-scrollbar { display: none; }
         @media (max-width: 900px) {
           .percept-hero-grid { grid-template-columns: 1fr !important; }
           .percept-experts-grid { grid-template-columns: 1fr !important; }
+          .why-section-heading { grid-template-columns: 1fr !important; align-items: start !important; }
+          .why-section-heading > p { justify-self: start !important; }
+          .why-card-grid { grid-template-columns: 1fr !important; }
           .percept-footer-grid { grid-template-columns: 1fr 1fr !important; row-gap: 3.2rem !important; }
           .percept-footer-brand { grid-column: 1 / -1 !important; }
         }
@@ -843,9 +897,11 @@ export function HomeClient() {
           }
           .mobile-first-hero { min-height: min(92svh, 88rem); }
           .mobile-hero-image {
+            display: block;
             object-fit: cover;
             object-position: center 18%;
           }
+          .hero-desktop-image { display: none; }
           .mobile-hero-shade {
             position: absolute;
             inset: 0;
@@ -856,6 +912,7 @@ export function HomeClient() {
             z-index: 2;
             left: 2rem;
             right: 2rem;
+            top: auto;
             bottom: 2rem;
             color: #fff;
           }
@@ -895,6 +952,7 @@ export function HomeClient() {
             text-align: center;
           }
           .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
+          .hero-proof-points { display: none; }
           #why { padding-top: 5.6rem !important; padding-bottom: 5.6rem !important; }
           .percept-why-heading { margin-bottom: 3.2rem !important; }
         }
