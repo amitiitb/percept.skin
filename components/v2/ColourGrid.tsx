@@ -1,10 +1,12 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { IconRefresh } from "@/components/ui/icons";
 import type { ColourAnalysis } from "@/lib/v2/types";
 import { MAX_GENERATIONS } from "@/lib/v2/generationBudget";
+import { GenerationLoader } from "@/components/v2/GenerationLoader";
+import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
 // Replaces the old CSS-tinted "draping" cards, which layered a flat colour
 // block under the user's photo. Those were cheap to render but obviously fake,
@@ -14,7 +16,7 @@ import { MAX_GENERATIONS } from "@/lib/v2/generationBudget";
 // Panel order is deliberately NOT labelled: the model does not honour a
 // requested panel count reliably (a 6-panel ask has returned 9), so labelling
 // positionally would mislabel colours. The swatch list below carries the names.
-const OCCASION_LABELS = ["Office", "Formal suit", "Wedding / festive", "Weekend casual", "Evening party", "Smart casual"];
+const OCCASION_LABELS = ["Casual / friendly meet-up", "Travel day", "Everyday office", "Investor meeting", "Office party", "Wedding / festive"];
 
 export function ColourGrid({
   sessionId, photo, analysis,
@@ -46,11 +48,11 @@ export function ColourGrid({
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Please log in again.");
-      const res = await fetch("/api/colour-analysis/draping", {
+      const res = await enqueueImageGeneration(() => fetch("/api/colour-analysis/draping", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ sessionId, photoDataUrl: photo }),
-      });
+      }));
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Could not generate your colour previews");
       setUrl(body.url); setOccasions(body.occasions ?? []);
@@ -61,18 +63,6 @@ export function ColourGrid({
       setState("error");
     }
   }
-
-  // The user has already paid, so nothing here should need a second click to
-  // "unlock". Generates once on mount when no stored grid exists. The ref
-  // guard matters: without it React's dev double-mount fires two billed
-  // generations for a single page view.
-  const kicked = useRef(false);
-  useEffect(() => {
-    if (kicked.current || existing || url || !photo) return;
-    kicked.current = true;
-    generate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photo, existing]);
 
   if (url) {
     return (
@@ -125,12 +115,7 @@ export function ColourGrid({
           <PrimaryButton fullWidth={false} onClick={generate}>Try again</PrimaryButton>
         </>
       ) : (
-        <>
-          <p style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, margin: "0 0 0.6rem" }}>
-            Dressing you in your {analysis.sub_season} palette…
-          </p>
-          <p style={{ fontSize: "1.3rem", color: "var(--muted)", margin: 0 }}>This takes around 15 seconds.</p>
-        </>
+        <GenerationLoader kind="colour" title={`Dressing you in your ${analysis.sub_season} palette…`} detail="Creating occasion-ready looks from your recommended colours." />
       )}
     </div>
   );

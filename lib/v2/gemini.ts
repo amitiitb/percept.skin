@@ -7,7 +7,11 @@
 
 import { GoogleAuth } from "google-auth-library";
 
-const GEMINI_MODEL = "gemini-2.5-flash-image";
+// Nano Banana Pro: Google's highest-quality model for complex image editing.
+// Keep this configurable so an environment can fall back without a deploy if
+// regional capacity or quota differs. The GA model is global-only.
+const GEMINI_MODEL = process.env.GEMINI_IMAGE_MODEL ?? "gemini-3-pro-image";
+const VERTEX_IMAGE_LOCATION = process.env.GOOGLE_VERTEX_IMAGE_LOCATION ?? "global";
 
 // Vertex AI, not the Gemini Developer API (generativelanguage.googleapis.com).
 // Both serve the same models, but they bill through different rails: the
@@ -24,6 +28,39 @@ export const VERTEX_PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? "glowmetry";
 export class GeminiGenerationError extends Error {}
 export class GeminiEmptyResponseError extends Error {}
 export class GeminiQuotaError extends Error {}
+
+const RETRY_DELAYS_MS = [3_000, 8_000];
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function requestGeneratedImage(url: string, init: RequestInit): Promise<Response> {
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      const response = await fetch(url, init);
+      if (response.status !== 429) return response;
+
+      const details = await response.text();
+      if (attempt === RETRY_DELAYS_MS.length) {
+        throw new GeminiQuotaError(`Gemini quota exceeded: ${details}`);
+      }
+    } catch (error) {
+      if (error instanceof GeminiQuotaError) throw error;
+      if (attempt === RETRY_DELAYS_MS.length) {
+        throw new GeminiGenerationError(
+          `Gemini request failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    // Small jitter prevents two users whose calls failed together from retrying
+    // at precisely the same instant and colliding again.
+    await wait(RETRY_DELAYS_MS[attempt] + Math.floor(Math.random() * 1_000));
+  }
+
+  throw new GeminiGenerationError("Gemini request failed after retries");
+}
 
 // Unlike a static API key, OAuth access tokens expire (~1h), so they are
 // cached and refreshed rather than re-minted per call. GoogleAuth resolves
@@ -81,11 +118,14 @@ export async function generateImageEdit(
   const token = await vertexAccessToken();
   const { mimeType, data } = await toImageBytes(photoDataUrl);
 
+  const imageVertexHost = VERTEX_IMAGE_LOCATION === "global"
+    ? "aiplatform.googleapis.com"
+    : `${VERTEX_IMAGE_LOCATION}-aiplatform.googleapis.com`;
   const url =
-    `https://${VERTEX_LOCATION}-aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT}` +
-    `/locations/${VERTEX_LOCATION}/publishers/google/models/${GEMINI_MODEL}:generateContent`;
+    `https://${imageVertexHost}/v1/projects/${VERTEX_PROJECT}` +
+    `/locations/${VERTEX_IMAGE_LOCATION}/publishers/google/models/${GEMINI_MODEL}:generateContent`;
 
-  const res = await fetch(url, {
+  const res = await requestGeneratedImage(url, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -99,7 +139,13 @@ export async function generateImageEdit(
           { inlineData: { mimeType, data } },
         ],
       }],
-      generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
+      generationConfig: {
+        responseModalities: ["TEXT", "IMAGE"],
+        // A 3x2 panel grid is naturally 3:2. 2K gives the Pro editor enough
+        // pixels for six faces, hairstyles and frame details without paying
+        // the much larger 4K output cost during this comparison test.
+        imageConfig: { aspectRatio: "3:2", imageSize: "2K" },
+      },
     }),
   });
 
@@ -117,7 +163,9 @@ export async function generateImageEdit(
     candidates?: Array<{ content?: { parts?: Array<{ inlineData?: { mimeType: string; data: string } }> } }>;
   };
 
-  const imagePart = json.candidates?.[0]?.content?.parts?.find((p) => p.inlineData)?.inlineData;
+  // Reasoning-capable image models can emit intermediate thought images.
+  // The last image part is the final edited deliverable.
+  const imagePart = json.candidates?.[0]?.content?.parts?.filter((p) => p.inlineData).at(-1)?.inlineData;
   if (!imagePart) throw new GeminiEmptyResponseError("Gemini returned no image — the request may have been refused");
 
   return { mimeType: imagePart.mimeType, base64: imagePart.data };
@@ -162,24 +210,36 @@ const SUBJECT_ADAPTATION_RULES =
 // user actually has to make. The occasion list is fixed and ordered so the UI
 // can caption the panels underneath in the same order.
 export const COLOUR_OCCASIONS = [
-  "everyday office wear, a smart plain shirt",
-  "a formal suit with shirt and tie",
-  "a wedding or festive celebration outfit",
-  "a relaxed weekend casual top",
-  "an evening party or night-out outfit",
-  "a smart-casual blazer over a plain tee",
+  "everyday casual or a friendly meet-up, a relaxed knit, polo, overshirt or casual top",
+  "a comfortable travel day, a breathable layered top or lightweight jacket, never a suit",
+  "a normal office day, a smart plain shirt or business-casual knit, no suit and no tie",
+  "an investor or important formal meeting, the only panel allowed to use a full business suit",
+  "an office party or evening social event, a polished party shirt or elevated separates, never a business suit",
+  "a wedding or festive celebration, culturally appropriate festive clothing, visibly different from business wear",
+] as const;
+
+export const COLOUR_OCCASION_LABELS = [
+  "Casual / friendly meet-up",
+  "Travel day",
+  "Everyday office",
+  "Investor meeting",
+  "Office party",
+  "Wedding / festive",
 ] as const;
 
 export function generateColourGrid(photoDataUrl: string, colourNames: string[]) {
   return generateImageEdit(
     photoDataUrl,
-    `Create a single clean grid collage image of THIS EXACT person: same face, same hair, same neutral background in every panel. ` +
+    `Create a single clean grid collage using the supplied photograph as an IMMUTABLE identity reference. This must be THIS EXACT person, not a similar-looking model. ` +
     SUBJECT_ADAPTATION_RULES +
     `Each panel shows them dressed for a different occasion, in this exact order: ${COLOUR_OCCASIONS.join("; then ")}. ` +
     `Every outfit must use colours drawn from this palette: ${colourNames.join(", ")}. ` +
-    `Preserve the subject's identity, body proportions and existing gender presentation. All six outfits must be coherent with the same presentation visible in the source; do not masculinize, feminize or mix presentation between panels. ` +
+    `The six clothing silhouettes, garment types and levels of formality must be unmistakably different. Use EXACTLY ONE full suit in the entire grid, only for the investor or formal meeting panel. Do not repeat a suit, blazer combination, shirt-and-tie combination, or near-identical outfit in another panel. ` +
+    `EDIT CLOTHING ONLY. Copy the source face, facial proportions, skin tone, skin texture, hairline, scalp hair, facial hair, expression, head angle and eye direction without reinterpretation into all six panels. Do not beautify, slim, age, de-age, masculinize, feminize or replace the person. ` +
+    `Keep the same close chest-up crop and the same real background from the supplied photo in every panel. Do not create a studio model, grey studio backdrop, full-body portrait or a different camera perspective. Show enough upper torso to make each garment clearly readable while keeping the face at the same scale as the source. ` +
+    `Preserve the subject's body proportions and existing gender presentation. All six outfits must be coherent with the same presentation visible in the source. ` +
     GRID_CONSISTENCY_RULES +
-    `Photorealistic studio portraits, identical framing, pose and lighting in every panel, thin white gutters between panels. ` +
+    `Photorealistic edits of the supplied photograph, identical framing, pose, background and lighting in every panel, thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters, no labels and no colour names anywhere in the image.`
   );
 }
@@ -243,6 +303,7 @@ export function generateHairstyleGrid(photoDataUrl: string, styleNames: string[]
     `Preserve the subject's presentation exactly as shown in the source. Do not masculinize, feminize, or change their apparent gender presentation. ` +
     `Facial-hair presence is immutable: if the source has no beard, mustache or stubble, every panel must remain completely free of beard, mustache and stubble; if facial hair is present, preserve it pixel-for-pixel. ` +
     `Everything below the scalp hairline must remain visually identical to the source photograph: exact facial identity, face shape, eyes, eyebrows, nose, lips, ears, skin tone, skin texture, neck, clothing, pose, expression, camera perspective, lighting, shadows and background. ` +
+    `CLOTHING IS LOCKED: copy the source shirt pixel-for-pixel into all six panels. Sample its exact colour and preserve that identical colour, neckline, fabric, sleeves, shadows and visible logos in every panel. Never recolour, replace or restyle the shirt, including panel 6. A changed shirt colour makes the entire result invalid. ` +
     `Do not beautify, retouch, sharpen, relight, smooth skin, remove marks, alter facial hair, change body proportions, or reconstruct the face. Do not make the person younger, slimmer, more symmetrical or more conventionally attractive. ` +
     `The result must look like the original unedited photo with only a hairstyle placed naturally onto it. Identical framing and thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters and no labels anywhere in the image.`

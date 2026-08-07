@@ -387,12 +387,13 @@ export const geminiProvider: AnalysisProvider = {
           // requests (measured), and a high roll left too little of the 8192
           // ceiling for the ~2500-3500 token JSON body, truncating it mid-object
           // — a real production failure caught in E2E testing, not theoretical.
-          // 2048 is generous for a grounded extraction task (no multi-step
-          // reasoning needed) and maxOutputTokens is raised well past the
-          // thinking cap so the full JSON always has room after it.
+          // This is structured visual extraction, not an open-ended reasoning
+          // task. Keep thinking small and reserve the budget for the sizeable
+          // report JSON. A real report reached 12k tokens and was truncated in
+          // the middle of a metric, so 20k is intentional headroom.
           generationConfig: {
-            responseMimeType: "application/json", maxOutputTokens: 12000, temperature: 0.4,
-            thinkingConfig: { thinkingBudget: 2048 },
+            responseMimeType: "application/json", maxOutputTokens: 20000, temperature: 0.3,
+            thinkingConfig: { thinkingBudget: 512 },
           },
         }),
       });

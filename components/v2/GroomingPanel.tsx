@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { IconRefresh } from "@/components/ui/icons";
+import { GenerationLoader } from "@/components/v2/GenerationLoader";
+import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
 interface GridProps {
   sessionId: string;
@@ -44,11 +46,11 @@ function GroomingGrid({ sessionId, photo, isPremium, onRequirePremium, kind, end
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Please log in again.");
-      const res = await fetch(endpoint, {
+      const res = await enqueueImageGeneration(() => fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ sessionId, photoDataUrl: photo }),
-      });
+      }));
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? `Could not generate your ${kind} previews`);
       setUrl(body.url);
@@ -101,20 +103,13 @@ function GroomingGrid({ sessionId, photo, isPremium, onRequirePremium, kind, end
       ) : (
         <div style={{ textAlign: "center", padding: "3.2rem 0", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.2rem" }}>
           {state === "loading" ? (
-            <>
-              <p style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, margin: "0 0 0.6rem" }}>Creating your {kind} previews…</p>
-              <p style={{ fontSize: "1.3rem", color: "var(--muted)", margin: 0 }}>This takes around 15 seconds.</p>
-            </>
+            <GenerationLoader kind="beard" title={`Creating your ${kind} previews…`} detail="Keeping your identity fixed while styling six looks." />
           ) : state === "error" ? (
             <>
               <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>
               <button type="button" onClick={generate} style={{ padding: "1.2rem 2.4rem", borderRadius: "9999px", border: "none", background: "var(--btn-fill)", color: "var(--btn-fill-ink)", fontSize: "1.4rem", fontWeight: 600, cursor: "pointer" }}>Try again</button>
             </>
-          ) : (
-            <button type="button" onClick={generate} style={{ padding: "1.2rem 2.4rem", borderRadius: "9999px", border: "none", background: "var(--btn-fill)", color: "var(--btn-fill-ink)", fontSize: "1.4rem", fontWeight: 600, cursor: "pointer" }}>
-              {`Generate ${kind} previews →`}
-            </button>
-          )}
+          ) : <GenerationLoader kind="beard" title={`Preparing your ${kind} previews…`} />}
         </div>
       )}
     </div>

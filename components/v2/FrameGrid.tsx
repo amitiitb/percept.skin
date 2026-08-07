@@ -1,8 +1,10 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { IconRefresh } from "@/components/ui/icons";
+import { GenerationLoader } from "@/components/v2/GenerationLoader";
+import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
 interface Props {
   sessionId: string;
@@ -49,11 +51,11 @@ export function FrameGrid({ sessionId, photo, initialPath, initialRemaining = 0 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Please log in again.");
-      const res = await fetch("/api/frame-tryon/grid", {
+      const res = await enqueueImageGeneration(() => fetch("/api/frame-tryon/grid", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ sessionId, photoDataUrl: photo }),
-      });
+      }));
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Could not generate your frame previews");
       setUrl(body.url);
@@ -64,16 +66,6 @@ export function FrameGrid({ sessionId, photo, initialPath, initialRemaining = 0 
       setState("error");
     }
   }
-
-  // Already paid for, so it generates on first view rather than behind a click.
-  // The ref guard stops React's dev double-mount billing two generations.
-  const kicked = useRef(false);
-  useEffect(() => {
-    if (kicked.current || url || initialPath || !photo) return;
-    kicked.current = true;
-    generate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photo, initialPath]);
 
   if (url) {
     return (
@@ -120,10 +112,7 @@ export function FrameGrid({ sessionId, photo, initialPath, initialRemaining = 0 
           <PrimaryButton fullWidth={false} onClick={generate}>Try again</PrimaryButton>
         </>
       ) : (
-        <>
-          <p style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, margin: "0 0 0.6rem" }}>Fitting five frame styles to your face…</p>
-          <p style={{ fontSize: "1.3rem", color: "var(--muted)", margin: 0 }}>This takes around 15 seconds.</p>
-        </>
+        <GenerationLoader kind="frame" title="Fitting six frame styles to your face…" detail="Matching frame shape, scale and bridge position to your proportions." />
       )}
     </div>
   );

@@ -26,7 +26,7 @@ const PHOTO_LABELS: Record<string, string> = {
   face_detail: "Close-up", hairline_front: "Hairline", scalp_crown: "Crown",
 };
 
-const COLOUR_LABELS = ["Office", "Formal suit", "Wedding / festive", "Weekend casual", "Evening party", "Smart casual"];
+const COLOUR_LABELS = ["Casual / friendly meet-up", "Travel day", "Everyday office", "Investor meeting", "Office party", "Wedding / festive"];
 const HAIR_LABELS = ["Office", "Wedding / formal", "Everyday casual", "Evening party", "Short & low-maintenance", "Textured everyday"];
 const BEARD_LABELS = ["Clean-shaven", "Light stubble", "Short boxed beard", "Full classic beard", "Goatee", "Mustache only"];
 const FRAME_LABELS = ["Office", "Evening / party", "Formal & wedding", "Everyday casual", "Minimal rimless", "Sporty everyday"];
@@ -64,6 +64,19 @@ interface SessionRow {
   positive_observations: string[] | null;
   recommendations: RecommendationSet | null;
   limitations: string[] | null;
+}
+
+function reportFileBase(name: string, createdAt: string) {
+  const safeName = name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+  const date = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric", month: "short", year: "numeric",
+  }).format(new Date(createdAt)).replace(/\s+/g, "-");
+  return ["Percept-Report", safeName, date].filter(Boolean).join("-");
 }
 
 export default function V2ReportPrintPage() {
@@ -132,6 +145,17 @@ export default function V2ReportPrintPage() {
   const categoryAllowed = (cat: MetricCategory) =>
     (cat === "skin" || cat === "face") ? purchased.has("skin") : purchased.has("hairstyle");
 
+  const fileBase = session ? reportFileBase(name, session.created_at) : "Percept-Report";
+
+  // Browsers commonly use document.title as the suggested filename for
+  // Print -> Save as PDF, so keep it aligned with the explicit PDF download.
+  useEffect(() => {
+    if (!session) return;
+    const previous = document.title;
+    document.title = fileBase;
+    return () => { document.title = previous; };
+  }, [fileBase, session]);
+
   const handlePrint = () => {
     window.print();
   };
@@ -148,7 +172,7 @@ export default function V2ReportPrintPage() {
         format: [canvas.width / 2, canvas.height / 2]
       });
       pdf.addImage(imgData, "JPEG", 0, 0, canvas.width / 2, canvas.height / 2);
-      pdf.save(`Percept_Report_${sessionId}.pdf`);
+      pdf.save(`${fileBase}.pdf`);
     } catch (e) {
       console.error("PDF generation failed", e);
     } finally {

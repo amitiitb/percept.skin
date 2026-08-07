@@ -578,16 +578,18 @@ function TabBar({ tabs, active, onChange, locked }: {
           return (
             <motion.button
               key={t}
+              className={`v2-tab-option v2-tab-${t}${on ? " is-active" : ""}`}
               role="tab"
               aria-selected={on}
               onClick={() => onChange(t)}
+              whileHover={{ y: -2 }}
               whileTap={{ scale: 0.96 }}
               style={{
                 position: "relative", flex: "1 1 0", minWidth: 0, display: "inline-flex", alignItems: "center",
                 justifyContent: "center",
-                gap: "0.8rem", padding: "1.1rem 2rem", borderRadius: "9999px", border: "none",
+                gap: "0.8rem", padding: "1.25rem 2rem", borderRadius: "1.2rem", border: "none",
                 background: "none", cursor: "pointer", whiteSpace: "nowrap",
-                fontSize: "1.5rem", fontWeight: 700,
+                fontSize: "1.55rem", fontWeight: 800,
                 color: on ? "#fff" : "var(--secondary)", transition: "color 0.2s",
               }}
             >
@@ -596,16 +598,17 @@ function TabBar({ tabs, active, onChange, locked }: {
                   layoutId="v2-tab-pill"
                   aria-hidden
                   style={{
-                    position: "absolute", inset: 0, borderRadius: "9999px", background: "var(--panel)",
-                    boxShadow: "0 0.8rem 2rem -0.8rem rgba(12, 92, 81,0.55)",
+                    position: "absolute", inset: 0, borderRadius: "1.2rem",
+                    background: `linear-gradient(135deg, var(--panel), ${meta.accent})`,
+                    boxShadow: `0 1rem 2.6rem -1rem ${meta.accent}`,
                   }}
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
               <span style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: "0.8rem" }}>
                 <span aria-hidden className="v2-tab-icon" style={{
-                  display: "flex", color: on ? meta.accent : "var(--muted)", transition: "color 0.2s",
-                }}><meta.Icon size={1.7} strokeWidth={2} /></span>
+                  display: "flex", color: on ? "#fff" : meta.accent, transition: "color 0.2s",
+                }}><meta.Icon size={1.85} strokeWidth={2.2} /></span>
                 <span className="v2-tab-full">{meta.label}</span>
                 <span className="v2-tab-short" style={{ display: "none" }}>{meta.short}</span>
                 {locked?.has(t) && (
@@ -1167,6 +1170,16 @@ export default function V2ReportPage() {
   const filterableMetrics = activeTab === "skin" ? [...skinMetrics, ...faceMetrics]
     : activeTab === "hairstyle" ? hairMetrics : [];
 
+  function openCategory(tabId: TabId) {
+    setTab(tabId);
+    setMetricFilter("all");
+    // The overview cards sit well above the tab panels on mobile. Changing the
+    // tab without moving the viewport made the tap appear to do nothing.
+    window.setTimeout(() => {
+      document.getElementById("v2-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+  }
+
   return (
     <div className="v2-report-page" style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
@@ -1219,14 +1232,20 @@ export default function V2ReportPage() {
 
         {categoryCards.length > 0 && (
           <section className="v2-report-block v2-category-block">
-            <p className="v2-eyebrow">Category overview</p><h2 style={{ margin: "0 0 1.6rem", color: "var(--primary)", fontSize: "2.2rem" }}>See the whole picture</h2>
+            <div className="v2-category-intro">
+              <div><p className="v2-eyebrow">Your results at a glance</p><h2>See your whole picture.</h2><p>Select any card to open the complete analysis and personalised recommendations.</p></div>
+              <span><IconSparkle size={1.35} /> {categoryCards.length} insights ready</span>
+            </div>
             <div className="v2-category-grid">{categoryCards.map((card) => {
               const categoryBand = bandFor(card.score);
-              return <button key={card.label} onClick={() => setTab(card.tab)}>
-                <div className="v2-category-heading"><span>{card.label}</span><strong style={{ color: card.score === null ? "var(--primary)" : categoryBand.color }}>{card.score ?? "View"}</strong></div>
+              const CategoryIcon = card.label === "Face" ? IconSparkle : TAB_LABELS[card.tab].Icon;
+              const accent = card.score === null ? TAB_LABELS[card.tab].accent : categoryBand.color;
+              return <motion.button key={card.label} onClick={() => openCategory(card.tab)} whileHover={{ y: -5 }} whileTap={{ scale: .985 }} style={{ "--category-accent": accent } as React.CSSProperties}>
+                <div className="v2-category-card-top"><span className="v2-category-icon"><CategoryIcon size={2.1} strokeWidth={2} /></span><span className="v2-category-open" aria-hidden>↗</span></div>
+                <div className="v2-category-heading"><span>{card.label}</span><strong style={{ color: accent }}>{card.score ?? "View"}{card.score !== null && <small>/100</small>}</strong></div>
                 {card.score !== null && <div className="v2-category-bar"><i style={{ width: `${card.score}%`, background: categoryBand.color }} /></div>}
-                <p>{card.detail}</p><small>Explore details →</small>
-              </button>;
+                <p>{card.detail}</p><span className="v2-category-cta">Open {card.label.toLowerCase()} analysis <b aria-hidden>→</b></span>
+              </motion.button>;
             })}</div>
           </section>
         )}
@@ -1255,8 +1274,15 @@ export default function V2ReportPage() {
             being read. Replaces the old anchor-link contents list, which still
             left every module stacked in one scroll. */}
         <section className="v2-analysis-block">
-        <div className="v2-block-heading v2-analysis-heading"><div><p className="v2-eyebrow">Detailed analysis</p><h2>Explore your results</h2></div><span>Select a category</span></div>
-        <div className="v2-score-legend" aria-label="Score colour guide"><span><i className="strong" />Strong result</span><span><i className="watch" />Neutral or watch</span><span><i className="focus" />Needs attention</span><span><i className="unknown" />Not assessed</span></div>
+        <div className="v2-analysis-heading">
+          <div className="v2-analysis-heading-icon" aria-hidden><IconSparkle size={2.4} /></div>
+          <div className="v2-analysis-heading-copy">
+            <p className="v2-eyebrow">Your personalised report</p>
+            <h2>Explore what makes you, you.</h2>
+            <p>Choose a category to reveal your scores, tailored recommendations and visual previews.</p>
+          </div>
+          <span className="v2-category-count"><b>{tabs.length}</b> categories ready <span aria-hidden>↓</span></span>
+        </div>
         <TabBar
           tabs={tabs}
           active={activeTab ?? "skin"}
@@ -1266,6 +1292,7 @@ export default function V2ReportPage() {
             document.getElementById("v2-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
         />
+        <div className="v2-score-legend" aria-label="Score colour guide"><strong>How to read your scores</strong><span><i className="strong" />Strong</span><span><i className="watch" />Watch</span><span><i className="focus" />Needs attention</span><span><i className="unknown" />Not assessed</span></div>
 
         {/* Every purchased panel stays mounted, with inactive ones hidden,
             rather than swapping a single keyed child through AnimatePresence.
@@ -1291,7 +1318,6 @@ export default function V2ReportPage() {
               {hairParts.map((p, i) => (
                 <Section key={p.id} index={i + 1} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
               ))}
-              <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="hair" recommendations={recommendations} /></div>
               <HairstylePanel
                 sessionId={sessionId}
                 photo={photo}
@@ -1300,14 +1326,15 @@ export default function V2ReportPage() {
                 initialPath={hairGridPath}
                 initialRemaining={Math.max(0, MAX_GENERATIONS - hairUsed)}
               />
-              <GroomingPanel
+              <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="hair" recommendations={recommendations} /></div>
+              {beardGridPath && <GroomingPanel
                 sessionId={sessionId}
                 photo={photo}
                 isPremium
                 onRequirePremium={() => {}}
                 initialBeardPath={beardGridPath}
                 initialBeardRemaining={Math.max(0, MAX_GENERATIONS - beardUsed)}
-              />
+              />}
             </div>
           )}
 
@@ -1376,7 +1403,8 @@ export default function V2ReportPage() {
           background-image: radial-gradient(circle at 82% 4%, rgba(133,164,151,0.13), transparent 28rem);
         }
         .v2-score-compact { width: 10rem; height: 10rem; display: grid; place-items: center; flex: 0 0 auto; }
-        .v2-score-legend { display: flex; flex-wrap: wrap; gap: .7rem 1.5rem; margin: -0.3rem 0 1.6rem; padding: 1rem 1.2rem; border: 1px solid var(--line); border-radius: 1rem; background: #F7F5F0; }
+        .v2-score-legend { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 1.5rem; margin: -.6rem 0 1.8rem; padding: .9rem 1.2rem; border: 1px solid var(--line); border-radius: 1rem; background: #F7F5F0; }
+        .v2-score-legend > strong { margin-right: auto; color: var(--primary); font-size: 1.08rem; font-weight: 800; }
         .v2-score-legend span { display: inline-flex; align-items: center; gap: .55rem; color: var(--secondary); font-size: 1.12rem; font-weight: 650; }
         .v2-score-legend i { width: .8rem; height: .8rem; border-radius: 50%; }
         .v2-score-legend .strong { background: #217A55; } .v2-score-legend .watch { background: #C28A27; } .v2-score-legend .focus { background: #B33B3B; } .v2-score-legend .unknown { background: #7A8581; }
@@ -1394,14 +1422,35 @@ export default function V2ReportPage() {
         .v2-report-section { overflow: visible !important; }
         .v2-hero-grid { box-shadow: 0 1.8rem 5rem -4rem rgba(23,62,53,0.45); }
         .v2-report-block, .v2-analysis-block { margin: 3.2rem 0; padding: 2.6rem 2.8rem; border: 1px solid #D8D4CA; border-radius: 1.6rem; background: rgba(252,251,248,0.82); box-shadow: 0 1.6rem 4rem -4rem rgba(23,62,53,0.5); }
-        .v2-category-block { border-top: 0.35rem solid #6F9386; }
+        .v2-category-block { position: relative; border: 1px solid #CEDCD7; border-top: 0.45rem solid #3A8D78; background: linear-gradient(145deg, #FCFBF8 0%, #F0F7F4 100%); }
         .v2-photo-block { border-top: 0.35rem solid #A38B69; }
-        .v2-analysis-block { border-top: 0.35rem solid #315F52; }
+        .v2-analysis-block { position: relative; overflow: hidden; border: 1px solid #BFD4CC; border-top: 0.45rem solid #20A58F; background: linear-gradient(180deg, rgba(229,246,240,.92) 0, rgba(252,251,248,.96) 24rem); box-shadow: 0 2.2rem 5rem -3.5rem rgba(13,48,40,.62); }
         .v2-block-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.6rem; margin-bottom: 1.8rem; padding-bottom: 1.4rem; border-bottom: 1px solid var(--line); }
         .v2-block-heading h2 { margin: 0; color: var(--primary); font-size: 2.1rem; }
         .v2-block-heading > span { padding: 0.55rem 0.9rem; border: 1px solid var(--line); border-radius: 9999px; background: #F5F3EE; color: var(--muted); font-size: 1.05rem; font-weight: 700; white-space: nowrap; }
-        .v2-category-block > h2 { padding-bottom: 1.4rem; border-bottom: 1px solid var(--line); }
-        .v2-analysis-block .v2-tabbar { background: rgba(252,251,248,0.96) !important; margin-bottom: 1.8rem !important; padding-top: 0 !important; }
+        .v2-category-intro { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 2rem; padding-bottom: 1.8rem; border-bottom: 1px solid #D4DFDB; }
+        .v2-category-intro h2 { margin: 0; color: var(--primary); font-size: clamp(2.5rem, 3vw, 3.35rem); font-weight: 850; letter-spacing: -.035em; line-height: 1.08; }
+        .v2-category-intro > div > p:last-child { margin: .75rem 0 0; color: var(--secondary); font-size: 1.25rem; line-height: 1.5; }
+        .v2-category-intro > span { display: inline-flex; align-items: center; gap: .55rem; padding: .75rem 1rem; border: 1px solid #BFD7CF; border-radius: 9999px; background: #E4F3EE; color: #176D5C; font-size: 1.05rem; font-weight: 800; white-space: nowrap; }
+        .v2-analysis-heading { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.5rem; margin: -1rem -1.1rem 2rem; padding: 2.1rem 2.2rem; overflow: hidden; border: 1px solid rgba(255,255,255,.13); border-radius: 1.4rem; background: linear-gradient(125deg, #092F27 0%, #11594C 62%, #168D78 100%); box-shadow: 0 1.8rem 3.8rem -2.2rem rgba(9,47,39,.7); }
+        .v2-analysis-heading:before, .v2-analysis-heading:after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
+        .v2-analysis-heading:before { width: 18rem; height: 18rem; right: -6rem; top: -11rem; border: 1px solid rgba(255,255,255,.16); box-shadow: 0 0 0 2.8rem rgba(255,255,255,.035), 0 0 0 5.6rem rgba(255,255,255,.02); animation: v2-analysis-orbit 7s ease-in-out infinite; }
+        .v2-analysis-heading:after { width: 9rem; height: 9rem; left: 38%; bottom: -8rem; background: rgba(238,185,57,.16); filter: blur(1px); animation: v2-analysis-glow 4s ease-in-out infinite alternate; }
+        .v2-analysis-heading-icon { position: relative; z-index: 1; display: grid; place-items: center; width: 5.3rem; height: 5.3rem; border: 1px solid rgba(255,255,255,.25); border-radius: 1.35rem; background: linear-gradient(145deg, rgba(255,255,255,.2), rgba(255,255,255,.08)); color: #FFD166; box-shadow: inset 0 1px rgba(255,255,255,.22), 0 .8rem 2rem rgba(0,0,0,.16); animation: v2-analysis-float 3.6s ease-in-out infinite; }
+        .v2-analysis-heading-copy { position: relative; z-index: 1; }
+        .v2-analysis-heading .v2-eyebrow { margin-bottom: .65rem; color: #70E1CD; font-size: 1.08rem; }
+        .v2-analysis-heading h2 { margin: 0; max-width: 54rem; color: #fff; font-size: clamp(2.4rem, 3vw, 3.35rem); font-weight: 850; letter-spacing: -.035em; line-height: 1.05; }
+        .v2-analysis-heading-copy > p:last-child { margin: .85rem 0 0; max-width: 58rem; color: rgba(255,255,255,.78); font-size: 1.25rem; font-weight: 520; line-height: 1.5; }
+        .v2-category-count { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: .45rem; padding: .75rem 1rem; border: 1px solid rgba(255,255,255,.22); border-radius: 9999px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.86); font-size: 1rem; font-weight: 750; white-space: nowrap; backdrop-filter: blur(8px); }
+        .v2-category-count b { color: #FFD166; font-size: 1.25rem; }
+        .v2-category-count span { color: #70E1CD; font-size: 1.25rem; animation: v2-analysis-nudge 1.5s ease-in-out infinite; }
+        .v2-analysis-block .v2-tabbar { background: transparent !important; margin-bottom: 1.8rem !important; padding-top: 0 !important; }
+        .v2-analysis-block .v2-tabrail { gap: .65rem !important; padding: .65rem !important; border-color: #D1DDD8 !important; border-radius: 1.55rem !important; background: rgba(255,255,255,.76) !important; box-shadow: inset 0 1px rgba(255,255,255,.9), 0 1.2rem 3rem -2.5rem rgba(13,48,40,.55); }
+        .v2-tab-option:not(.is-active):hover { background: rgba(23,62,53,.06) !important; }
+        @keyframes v2-analysis-float { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-.35rem) rotate(3deg); } }
+        @keyframes v2-analysis-nudge { 0%,100% { transform: translateY(-.1rem); } 50% { transform: translateY(.2rem); } }
+        @keyframes v2-analysis-orbit { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-1rem,1rem); } }
+        @keyframes v2-analysis-glow { from { transform: scale(.8); opacity: .5; } to { transform: scale(1.35); opacity: 1; } }
         .v2-analysis-block .v2-report-section { box-shadow: 0 1rem 2.8rem -2.8rem rgba(23,62,53,0.5); }
         .v2-limitations { border: 1px solid #DDD5C5; border-left: 0.35rem solid #A97931; }
         .v2-overview-pills span { padding: 0.7rem 1.1rem; border-radius: 9999px; background: #F0EEE8; border: 1px solid #E2DED5; color: #425E56; font-size: 1.15rem; }
@@ -1427,16 +1476,28 @@ export default function V2ReportPage() {
         .v2-priority-signal { display: block; width: 100%; height: 0.45rem; margin-top: auto; overflow: hidden; border-radius: 9999px; background: #E4E1DA; }
         .v2-priority-signal b { display: block; height: 100%; border-radius: inherit; background: #356B57; }
         article.improve .v2-priority-signal b { background: #A97931; } article.retake .v2-priority-signal b { background: #66847A; }
-        .v2-category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; }
-        .v2-category-grid button { padding: 1.8rem; text-align: left; border: 1px solid var(--line); border-radius: 1.4rem; background: var(--surface); cursor: pointer; color: var(--primary); box-shadow: 0 1.2rem 3rem -2.8rem rgba(23,62,53,0.65); transition: transform .18s ease, box-shadow .18s ease; }
-        .v2-category-grid button:hover { transform: translateY(-2px); box-shadow: 0 1.6rem 3.4rem -2.6rem rgba(23,62,53,0.55); }
+        .v2-category-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+        .v2-category-grid button { position: relative; min-height: 19rem; padding: 2rem 2.1rem 1.5rem; overflow: hidden; text-align: left; border: 1px solid #D6DFDB; border-radius: 1.5rem; background: rgba(255,255,255,.87); cursor: pointer; color: var(--primary); box-shadow: 0 1.4rem 3.4rem -2.8rem rgba(23,62,53,.58); transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+        .v2-category-grid button:before { content: ""; position: absolute; inset: 0 auto 0 0; width: .38rem; background: var(--category-accent); transition: width .2s ease; }
+        .v2-category-grid button:after { content: ""; position: absolute; width: 9rem; height: 9rem; right: -5rem; top: -5rem; border-radius: 50%; background: color-mix(in srgb, var(--category-accent) 12%, transparent); transition: transform .3s ease; }
+        .v2-category-grid button:hover { border-color: var(--category-accent); background: #fff; box-shadow: 0 2rem 4.2rem -2.6rem color-mix(in srgb, var(--category-accent) 45%, transparent); }
+        .v2-category-grid button:hover:before { width: .65rem; }
+        .v2-category-grid button:hover:after { transform: scale(1.5); }
+        .v2-category-grid button:focus-visible { outline: .25rem solid color-mix(in srgb, var(--category-accent) 45%, transparent); outline-offset: .2rem; }
+        .v2-category-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+        .v2-category-icon { display: grid; place-items: center; width: 4.3rem; height: 4.3rem; border-radius: 1.1rem; background: color-mix(in srgb, var(--category-accent) 12%, white); color: var(--category-accent); }
+        .v2-category-open { display: grid; place-items: center; width: 2.7rem; height: 2.7rem; border: 1px solid #D5DEDA; border-radius: 50%; color: var(--secondary); font-size: 1.25rem; transition: color .2s ease, background .2s ease, transform .2s ease; }
+        .v2-category-grid button:hover .v2-category-open { color: #fff; border-color: var(--category-accent); background: var(--category-accent); transform: rotate(45deg); }
         .v2-category-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-        .v2-category-heading > span { color: var(--muted); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 0.08em; }
-        .v2-category-heading > strong { font-size: 2.6rem; font-variant-numeric: tabular-nums; }
-        .v2-category-bar { width: 100%; height: 0.55rem; margin: 1rem 0 1.3rem; border-radius: 9999px; overflow: hidden; background: #E4E1DA; }
+        .v2-category-heading > span { color: var(--primary); font-size: 1.65rem; font-weight: 850; letter-spacing: -.015em; }
+        .v2-category-heading > strong { font-size: 3.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+        .v2-category-heading > strong small { margin-left: .2rem; color: var(--muted); font-size: 1rem; font-weight: 700; }
+        .v2-category-bar { width: 100%; height: 0.65rem; margin: 1rem 0 1.15rem; border-radius: 9999px; overflow: hidden; background: #E4E1DA; }
         .v2-category-bar i { display: block; height: 100%; border-radius: inherit; }
-        .v2-category-grid button p { min-height: 3.6rem; margin: 0 0 1rem; color: var(--secondary); font-size: 1.2rem; line-height: 1.45; }
-        .v2-category-grid button small { color: var(--rose); font-weight: 700; }
+        .v2-category-grid button p { margin: 0 0 1.4rem; color: var(--secondary); font-size: 1.25rem; line-height: 1.45; }
+        .v2-category-cta { position: absolute; left: 2.1rem; right: 2.1rem; bottom: 1.4rem; display: flex; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid #E1E6E3; color: var(--category-accent); font-size: 1.12rem; font-weight: 850; }
+        .v2-category-cta b { font-size: 1.35rem; transition: transform .2s ease; }
+        .v2-category-grid button:hover .v2-category-cta b { transform: translateX(.35rem); }
         .v2-progress-panel { display: grid; grid-template-columns: minmax(20rem, 1.2fr) auto minmax(16rem, .7fr) auto; align-items: center; gap: 2.4rem; margin-top: 3.2rem; padding: 3rem; overflow: hidden; position: relative; background: linear-gradient(135deg, #173E35 0%, #244F43 68%, #315F52 100%); border: 1px solid #315F52; border-radius: 1.6rem; box-shadow: 0 2.2rem 5rem -3.6rem rgba(23,62,53,.8); }
         .v2-progress-panel:after { content: ""; position: absolute; width: 18rem; height: 18rem; right: -8rem; top: -10rem; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 0 0 3rem rgba(255,255,255,.025), 0 0 0 6rem rgba(255,255,255,.018); pointer-events: none; }
         .v2-progress-panel .v2-eyebrow { color: #91C6B3; }
@@ -1462,6 +1523,7 @@ export default function V2ReportPage() {
           .v2-priority-intro { display: block; }
           .v2-priority-intro > p:last-child { margin: 0.8rem 0 0; text-align: left; }
           .v2-priority-grid { grid-template-columns: 1fr; }
+          .v2-category-intro { align-items: flex-start; }
           .v2-progress-panel { grid-template-columns: 1fr; }
           .v2-progress-metrics { padding: 1.4rem 0 0; border-left: 0; border-top: 1px solid rgba(255,255,255,.18); }
         }
@@ -1477,7 +1539,14 @@ export default function V2ReportPage() {
           .v2-block-heading { align-items: center; margin-bottom: 1.4rem; padding-bottom: 1.2rem; }
           .v2-block-heading h2 { font-size: 1.8rem; }
           .v2-block-heading > span { font-size: 0.95rem; }
-          .v2-score-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+          .v2-analysis-block { padding: 1.1rem !important; background: linear-gradient(180deg, rgba(229,246,240,.96) 0, rgba(252,251,248,.98) 22rem); }
+          .v2-analysis-heading { grid-template-columns: auto minmax(0, 1fr); gap: 1rem; margin: 0 0 1.3rem; padding: 1.5rem 1.3rem; border-radius: 1.2rem; }
+          .v2-analysis-heading-icon { width: 4.2rem; height: 4.2rem; border-radius: 1.05rem; }
+          .v2-analysis-heading h2 { font-size: 2rem; line-height: 1.08; }
+          .v2-analysis-heading-copy > p:last-child { font-size: 1.05rem; line-height: 1.4; }
+          .v2-category-count { grid-column: 1 / -1; justify-self: start; margin-left: 5.2rem; }
+          .v2-score-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: -.5rem; }
+          .v2-score-legend > strong { grid-column: 1 / -1; }
           .v2-score-legend span { font-size: 1.05rem; }
           .v2-hero-grid { padding: 1.6rem !important; gap: 1.8rem !important; border-radius: 1.4rem !important; }
           .v2-hero-grid > div:first-child { max-width: 18rem !important; }
@@ -1486,10 +1555,14 @@ export default function V2ReportPage() {
           .v2-priority-panel { padding: 2rem 1.6rem; border-radius: 1.3rem; }
           .v2-priority-grid article { min-height: 0; padding: 1.4rem; }
           .v2-priority-card-top { margin-bottom: 1rem; }
-          .v2-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .v2-category-grid button { padding: 1.4rem; }
+          .v2-category-intro { display: block; }
+          .v2-category-intro h2 { font-size: 2.35rem; }
+          .v2-category-intro > span { margin-top: 1rem; }
+          .v2-category-grid { grid-template-columns: 1fr; }
+          .v2-category-grid button { min-height: 18rem; padding: 1.6rem 1.6rem 1.4rem; }
           .v2-category-heading > strong { font-size: 2.2rem; }
-          .v2-category-grid button p { min-height: 5.2rem; }
+          .v2-category-grid button p { padding-right: 1rem; }
+          .v2-category-cta { left: 1.6rem; right: 1.6rem; bottom: 1.25rem; }
           .v2-progress-panel { padding: 2rem 1.6rem; gap: 1.5rem; }
           .v2-progress-panel h2 { font-size: 2rem; }
           .v2-next-scan { min-width: 0; }
@@ -1519,7 +1592,7 @@ export default function V2ReportPage() {
           .v2-filter-full { display: none !important; }
           .v2-filter-short { display: inline !important; }
           .v2-report-section { margin-bottom: 1.2rem !important; border-radius: 1.25rem !important; }
-          .v2-info-popover { position: fixed; top: 50%; left: 50%; width: calc(100vw - 3.2rem); max-width: 34rem; transform: translate(-50%, -50%); box-shadow: 0 0 0 100vmax rgba(18,35,31,.42), 0 2rem 5rem -1rem rgba(18,35,31,.45); }
+          .v2-info-popover { position: fixed; top: 20dvh; left: 1.6rem; right: 1.6rem; width: auto; max-width: none; max-height: 60dvh; overflow-y: auto; transform: none !important; box-shadow: 0 0 0 100vmax rgba(18,35,31,.42), 0 2rem 5rem -1rem rgba(18,35,31,.45); }
           .v2-info-popover:before { display: none; }
           .v2-section-header { padding: 1.5rem 1.6rem 1.4rem !important; }
           .v2-section-header h2 { font-size: 2.1rem !important; }
@@ -1537,6 +1610,9 @@ export default function V2ReportPage() {
           .v2-routine-tabs button span { display: none !important; }
           .v2-routine-content { padding: 2rem 1.6rem !important; border-radius: 1.25rem !important; }
           .v2-routine-content li { gap: 0.8rem !important; font-size: 1.3rem !important; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .v2-analysis-heading:before, .v2-analysis-heading:after, .v2-analysis-heading-icon, .v2-category-count span { animation: none !important; }
         }
       `}</style>
     </div>

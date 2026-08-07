@@ -203,7 +203,7 @@ export default function V2BundlePage() {
   // end if the user never taps the button — the tap just gets there sooner.
   useEffect(() => {
     if (payState !== "success") return;
-    const t = setTimeout(() => router.push(`/report/${sessionId}`), 3400);
+    const t = setTimeout(() => router.push(`/prepare/${sessionId}`), 3400);
     return () => clearTimeout(t);
   }, [payState, sessionId]);
 
@@ -453,19 +453,19 @@ export default function V2BundlePage() {
               style={{ fontSize: "1.6rem", color: "rgba(255,255,255,0.7)", textAlign: "center", marginBottom: "4rem", maxWidth: "44rem" }}
             >
               {purchasePath === "combo"
-                ? "Your report is ready, and our team will reach out about your consultation within 24 hours."
-                : "Your Complete Beauty Report is ready to view."}
+                ? "Your report is now being prepared, and our team will reach out about your consultation within 24 hours."
+                : "Your personalised report is now being prepared."}
             </motion.p>
 
             <motion.button
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.4 }}
-              onClick={() => router.push(`/report/${sessionId}`)}
+              onClick={() => router.push(`/prepare/${sessionId}`)}
               style={{
                 background: "var(--rose)", color: "#fff", fontSize: "1.6rem", fontWeight: 500,
                 border: "none", borderRadius: "9999px", padding: "1.6rem 3.6rem", cursor: "pointer",
               }}
             >
-              View My Report →
+              Prepare My Report →
             </motion.button>
           </motion.div>
         )}
@@ -477,11 +477,13 @@ export default function V2BundlePage() {
         {/* Real analysis progress — reads the actual stage app/api/analyse/route.ts
             is writing, not a decorative timed loop. */}
         <div style={{ display: "flex", justifyContent: "center", marginBottom: "3.2rem" }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: "1rem", borderRadius: "9999px", padding: "1rem 2rem",
-            background: stage === "failed" ? "#FBEAE7" : "var(--surface)",
-            border: `1px solid ${stage === "failed" ? "#E8B4AA" : "var(--line)"}`,
+          <div className={`analysis-status-pill ${stage === "failed" ? "is-failed" : stage === "complete" ? "is-complete" : "is-active"}`} style={{
+            display: "inline-flex", alignItems: "center", gap: "1rem", borderRadius: "9999px", padding: "1.2rem 2.2rem",
+            background: stage === "failed" ? "#FBEAE7" : "linear-gradient(90deg,var(--surface),var(--wash))",
+            border: `2px solid ${stage === "failed" ? "#E8B4AA" : "transparent"}`,
+            boxShadow: "0 .8rem 2.4rem rgba(23,76,64,.08)",
           }}>
+            {stage !== "failed" && stage !== "complete" && <i className="analysis-status-shine" aria-hidden />}
             {stage === "complete" ? (
               <span style={{ width: "1.6rem", height: "1.6rem", borderRadius: "50%", background: "#4C8C5F", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -489,10 +491,10 @@ export default function V2BundlePage() {
             ) : stage === "failed" ? (
               <span style={{ width: "1.6rem", height: "1.6rem", borderRadius: "50%", background: "#C8503A", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "1.1rem", fontWeight: 700 }}>!</span>
             ) : (
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }} style={{ width: "1.6rem", height: "1.6rem", borderRadius: "50%", border: "2px solid var(--line)", borderTopColor: "var(--primary)", flexShrink: 0 }} />
+              <motion.div className="analysis-status-spinner" animate={{ rotate: 360 }} transition={{ duration: 1.05, repeat: Infinity, ease: "linear" }} style={{ width: "1.8rem", height: "1.8rem", borderRadius: "50%", border: "3px solid rgba(19,168,151,.2)", borderTopColor: "#13A897", borderRightColor: "#E0A62A", flexShrink: 0 }} />
             )}
             <AnimatePresence mode="wait">
-              <motion.span key={stage ?? "start"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ fontSize: "1.4rem", color: stage === "failed" ? "#A83E2E" : "var(--secondary)" }}>
+              <motion.span key={stage ?? "start"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ fontSize: "1.5rem", fontWeight: 750, color: stage === "failed" ? "#A83E2E" : "var(--primary)", letterSpacing: "-.01em" }}>
                 {stage === "complete"
                   ? "Your report is ready"
                   : stage === "failed"
@@ -507,6 +509,22 @@ export default function V2BundlePage() {
             )}
           </div>
         </div>
+
+        <style>{`
+          .analysis-status-pill { position:relative; isolation:isolate; overflow:hidden; }
+          .analysis-status-pill.is-active {
+            background:linear-gradient(#FAFBF8,#F5F7F2) padding-box,
+              linear-gradient(105deg,#13A897,#79D7C1,#E7B23B,#EF765C,#13A897) border-box!important;
+            background-size:100% 100%,300% 100%!important;
+            animation:analysis-border-flow 4s linear infinite,analysis-breathe 2.4s ease-in-out infinite;
+          }
+          .analysis-status-shine { position:absolute; z-index:-1; top:-80%; bottom:-80%; left:-22%; width:18%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.92),transparent); transform:rotate(16deg); animation:analysis-shine 2.8s ease-in-out infinite; }
+          .analysis-status-spinner { filter:drop-shadow(0 0 .45rem rgba(19,168,151,.45)); }
+          @keyframes analysis-border-flow { to { background-position:0 0,300% 0; } }
+          @keyframes analysis-breathe { 0%,100% { box-shadow:0 .8rem 2.4rem rgba(23,76,64,.08),0 0 0 0 rgba(19,168,151,.08); } 50% { box-shadow:0 1rem 3rem rgba(23,76,64,.14),0 0 0 .45rem rgba(19,168,151,.08); } }
+          @keyframes analysis-shine { 0%,18% { left:-25%; opacity:0; } 45% { opacity:1; } 72%,100% { left:112%; opacity:0; } }
+          @media (prefers-reduced-motion:reduce) { .analysis-status-pill.is-active,.analysis-status-shine { animation:none; } }
+        `}</style>
 
         <div style={{ textAlign: "center", marginBottom: "3.2rem" }}>
           <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "1.2rem" }}>

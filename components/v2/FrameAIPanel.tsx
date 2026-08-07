@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
 interface Props {
   sessionId: string;
@@ -46,11 +47,11 @@ export default function FrameAIPanel({ sessionId, photo, isPremium, onRequirePre
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Please log in again.");
-      const res = await fetch("/api/frame-tryon/generate", {
+      const res = await enqueueImageGeneration(() => fetch("/api/frame-tryon/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ sessionId, frameName, framePrompt, photoDataUrl: photo }),
-      });
+      }));
       const body = await res.json() as { imageUrl?: string; error?: string };
       if (!res.ok) throw new Error(body.error ?? "Frame preview generation failed");
       setResultUrl(body.imageUrl ?? null);

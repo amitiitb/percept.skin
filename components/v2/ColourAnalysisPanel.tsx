@@ -5,6 +5,7 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { ColourGrid } from "@/components/v2/ColourGrid";
 import type { ColourAnalysis, ColourSwatch } from "@/lib/v2/types";
 import { IconCheck } from "@/components/ui/icons";
+import { GenerationLoader } from "@/components/v2/GenerationLoader";
 
 interface Props {
   sessionId: string;
@@ -89,8 +90,12 @@ export default function ColourAnalysisPanel({ sessionId, photo, initialAnalysis 
         <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2rem", lineHeight: 1.5 }}>
           Discover your seasonal palette, best clothing colours, colours to avoid, and best metal tone, personalised to your skin tone.
         </p>
-        {error && <p style={{ color: "var(--rose)", fontSize: "1.4rem", marginBottom: "1.6rem" }}>{error}</p>}
-        <PrimaryButton fullWidth={false} onClick={fetchAnalysis} loading={loading}>Get My Colour Analysis →</PrimaryButton>
+        {error ? (
+          <div style={{ textAlign: "center", padding: "2.4rem", border: "1px solid var(--line)", borderRadius: "1.2rem", background: "var(--surface)" }}>
+            <p style={{ color: "var(--rose)", fontSize: "1.4rem", marginBottom: "1.6rem" }}>{error}</p>
+            <PrimaryButton fullWidth={false} onClick={fetchAnalysis}>Try again</PrimaryButton>
+          </div>
+        ) : <GenerationLoader kind="colour" title={loading ? "Analysing your colouring…" : "Preparing your colour analysis…"} detail="Finding your season, palette and best clothing colours." />}
       </div>
     );
   }

@@ -1,8 +1,10 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { IconRefresh } from "@/components/ui/icons";
+import { GenerationLoader } from "@/components/v2/GenerationLoader";
+import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
 interface Props {
   sessionId: string;
@@ -50,11 +52,11 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("Please log in again.");
-      const res = await fetch("/api/hairstyle/grid", {
+      const res = await enqueueImageGeneration(() => fetch("/api/hairstyle/grid", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ sessionId, photoDataUrl: photo }),
-      });
+      }));
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "Could not generate your hairstyle previews");
       setUrl(body.url);
@@ -76,16 +78,6 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
     supabase.storage.from("photos_v2").createSignedUrl(initialPath, 60 * 60 * 24 * 7)
       .then(({ data }) => { if (data?.signedUrl) setUrl(data.signedUrl); });
   }
-
-  // Already paid for, so it should not need a second click to unlock.
-  // Ref guard prevents React's dev double-mount billing two generations.
-  const kicked = useRef(false);
-  useEffect(() => {
-    if (kicked.current || url || initialPath || !photo || !isPremium) return;
-    kicked.current = true;
-    generate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photo, isPremium, initialPath]);
 
   return (
     <div style={{ marginTop: "4rem", paddingTop: "4rem", borderTop: "1px solid var(--line)" }}>
@@ -135,10 +127,7 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
               <PrimaryButton fullWidth={false} onClick={generate}>Try again</PrimaryButton>
             </>
           ) : (
-            <>
-              <p style={{ fontSize: "1.5rem", color: "var(--primary)", fontWeight: 500, margin: "0 0 0.6rem" }}>Creating your hairstyle previews…</p>
-              <p style={{ fontSize: "1.3rem", color: "var(--muted)", margin: 0 }}>This takes around 15 seconds.</p>
-            </>
+            <GenerationLoader kind="hairstyle" title="Creating your hairstyle previews…" detail="Testing six styles while keeping your face and clothing consistent." />
           )}
         </div>
       )}

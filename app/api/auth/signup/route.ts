@@ -12,6 +12,25 @@ const supabaseAdmin = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
+async function accountExistsForEmail(email: string): Promise<boolean> {
+  const target = email.trim().toLowerCase();
+  // Supabase Admin currently offers pagination but no server-side email
+  // filter. Walk the pages in batches so anonymous-user conversion can detect
+  // a duplicate before updateUserById collapses it into the opaque
+  // "Database error updating user" seen on mobile.
+  let page = 1;
+  while (true) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) {
+      logV2.warn("v2_signup_existing_email_lookup_failed", { message: error.message, status: error.status ?? null });
+      return false;
+    }
+    if (data.users.some((user) => user.email?.trim().toLowerCase() === target && !user.is_anonymous)) return true;
+    if (!data.nextPage || data.users.length === 0) return false;
+    page = data.nextPage;
+  }
+}
+
 export async function POST(req: NextRequest) {
   const { name, email, password } = await req.json();
 
@@ -22,6 +41,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
   }
 
+  const cleanEmail = String(email).trim().toLowerCase();
+  if (await accountExistsForEmail(cleanEmail)) {
+    return NextResponse.json(
+      { error: "An account with this email has already been created. Please log in.", code: "ACCOUNT_EXISTS" },
+      { status: 409 },
+    );
+  }
+
   const auth = await verifySupabaseUser(req);
   let error: { message: string; status?: number; code?: string } | null = null;
 
@@ -30,7 +57,7 @@ export async function POST(req: NextRequest) {
     if (lookupError) error = lookupError;
     else if (existing.user?.is_anonymous) {
       const result = await supabaseAdmin.auth.admin.updateUserById(auth.userId, {
-        email,
+        email: cleanEmail,
         password,
         email_confirm: true,
         user_metadata: { ...existing.user.user_metadata, name },
@@ -43,7 +70,7 @@ export async function POST(req: NextRequest) {
 
   if (!auth) {
     const result = await supabaseAdmin.auth.admin.createUser({
-      email, password, email_confirm: true, user_metadata: { name },
+      email: cleanEmail, password, email_confirm: true, user_metadata: { name },
     });
     error = result.error;
   }
@@ -61,7 +88,7 @@ export async function POST(req: NextRequest) {
     // "{}") — not a code bug here, a real upstream issue, but showing that
     // raw text to a user is useless. Log the real error server-side, show a
     // real message client-side.
-    logV2.error("v2_signup_create_user_failed", { email, message: error.message, status: error.status ?? null });
+    logV2.error("v2_signup_create_user_failed", { email: cleanEmail, message: error.message, status: error.status ?? null });
     const raw = error.message ?? "";
     const looksHuman = raw.length > 0 && raw.length < 200 && raw !== "{}" && !raw.startsWith("{");
     // GoTrue normally returns email_exists/user_already_exists, but some
@@ -82,7 +109,7 @@ export async function POST(req: NextRequest) {
   // Welcome email — fire and forget, never blocks signup
   resend.emails.send({
     from: "Percept <noreply@superapp.digital>",
-    to: email,
+    to: cleanEmail,
     subject: "Welcome to Percept",
     html: buildWelcomeEmail(name),
   }).catch(() => { /* non-fatal */ });
