@@ -8,6 +8,7 @@ import { logV2 } from "@/lib/v2/log";
 import { replaceImage } from "@/lib/v2/storageUpload";
 import { MAX_GENERATIONS, budgetExhaustedMessage } from "@/lib/v2/generationBudget";
 import type { ColourAnalysis, ColourSwatch } from "@/lib/v2/types";
+import { signedFrontPhotoForSession } from "@/lib/v2/sessionPhoto";
 
 // How many palette colours are fed into the single composite grid. One
 // billed generation total, not one per colour.
@@ -72,7 +73,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { mimeType, base64 } = await generateColourGrid(photoDataUrl, picks.map((s) => s.name));
+    const sourcePhoto = await signedFrontPhotoForSession(supabase, auth.userId, sessionId);
+    const { mimeType, base64 } = await generateColourGrid(sourcePhoto, picks.map((s) => s.name));
     const ext = mimeType.includes("png") ? "png" : "jpg";
     const path = `${auth.userId}/${sessionId}/colour-grid.${ext}`;
 

@@ -7,16 +7,18 @@ import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
 import { replaceImage } from "@/lib/v2/storageUpload";
 import { MAX_GENERATIONS, gridGenerationsUsed, budgetExhaustedMessage } from "@/lib/v2/generationBudget";
+import { signedFrontPhotoForSession } from "@/lib/v2/sessionPhoto";
 
 // One composite grid of several hairstyles, rather than one billed generation
 // per style tapped. Same reasoning as the colour grid: cheaper, faster, and
 // every panel is lit and framed identically by construction.
 const STYLES = [
-  "long layered waves",
-  "chin-length textured bob",
-  "soft curtain bangs",
-  "blunt shoulder-length lob",
-  "very short pixie cut",
+  "a neat professional style that keeps roughly the subject's current hair length",
+  "a polished formal style aligned with the subject's existing gender presentation",
+  "a relaxed casual style aligned with the subject's existing gender presentation",
+  "a sharper evening style with controlled volume and a distinct silhouette",
+  "a genuinely short, practical, low-maintenance cut aligned with the subject's existing gender presentation",
+  "a textured everyday style aligned with the subject's natural texture and existing gender presentation",
 ];
 
 function scopedClient(token: string): SupabaseClient {
@@ -55,7 +57,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { mimeType, base64 } = await generateHairstyleGrid(photoDataUrl, STYLES);
+    const sourcePhoto = await signedFrontPhotoForSession(supabase, auth.userId, sessionId);
+    const { mimeType, base64 } = await generateHairstyleGrid(sourcePhoto, STYLES);
     const ext = mimeType.includes("png") ? "png" : "jpg";
     const path = `${auth.userId}/${sessionId}/hairstyle-grid.${ext}`;
 

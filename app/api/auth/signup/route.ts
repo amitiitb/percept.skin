@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   const auth = await verifySupabaseUser(req);
-  let error: { message: string; status?: number } | null = null;
+  let error: { message: string; status?: number; code?: string } | null = null;
 
   if (auth) {
     const { data: existing, error: lookupError } = await supabaseAdmin.auth.admin.getUserById(auth.userId);
@@ -64,10 +64,19 @@ export async function POST(req: NextRequest) {
     logV2.error("v2_signup_create_user_failed", { email, message: error.message, status: error.status ?? null });
     const raw = error.message ?? "";
     const looksHuman = raw.length > 0 && raw.length < 200 && raw !== "{}" && !raw.startsWith("{");
-    const msg = /already|registered|exists/i.test(raw)
-      ? "An account with this email already exists. Try logging in instead."
+    // GoTrue normally returns email_exists/user_already_exists, but some
+    // deployments return an empty body with status 422 for the same duplicate
+    // email conflict. Treat all of those shapes consistently.
+    const accountExists = error.status === 422 ||
+      /email_exists|user_already_exists/i.test(error.code ?? "") ||
+      /already|registered|exists/i.test(raw);
+    const msg = accountExists
+      ? "An account with this email has already been created. Please log in."
       : looksHuman ? raw : "Something went wrong creating your account. Please try again in a moment.";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    return NextResponse.json(
+      { error: msg, code: accountExists ? "ACCOUNT_EXISTS" : "SIGNUP_FAILED" },
+      { status: accountExists ? 409 : 400 },
+    );
   }
 
   // Welcome email — fire and forget, never blocks signup

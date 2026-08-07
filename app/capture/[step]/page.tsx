@@ -375,8 +375,11 @@ export default function V2CapturePage() {
       // server-side, another device, admin purge). Verify before reusing it;
       // an orphaned id here silently fails every future insert via RLS
       // instead of self-healing.
-      const { data: existing } = await supabase.from("analysis_sessions_v2").select("id").eq("id", currentSessionId).eq("user_id", user.id).maybeSingle();
-      if (existing) return currentSessionId;
+      const { data: existing } = await supabase.from("analysis_sessions_v2").select("id, status").eq("id", currentSessionId).eq("user_id", user.id).maybeSingle();
+      // Only an unfinished capture may be resumed. Reusing an analyzing or
+      // completed session overwrites its photos while leaving its generated
+      // grids attached, producing a report that visibly mixes two scans.
+      if (existing?.status === "capturing" || existing?.status === "pending") return currentSessionId;
       logV2.warn("v2_stale_session_id_discarded", { stale_session_id: currentSessionId });
     }
 

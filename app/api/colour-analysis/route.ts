@@ -6,6 +6,7 @@ import { logV2 } from "@/lib/v2/log";
 import { vertexAccessToken, VERTEX_LOCATION, VERTEX_PROJECT } from "@/lib/v2/gemini";
 import { stripEmDash } from "@/lib/v2/aiProvider";
 import type { ColourAnalysis } from "@/lib/v2/types";
+import { signedFrontPhotoForSession } from "@/lib/v2/sessionPhoto";
 
 const GEMINI_TEXT_MODEL = "gemini-2.5-flash";
 
@@ -76,7 +77,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Purchase the Color Analysis module to generate this report" }, { status: 403 });
     }
 
-    const base64Photo = await toBase64(photoDataUrl);
+    const sourcePhoto = await signedFrontPhotoForSession(supabase, auth.userId, sessionId);
+    const base64Photo = await toBase64(sourcePhoto);
 
     const url =
       `https://${VERTEX_LOCATION}-aiplatform.googleapis.com/v1/projects/${VERTEX_PROJECT}` +

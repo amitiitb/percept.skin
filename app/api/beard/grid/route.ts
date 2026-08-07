@@ -7,6 +7,7 @@ import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
 import { replaceImage } from "@/lib/v2/storageUpload";
 import { MAX_GENERATIONS, gridGenerationsUsed, budgetExhaustedMessage } from "@/lib/v2/generationBudget";
+import { signedFrontPhotoForSession } from "@/lib/v2/sessionPhoto";
 
 function scopedClient(token: string): SupabaseClient {
   return createClient(
@@ -44,7 +45,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { mimeType, base64 } = await generateBeardGrid(photoDataUrl, [...BEARD_STYLES]);
+    const sourcePhoto = await signedFrontPhotoForSession(supabase, auth.userId, sessionId);
+    const { mimeType, base64 } = await generateBeardGrid(sourcePhoto, [...BEARD_STYLES]);
     const ext = mimeType.includes("png") ? "png" : "jpg";
     const path = `${auth.userId}/${sessionId}/beard-grid.${ext}`;
 

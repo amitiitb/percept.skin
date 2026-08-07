@@ -1,11 +1,17 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/ui/Logo";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
+  return <Suspense><ForgotPasswordForm /></Suspense>;
+}
+
+function ForgotPasswordForm() {
+  const params = useSearchParams();
+  const [email, setEmail] = useState(() => params.get("email") ?? "");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -88,7 +94,7 @@ export default function ForgotPasswordPage() {
                   Reset password.
                 </h1>
                 <p style={{ marginTop: "1.2rem", fontSize: "1.6rem", color: "var(--secondary)", lineHeight: 1.6 }}>
-                  Enter your account email and we'll send a reset link.
+                  Enter your account email and we&apos;ll send a reset link.
                 </p>
               </div>
 

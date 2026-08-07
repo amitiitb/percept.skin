@@ -7,16 +7,18 @@ import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
 import { replaceImage } from "@/lib/v2/storageUpload";
 import { MAX_GENERATIONS, gridGenerationsUsed, budgetExhaustedMessage } from "@/lib/v2/generationBudget";
+import { signedFrontPhotoForSession } from "@/lib/v2/sessionPhoto";
 
 // One composite grid of five frame styles, the overview shot. The existing
 // per-frame route (/api/frame-tryon/generate) stays as the interactive path
 // for trying a single style at full size, so this does not replace it.
 const FRAMES = [
-  "black and gold Clubmaster-style browline eyeglasses with a thick acetate top rim",
-  "classic gold-metal aviator eyeglasses with thin wire frames",
-  "matte black Wayfarer-style acetate eyeglasses with a bold rectangular frame",
-  "thin gold-metal round eyeglasses with a minimalist vintage look",
-  "warm tortoiseshell acetate eyeglasses with a soft rounded-square frame",
+  "thin gunmetal rectangular eyeglasses",
+  "black and gold Clubmaster browline eyeglasses",
+  "warm tortoiseshell cat-eye eyeglasses",
+  "thin gold-metal hexagonal eyeglasses",
+  "minimal champagne-gold rimless eyeglasses",
+  "matte black Wayfarer eyeglasses with a trapezoidal silhouette",
 ];
 
 function scopedClient(token: string): SupabaseClient {
@@ -52,7 +54,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { mimeType, base64 } = await generateFrameGrid(photoDataUrl, FRAMES);
+    const sourcePhoto = await signedFrontPhotoForSession(supabase, auth.userId, sessionId);
+    const { mimeType, base64 } = await generateFrameGrid(sourcePhoto, FRAMES);
     const ext = mimeType.includes("png") ? "png" : "jpg";
     const path = `${auth.userId}/${sessionId}/frame-grid.${ext}`;
 

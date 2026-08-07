@@ -133,6 +133,17 @@ const GRID_CONSISTENCY_RULES =
   `All 6 panels must be clearly different from every other panel — before drawing each panel, check it against the ones already drawn, and if it would repeat an earlier look, draw a different variation instead; a repeated panel is a failure. ` +
   `Keep the exact same neutral facial expression, head angle, and eye direction in every single panel — do not let the face's expression shift from panel to panel, only the styling changes. `;
 
+// Account profile data deliberately does not participate in image styling: an
+// account holder may scan a partner, relative, client, or child. The source
+// photograph is the authority for this generation. This is phrased as visual
+// presentation rather than a claim about the person's gender identity.
+const SUBJECT_ADAPTATION_RULES =
+  `First inspect only the supplied subject and choose one visual styling category for this generation: adult masculine-presenting, adult feminine-presenting, child, or ambiguous/neutral. ` +
+  `Use that one category consistently in all six panels and never borrow identity or styling assumptions from an account owner. ` +
+  `If the subject is a child, use only age-appropriate child styling and clothing: no beard, mustache, stubble, adult formalwear, sexualized styling, or adult body proportions. ` +
+  `If presentation is ambiguous, keep styling neutral and close to the source instead of making a strong masculine or feminine guess. ` +
+  `This classification controls styling only; it must not change the subject's face, body, age, skin, or identity. `;
+
 // One composite grid rather than one call per colour. Measured on real runs:
 // a single grid costs ~1/6th of six separate generations, returns in ~10s
 // instead of ~17s, and reads as more cohesive because every panel is lit and
@@ -163,8 +174,10 @@ export function generateColourGrid(photoDataUrl: string, colourNames: string[]) 
   return generateImageEdit(
     photoDataUrl,
     `Create a single clean grid collage image of THIS EXACT person: same face, same hair, same neutral background in every panel. ` +
+    SUBJECT_ADAPTATION_RULES +
     `Each panel shows them dressed for a different occasion, in this exact order: ${COLOUR_OCCASIONS.join("; then ")}. ` +
     `Every outfit must use colours drawn from this palette: ${colourNames.join(", ")}. ` +
+    `Preserve the subject's identity, body proportions and existing gender presentation. All six outfits must be coherent with the same presentation visible in the source; do not masculinize, feminize or mix presentation between panels. ` +
     GRID_CONSISTENCY_RULES +
     `Photorealistic studio portraits, identical framing, pose and lighting in every panel, thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters, no labels and no colour names anywhere in the image.`
@@ -184,13 +197,19 @@ export const FRAME_OCCASIONS = [
   "sporty lightweight frames for everyday errands",
 ] as const;
 
-export function generateFrameGrid(photoDataUrl: string, _frameNames: string[]) {
+export function generateFrameGrid(photoDataUrl: string, frameNames: string[]) {
+  const requiredPanels = frameNames.map((frame, index) =>
+    `panel ${index + 1}: ${frame}, for ${FRAME_OCCASIONS[index]}`
+  ).join("; ");
   return generateImageEdit(
     photoDataUrl,
     `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same hair, same neutral background and same clothing in every panel. ` +
-    `Each panel shows them wearing a CLEARLY DIFFERENT pair of eyeglasses suited to a different occasion, in this exact order: ${FRAME_OCCASIONS.join("; then ")}. ` +
+    SUBJECT_ADAPTATION_RULES +
+    `Render these six prescribed and visibly different designs in this exact panel order: ${requiredPanels}. ` +
     `Every panel must show a visibly distinct frame shape and material, never the same design twice. ` +
     GRID_CONSISTENCY_RULES +
+    `First assess the subject's face shape and proportions. Each prescribed frame must be adapted in width, lens height and scale to flatter this specific face; do not use an oversized or poorly proportioned frame merely to exaggerate variety. ` +
+    `The six silhouettes must remain unmistakably different: rectangular, browline, cat-eye, hexagonal, rimless, and trapezoidal Wayfarer respectively. In particular panels 4 and 6 must not both become rectangular. ` +
     `In each panel the glasses must sit correctly on the face: temple width matching face width, bridge centred on the nose, ` +
     `a subtle realistic shadow on the nose bridge and under the brow, and a faint lens sheen rather than flat opaque glass. ` +
     `No warping, no floating frames, no misaligned temples. ` +
@@ -208,15 +227,22 @@ export const HAIRSTYLE_OCCASIONS = [
   "a textured, slightly tousled everyday look",
 ] as const;
 
-export function generateHairstyleGrid(photoDataUrl: string, _styleNames: string[]) {
+export function generateHairstyleGrid(photoDataUrl: string, styleNames: string[]) {
+  const requiredPanels = styleNames.map((style, index) =>
+    `panel ${index + 1}: ${style}, styled for ${HAIRSTYLE_OCCASIONS[index]}`
+  ).join("; ");
   return generateImageEdit(
     photoDataUrl,
     `Use the supplied photograph as an IMMUTABLE identity reference and create a single clean grid collage of THIS EXACT person. ` +
-    `Each panel shows a different hairstyle suited to a different occasion, in this exact order: ${HAIRSTYLE_OCCASIONS.join("; then ")}. ` +
+    SUBJECT_ADAPTATION_RULES +
+    `Render these six prescribed and visibly different hairstyles in this exact panel order: ${requiredPanels}. ` +
     `Every panel must show a visibly distinct cut and styling, never the same look twice. ` +
     GRID_CONSISTENCY_RULES +
+    `Before rendering, determine the single styling presentation already expressed by the subject in the source photograph. Keep that same presentation consistently across all six panels. Do not mix conventionally masculine and conventionally feminine hairstyle families in one grid. Do not introduce ponytails, buns, curtain bangs, bobs or long flowing layers unless they are consistent with the source subject's existing presentation. ` +
     `EDIT ONLY THE HAIR PIXELS ON THE TOP AND SIDES OF THE HEAD. Preserve the original hairline and natural hair colour. ` +
-    `Everything below the hairline must remain visually identical to the source photograph: exact facial identity, face shape, eyes, eyebrows, nose, lips, ears, skin tone, skin texture, beard, mustache, neck, clothing, pose, expression, camera perspective, lighting, shadows and background. ` +
+    `Preserve the subject's presentation exactly as shown in the source. Do not masculinize, feminize, or change their apparent gender presentation. ` +
+    `Facial-hair presence is immutable: if the source has no beard, mustache or stubble, every panel must remain completely free of beard, mustache and stubble; if facial hair is present, preserve it pixel-for-pixel. ` +
+    `Everything below the scalp hairline must remain visually identical to the source photograph: exact facial identity, face shape, eyes, eyebrows, nose, lips, ears, skin tone, skin texture, neck, clothing, pose, expression, camera perspective, lighting, shadows and background. ` +
     `Do not beautify, retouch, sharpen, relight, smooth skin, remove marks, alter facial hair, change body proportions, or reconstruct the face. Do not make the person younger, slimmer, more symmetrical or more conventionally attractive. ` +
     `The result must look like the original unedited photo with only a hairstyle placed naturally onto it. Identical framing and thin white gutters between panels. ` +
     `Absolutely no text, no words, no letters and no labels anywhere in the image.`
@@ -257,13 +283,17 @@ export const BEARD_STYLES = [
   "mustache only, no beard",
 ] as const;
 
-export function generateBeardGrid(photoDataUrl: string, _styleNames: string[]) {
+export function generateBeardGrid(photoDataUrl: string, styleNames: string[]) {
+  const requiredPanels = styleNames.map((style, index) => `panel ${index + 1}: ${style}`).join("; ");
   return generateImageEdit(
     photoDataUrl,
     `Create a single clean grid collage image of THIS EXACT person: same face, same skin tone, same hairstyle, same neutral background and same clothing in every panel. ` +
-    `Each panel shows a different facial hair style, in this exact order: ${BEARD_STYLES.join("; then ")}. ` +
+    `This facial-hair preview is for adults only. If the supplied subject appears to be a child, do not generate facial hair or an image; return a brief text refusal instead. ` +
+    `For an adult, infer styling from the photographed subject only, never from the account owner. ` +
+    `Render exactly these six facial-hair maps in order: ${requiredPanels}. ` +
     `Every panel must show a visibly distinct facial hair style, never the same look twice. ` +
     GRID_CONSISTENCY_RULES +
+    `The coverage geometry is mandatory: panel 1 has zero facial hair; panel 2 is sparse short stubble over beard areas; panel 3 is a short sharply edged boxed beard; panel 4 is a visibly longer full beard extending well below the chin; panel 5 has completely clean-shaven cheeks and jaw with hair only around the mouth and chin; panel 6 has completely clean-shaven cheeks, chin and jaw with hair only on the upper lip. Panels 4 and 5 must never share the same full-beard coverage. ` +
     `EDIT ONLY THE FACIAL-HAIR PIXELS around the upper lip, cheeks, chin and jaw. Keep the person's own hair colour, jawline and bone structure completely unchanged. ` +
     `Preserve the source face, skin texture, hairstyle, clothing, pose, lighting, shadows and background exactly. Do not beautify, retouch, smooth skin, relight or reconstruct the person. ` +
     `The result must look like the original unedited photo with only the facial hair changed. Identical framing and thin white gutters between panels. ` +

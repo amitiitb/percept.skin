@@ -6,6 +6,7 @@ import { hasPurchasedModule } from "@/lib/v2/requirePurchase";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { logV2 } from "@/lib/v2/log";
 import { replaceImage } from "@/lib/v2/storageUpload";
+import { signedFrontPhotoForSession } from "@/lib/v2/sessionPhoto";
 
 function scopedClient(token: string) {
   return createClient(
@@ -41,7 +42,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { mimeType, base64 } = await generateFramePreview(photoDataUrl, framePrompt);
+    const sourcePhoto = await signedFrontPhotoForSession(supabase, auth.userId, sessionId);
+    const { mimeType, base64 } = await generateFramePreview(sourcePhoto, framePrompt);
     const ext = mimeType.includes("png") ? "png" : "jpg";
     const path = `${auth.userId}/${sessionId}/frame-${frameName.toLowerCase().replace(/\s+/g, "-")}.${ext}`;
 

@@ -25,12 +25,9 @@ function SignupForm() {
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => params.get("error") ? "That link is invalid or has expired. Please try again." : "");
+  const [accountExists, setAccountExists] = useState(false);
   const [savingScan, setSavingScan] = useState(false);
-
-  useEffect(() => {
-    if (params.get("error")) setError("That link is invalid or has expired. Please try again.");
-  }, [params]);
 
   // Already a real logged-in user → skip signup, go wherever this link was
   // pointed (v2 callers pass ?next=/... — defaulting to /dashboard,
@@ -67,6 +64,7 @@ function SignupForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setAccountExists(false);
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     if (!agreed) { setError("Please confirm you're 18+ and agree to the Terms and Privacy Policy."); return; }
     setLoading(true);
@@ -87,6 +85,7 @@ function SignupForm() {
 
     if (!res.ok) {
       setError(json.error || "Something went wrong. Please try again.");
+      setAccountExists(json.code === "ACCOUNT_EXISTS" || res.status === 409);
       setLoading(false);
       return;
     }
@@ -187,7 +186,7 @@ function SignupForm() {
               {agreed && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
             </span>
             <span style={{ fontSize: "1.3rem", color: "var(--secondary)", lineHeight: 1.55 }}>
-              I'm 18 or older and agree to Percept's{" "}
+              I&apos;m 18 or older and agree to Percept&apos;s{" "}
               <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: "var(--primary)", fontWeight: 500 }}>Terms of Service</a>
               {" "}and{" "}
               <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: "var(--primary)", fontWeight: 500 }}>Privacy Policy</a>.
@@ -196,14 +195,33 @@ function SignupForm() {
 
           <AnimatePresence>
             {error && (
-              <motion.p
+              <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                style={{ fontSize: "1.4rem", color: "var(--rose)", lineHeight: 1.5, margin: 0 }}
+                role="alert"
+                style={{ padding: accountExists ? "1.6rem" : 0, border: accountExists ? "1px solid var(--line-strong)" : "none", borderRadius: "1.2rem", background: accountExists ? "var(--surface)" : "transparent" }}
               >
-                {error}
-              </motion.p>
+                <p style={{ fontSize: "1.4rem", fontWeight: accountExists ? 650 : 400, color: accountExists ? "var(--primary)" : "var(--rose)", lineHeight: 1.5, margin: 0 }}>
+                  {error}
+                </p>
+                {accountExists && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.8rem", marginTop: "1.2rem" }}>
+                    <a
+                      href={`/auth/login?next=${encodeURIComponent(params.get("next") || "/dashboard")}`}
+                      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: "4rem", padding: "0.8rem 1.5rem", borderRadius: "9999px", background: "var(--btn-fill)", color: "var(--btn-fill-ink)", fontSize: "1.3rem", fontWeight: 650, textDecoration: "none" }}
+                    >
+                      Log in
+                    </a>
+                    <a
+                      href={`/auth/forgot-password?email=${encodeURIComponent(email.trim().toLowerCase())}`}
+                      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: "4rem", padding: "0.8rem 1.5rem", borderRadius: "9999px", border: "1px solid var(--line-strong)", color: "var(--primary)", fontSize: "1.3rem", fontWeight: 650, textDecoration: "none" }}
+                    >
+                      Reset password
+                    </a>
+                  </div>
+                )}
+              </motion.div>
             )}
           </AnimatePresence>
 
