@@ -107,8 +107,8 @@ function MetricRow({ m }: { m: AnalysisMetric }) {
             transition={{ duration: 0.22 }}
             style={{ overflow: "hidden" }}
           >
-            <div style={{ paddingBottom: "2.4rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem", borderLeft: `2px solid ${band.color}`, paddingLeft: "1.8rem" }}>
+            <div className="v2-metric-detail" style={{ paddingBottom: "2.4rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
+              <div className="v2-metric-finding" style={{ display: "flex", flexDirection: "column", gap: "1.4rem", borderLeft: `2px solid ${band.color}`, paddingLeft: "1.8rem" }}>
                 <div>
                   <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.5rem" }}>In your scan</p>
                   <p style={{ fontSize: "1.6rem", color: "var(--primary)", lineHeight: 1.65, margin: 0 }}>{m.explanation}</p>
@@ -125,7 +125,7 @@ function MetricRow({ m }: { m: AnalysisMetric }) {
               </div>
 
               {guide && (
-                <div style={{ background: "var(--canvas)", borderRadius: "1.2rem", padding: "2.2rem 2.4rem" }}>
+                <div className="v2-metric-guide" style={{ background: "var(--canvas)", borderRadius: "1.2rem", padding: "2.2rem 2.4rem" }}>
                   <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 1.2rem" }}>
                     Understanding {m.metricName.toLowerCase()}
                   </p>
@@ -1605,6 +1605,14 @@ export default function V2ReportPage() {
              name its own full-width row keeps every metric to two tidy lines. */
           .v2-metric-row { flex-wrap: wrap !important; gap: 0.7rem 1rem !important; padding: 1.3rem 0 !important; }
           .v2-metric-row > span:first-child { flex: 1 1 100% !important; }
+          .v2-metric-detail { gap: 1.3rem !important; padding-bottom: 1.6rem !important; }
+          .v2-metric-finding { gap: 1rem !important; padding-left: 1rem !important; }
+          .v2-metric-finding p { overflow-wrap: anywhere; }
+          .v2-metric-finding > div > p:last-child { font-size: 1.28rem !important; line-height: 1.55 !important; }
+          .v2-metric-finding > p:last-child { font-size: 1.05rem !important; line-height: 1.45 !important; }
+          .v2-metric-guide { padding: 1.4rem 1.2rem !important; border-radius: 1rem !important; overflow:hidden; }
+          .v2-metric-guide > p { font-size: 1.22rem !important; line-height: 1.55 !important; overflow-wrap:anywhere; }
+          .v2-metric-guide > p:first-child { font-size: .98rem !important; line-height: 1.45 !important; letter-spacing: .06em !important; }
           .v2-routine-tabs { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100% !important; max-width: 100%; border-radius: 1.4rem !important; }
           .v2-routine-tabs button { min-width: 0; justify-content: center; gap: 0.45rem !important; padding: 1rem 0.5rem !important; font-size: 1.15rem !important; }
           .v2-routine-tabs button span { display: none !important; }

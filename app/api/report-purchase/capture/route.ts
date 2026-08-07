@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { captureOrderRaw } from "@/lib/v2/paypal";
 import { priceFor, DOCTOR_CONSULTATION_PRICE, type ModuleId } from "@/lib/v2/reportModules";
@@ -8,52 +7,8 @@ import { logV2 } from "@/lib/v2/log";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
 import { sendConsultationLead } from "@/lib/v2/consultationLead";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 function serviceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-}
-
-function buildReportReadyEmail(sessionId: string, consultationIncluded: boolean): string {
-  const upsellHtml = consultationIncluded
-    ? `<p style="margin-bottom:0">Your dermatologist consultation is included, our team will reach out within 24 hours with a real plan.</p>`
-    : `<p style="margin-bottom:0">Want a real dermatologist's take too? Add a consultation for just $${DOCTOR_CONSULTATION_PRICE}, a certified dermatologist reviews your case and follows up directly.</p>`;
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Your Percept report is ready</title>
-<style>
-  body { margin:0; padding:0; background:#E8E7E5; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#003934; }
-  .wrap { max-width:560px; margin:0 auto; padding:48px 24px; }
-  .logo { font-size:22px; font-weight:600; letter-spacing:-0.02em; color:#003934; }
-  .logo span { color:#1A9E8F; }
-  .card { background:#fff; border:1px solid #D6D3CD; border-radius:12px; padding:48px 40px; margin-top:32px; }
-  h1 { font-size:26px; font-weight:300; line-height:1.2; letter-spacing:-0.02em; margin:0 0 12px; }
-  p { font-size:15px; line-height:1.65; color:#4D6560; margin:0 0 24px; }
-  .btn { display:inline-block; background:#003934; color:#fff; font-size:16px; font-weight:500; padding:16px 36px; border-radius:9999px; text-decoration:none; letter-spacing:-0.01em; }
-  .upsell { margin-top:8px; padding-top:24px; border-top:1px solid #D6D3CD; }
-  .footer { margin-top:40px; font-size:12px; color:#8C9B97; }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="logo">Percept</div>
-  <div class="card">
-    <h1>Your report is ready.</h1>
-    <p>Your Percept Score and full breakdown are ready to view now.</p>
-    <a href="${process.env.NEXT_PUBLIC_SITE_URL}/report/${sessionId}" class="btn">View my report →</a>
-    <div class="upsell">
-      ${upsellHtml}
-    </div>
-  </div>
-  <div class="footer">
-    © 2026 Percept · AI-powered skin analysis
-  </div>
-</div>
-</body>
-</html>`;
 }
 
 export async function POST(req: NextRequest) {
@@ -130,21 +85,6 @@ export async function POST(req: NextRequest) {
     }
 
     logV2.info("v2_report_purchase_completed", { user_id: auth.userId, session_id: sessionId, modules: modules.join(","), amount, include_consultation: includeConsultation });
-
-    // Confirmation email, fire and forget, never blocks the response. The
-    // report page itself already handles "still finishing" gracefully (polls
-    // until analyse completes), so it's fine if this lands slightly before
-    // the analysis is fully done.
-    supabase.auth.admin.getUserById(auth.userId).then(({ data }) => {
-      const email = data.user?.email;
-      if (!email) return;
-      return resend.emails.send({
-        from: "Percept <noreply@superapp.digital>",
-        to: email,
-        subject: "Your Percept report is ready",
-        html: buildReportReadyEmail(sessionId, includeConsultation),
-      });
-    }).catch(() => { /* non-fatal */ });
 
     return NextResponse.json({ status: "complete", modules, includeConsultation });
   } catch (err) {

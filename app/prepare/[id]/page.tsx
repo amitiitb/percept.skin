@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { ModuleId } from "@/lib/v2/reportModules";
 
 type Status = "waiting" | "active" | "done" | "skipped" | "error";
-type StepId = "analysis" | "hairstyle" | "beard" | "colour" | "frame";
+type StepId = "analysis" | "hairstyle" | "beard" | "colour" | "frame" | "delivery";
 type Step = { id: StepId; label: string; detail: string; status: Status };
 
 const BASE_STEPS: Step[] = [
@@ -15,6 +15,7 @@ const BASE_STEPS: Step[] = [
   { id: "beard", label: "Beard recommendations", detail: "Included only when appropriate for the scanned subject", status: "waiting" },
   { id: "colour", label: "Colour and clothing analysis", detail: "Building your palette and outfit previews", status: "waiting" },
   { id: "frame", label: "Frame recommendations", detail: "Fitting six frame styles to your face", status: "waiting" },
+  { id: "delivery", label: "Report delivery", detail: "Preparing your PDF and email", status: "waiting" },
 ];
 
 const INSIGHTS = [
@@ -40,6 +41,44 @@ function InsightIcon({ kind }: { kind: typeof INSIGHTS[number]["kind"] }) {
 
 function sleep(ms: number) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
+function announceReportReady() {
+  document.title = "✓ Your Percept report is ready";
+  navigator.vibrate?.([120, 70, 180]);
+
+  // A short, soft three-note chime created locally with the Web Audio API —
+  // no tracking request or downloaded sound asset. Browsers may still block
+  // it when the page has never received a user interaction, so every alert is
+  // best-effort and the email remains the reliable notification channel.
+  try {
+    const AudioContextClass = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (AudioContextClass) {
+      const context = new AudioContextClass();
+      const master = context.createGain();
+      master.gain.setValueAtTime(0.0001, context.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.16, context.currentTime + 0.03);
+      master.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 1.15);
+      master.connect(context.destination);
+      [523.25, 659.25, 783.99].forEach((frequency, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        const start = context.currentTime + index * 0.2;
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.7, start + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.48);
+        oscillator.connect(gain); gain.connect(master);
+        oscillator.start(start); oscillator.stop(start + 0.5);
+      });
+      window.setTimeout(() => void context.close(), 1500);
+    }
+  } catch { /* visual, title and email alerts still work */ }
+
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("Your Percept report is ready", { body: "Your personalised analysis and recommendations are ready to view." });
+  }
+}
+
 export default function PrepareReportPage() {
   const params = useParams();
   const router = useRouter();
@@ -53,6 +92,12 @@ export default function PrepareReportPage() {
   useEffect(() => {
     const timer = setInterval(() => setInsightIndex((index) => (index + 1) % INSIGHTS.length), 6200);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const previous = document.title;
+    document.title = "Preparing your Percept report…";
+    return () => { document.title = previous; };
   }, []);
 
   function mark(id: StepId, status: Status, detail?: string) {
@@ -165,8 +210,19 @@ export default function PrepareReportPage() {
           mark("frame", "done", "Frame recommendations complete");
         } else mark("frame", "skipped", "Not included in this purchase");
 
+        mark("delivery", "active", "Creating your PDF and sending it to your account email");
+        try {
+          await call("/api/report-preparation/complete");
+          mark("delivery", "done", "PDF sent — check your inbox");
+        } catch {
+          // A delivery-provider outage must not lock a paid customer out of a
+          // report whose analysis and images are already complete.
+          mark("delivery", "skipped", "Report complete — email delivery will be retried when you reopen this page");
+        }
+
         if (!cancelled) {
-          await sleep(900);
+          announceReportReady();
+          await sleep(1700);
           router.replace(`/report/${sessionId}`);
         }
       } catch (caught) {
@@ -190,7 +246,8 @@ export default function PrepareReportPage() {
         <header className="v2-prepare-header">
           <p style={{ color: "var(--rose)", fontSize: "1.25rem", fontWeight: 900, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: "1rem" }}>✓ Payment confirmed</p>
           <h1 style={{ color: "var(--primary)", fontSize: "clamp(3.2rem, 7vw, 4.8rem)", fontWeight: 750, lineHeight: 1.04, letterSpacing: "-0.045em", margin: 0 }}>Your personalised report is taking shape</h1>
-          <p style={{ color: "var(--secondary)", fontSize: "1.6rem", fontWeight: 500, lineHeight: 1.55, margin: "1.5rem 0 3rem", maxWidth: "64rem" }}>We&apos;re turning your latest scan into tailored analysis and visual recommendations. Each completed step is saved automatically.</p>
+          <p style={{ color: "var(--secondary)", fontSize: "1.6rem", fontWeight: 500, lineHeight: 1.55, margin: "1.5rem 0 1.4rem", maxWidth: "72rem" }}>Your report is being generated now. Please don&apos;t close this browser window, but you can safely switch to another tab while we work.</p>
+          <div className="v2-waiting-notice"><span aria-hidden>♪</span><p><strong>We&apos;ll let you know when it&apos;s ready.</strong> You&apos;ll receive the PDF by email, and this page will play a completion alert when your report is available.</p></div>
         </header>
 
         <div className="v2-prepare-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} style={{ height: "0.8rem", background: "var(--line)", borderRadius: "999px", overflow: "hidden", marginBottom: "1rem" }}>
@@ -201,14 +258,14 @@ export default function PrepareReportPage() {
         <div className="v2-prepare-content">
         <section style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "2rem", padding: "1rem clamp(1.4rem, 4vw, 2.6rem)" }}>
           {steps.map((step, index) => (
-            <div key={step.id} style={{ position: "relative", display: "grid", gridTemplateColumns: "3.6rem 1fr", gap: "1.2rem", alignItems: "center", margin: step.status === "active" ? "0.6rem -1rem" : 0, padding: step.status === "active" ? "1.5rem 1rem" : "1.8rem 0", borderRadius: step.status === "active" ? "1.2rem" : 0, background: step.status === "active" ? "linear-gradient(90deg,rgba(200,80,58,.1),rgba(226,168,42,.05))" : "transparent", borderLeft: step.status === "active" ? "4px solid var(--rose)" : "4px solid transparent", transition: "all 250ms ease" }}>
+            <div key={step.id} className={`v2-prepare-step${step.status === "active" ? " is-active" : ""}`} style={{ position: "relative", display: "grid", gridTemplateColumns: "3.6rem minmax(0,1fr)", gap: "1.2rem", alignItems: "center", margin: step.status === "active" ? "0.6rem -1rem" : 0, padding: step.status === "active" ? "1.5rem 1rem" : "1.8rem 0", borderRadius: step.status === "active" ? "1.2rem" : 0, background: step.status === "active" ? "linear-gradient(90deg,rgba(200,80,58,.1),rgba(226,168,42,.05))" : "transparent", borderLeft: step.status === "active" ? "4px solid var(--rose)" : "4px solid transparent", transition: "all 250ms ease" }}>
               <span className="v2-step-node-wrap" aria-hidden>
                 <span style={{ position: "relative", zIndex: 2, width: "3.2rem", height: "3.2rem", borderRadius: "50%", display: "grid", placeItems: "center", fontSize: "1.35rem", fontWeight: 800, color: step.status === "active" ? "#fff" : "var(--primary)", background: step.status === "done" ? "#DDEDE4" : step.status === "skipped" ? "var(--wash)" : step.status === "error" ? "#F8DEDA" : step.status === "active" ? "var(--rose)" : "var(--canvas)", boxShadow: step.status === "done" ? "0 0 0 .35rem rgba(38,139,92,.08)" : undefined, animation: step.status === "active" ? "v2-prepare-pulse 1.4s ease-in-out infinite" : undefined }}>
                   {step.status === "done" ? "✓" : step.status === "skipped" ? "–" : step.status === "error" ? "!" : index + 1}
                 </span>
                 {index < steps.length - 1 && <span className={`v2-step-connector ${step.status === "done" || step.status === "skipped" ? "is-complete" : ""}`}>{step.status === "done" && <i>✓</i>}</span>}
               </span>
-              <div>
+              <div className="v2-step-copy">
                 <div className="v2-step-heading"><strong style={{ color: "var(--primary)", fontSize: step.status === "active" ? "1.65rem" : "1.5rem", fontWeight: step.status === "active" ? 850 : 700 }}>{step.label}</strong>{step.status === "active" && <span className="v2-active-status"><i /><i /><i /><b>In progress</b></span>}</div>
                 <span style={{ display: "block", marginTop: ".3rem", color: step.status === "error" ? "#A83E2E" : step.status === "active" ? "var(--secondary)" : "var(--muted)", fontSize: "1.25rem", fontWeight: step.status === "active" ? 600 : 400, lineHeight: 1.4 }}>{step.detail}</span>
               </div>
@@ -235,6 +292,9 @@ export default function PrepareReportPage() {
       </div>
       <style>{`
         .v2-prepare-header { max-width:76rem; }
+        .v2-waiting-notice { display:flex; align-items:center; gap:1rem; width:fit-content; max-width:72rem; margin:0 0 3rem; padding:.9rem 1.15rem; border:1px solid #BFD9D1; border-radius:1rem; background:#E9F6F1; color:#315F52; }
+        .v2-waiting-notice > span { display:grid; place-items:center; width:2.5rem; height:2.5rem; flex:0 0 auto; border-radius:.75rem; background:#0E8E80; color:#fff; font-size:1.25rem; font-weight:900; animation:v2-sound-pulse 1.8s ease-in-out infinite; }
+        .v2-waiting-notice p { margin:0; font-size:1.12rem; line-height:1.45; }.v2-waiting-notice strong { color:var(--primary); }
         .v2-prepare-progress,.v2-prepare-percent { width:min(76rem,68%); }
         .v2-prepare-content { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(28rem,.85fr); gap:2.4rem; align-items:start; }
         .v2-prepare-aside { position:sticky; top:2rem; }
@@ -251,7 +311,7 @@ export default function PrepareReportPage() {
         .v2-insight-card:after { content:""; position:absolute; width:13rem; height:13rem; right:-5rem; top:-7rem; border-radius:50%; background:rgba(226,168,42,.14); filter:blur(.2rem); }
         .v2-insight-art { width:6.4rem; height:6.4rem; display:grid; place-items:center; border-radius:1.6rem; background:#fff; color:#08796E; box-shadow:0 .55rem 1.5rem rgba(8,121,110,.13); }
         .v2-insight-art svg { width:3.2rem; height:3.2rem; }
-        .v2-insight-copy { position:relative; z-index:1; animation:v2-insight-enter .55s ease both; }
+        .v2-insight-copy { position:relative; z-index:1; min-width:0; animation:v2-insight-enter .55s ease both; }
         .v2-insight-copy p { margin:0 0 .35rem; color:#0E8E80; font-size:1rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
         .v2-insight-copy h2 { margin:0 0 .7rem; color:var(--primary); font-size:1.9rem; font-weight:850; line-height:1.2; letter-spacing:-.02em; }
         .v2-insight-copy span { display:block; color:var(--secondary); font-size:1.35rem; font-weight:500; line-height:1.55; }
@@ -262,9 +322,29 @@ export default function PrepareReportPage() {
         @keyframes v2-status-bars { 0%,100% { transform:scaleY(.35); opacity:.4; } 50% { transform:scaleY(1); opacity:1; } }
         @keyframes v2-check-travel { 0% { top:0; opacity:0; } 20% { opacity:1; } 80% { opacity:1; } 100% { top:88%; opacity:0; } }
         @keyframes v2-insight-enter { from { opacity:0; transform:translateY(.5rem); } to { opacity:1; transform:translateY(0); } }
+        @keyframes v2-sound-pulse { 0%,100% { transform:scale(1); box-shadow:0 0 0 0 rgba(14,142,128,.24); } 50% { transform:scale(1.06); box-shadow:0 0 0 .55rem rgba(14,142,128,0); } }
         @media (max-width:900px) { .v2-prepare-progress,.v2-prepare-percent { width:100%; } .v2-prepare-content { grid-template-columns:1fr; } .v2-prepare-aside { position:static; } .v2-insight-card { grid-template-columns:5.4rem 1fr; min-height:0; padding:2rem 2.2rem 2.3rem; } .v2-insight-controls { left:9.1rem; bottom:.75rem; } }
-        @media (max-width:520px) { .v2-step-heading { align-items:flex-start; } .v2-active-status { min-width:9.3rem; } .v2-insight-card { grid-template-columns:4.4rem 1fr; padding:1.6rem 1.5rem 2.3rem; } .v2-insight-art { width:4.4rem; height:4.4rem; }.v2-insight-art svg { width:2.7rem; height:2.7rem; }.v2-insight-controls { left:7.4rem; } }
-        @media (prefers-reduced-motion:reduce) { .v2-step-connector i,.v2-active-status i,.v2-insight-copy { animation:none; } }
+        @media (max-width:520px) {
+          main { padding:2.4rem 1rem 4rem !important; overflow-x:hidden; }
+          .v2-prepare-header h1 { font-size:3rem !important; overflow-wrap:anywhere; }
+          .v2-prepare-header > p:not(:first-child) { font-size:1.35rem !important; }
+          .v2-waiting-notice { width:100%; box-sizing:border-box; }
+          .v2-prepare-content > section { padding:.7rem .75rem !important; border-radius:1.4rem !important; overflow:hidden; }
+          .v2-prepare-step { grid-template-columns:3.1rem minmax(0,1fr) !important; gap:.75rem !important; padding:1.45rem .35rem !important; }
+          .v2-prepare-step.is-active { margin:.45rem 0 !important; padding:1.35rem .65rem !important; }
+          .v2-step-copy { min-width:0; }
+          .v2-step-heading { flex-direction:column; align-items:flex-start; gap:.65rem; }
+          .v2-step-heading strong { max-width:100%; font-size:1.35rem !important; line-height:1.2; overflow-wrap:anywhere; }
+          .v2-active-status { align-self:flex-start; min-width:0; min-height:2rem; padding:.3rem .75rem .3rem .55rem; }
+          .v2-active-status b { font-size:.86rem; letter-spacing:.07em; }
+          .v2-step-copy > span { max-width:100%; font-size:1.08rem !important; overflow-wrap:anywhere; }
+          .v2-insight-card { grid-template-columns:4.4rem minmax(0,1fr); width:100%; box-sizing:border-box; padding:1.5rem 1.25rem 2.4rem; gap:1rem; border-radius:1.4rem; }
+          .v2-insight-art { width:4.4rem; height:4.4rem; }.v2-insight-art svg { width:2.7rem; height:2.7rem; }
+          .v2-insight-copy h2 { font-size:1.55rem; overflow-wrap:anywhere; }
+          .v2-insight-copy span { font-size:1.15rem; overflow-wrap:anywhere; }
+          .v2-insight-controls { left:6.7rem; }
+        }
+        @media (prefers-reduced-motion:reduce) { .v2-step-connector i,.v2-active-status i,.v2-insight-copy,.v2-waiting-notice > span { animation:none; } }
       `}</style>
     </main>
   );
