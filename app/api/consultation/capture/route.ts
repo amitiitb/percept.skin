@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { captureOrderRaw } from "@/lib/v2/paypal";
-import { DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
+import { fulfilConsultation } from "@/lib/v2/fulfilPurchase";
 import { logV2 } from "@/lib/v2/log";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
-import { sendConsultationLead } from "@/lib/v2/consultationLead";
 
 function serviceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -47,24 +46,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Order does not belong to this account" }, { status: 403 });
     }
 
-    const supabase = serviceClient();
-    const { error } = await supabase.from("doctor_consultations_v2").upsert({
-      session_id: sessionIdRaw === "-" ? null : sessionIdRaw,
-      user_id: auth.userId,
-      contact_phone: contactPhoneRaw === "-" ? null : contactPhoneRaw,
-      amount_paid: DOCTOR_CONSULTATION_PRICE,
-      provider: "paypal",
-      provider_order_id: orderId,
-    }, { onConflict: "provider_order_id" });
-    if (error) throw error;
-
-    // Hand the lead to a human. Awaited but internally guarded, so a mail
-    // failure logs loudly without failing a capture whose money already moved.
-    await sendConsultationLead({
-      supabase, userId: auth.userId,
+    // Shared with the Razorpay verify route — records the row and hands the
+    // lead to a human. See lib/v2/fulfilPurchase.ts.
+    await fulfilConsultation({
+      supabase: serviceClient(),
+      userId: auth.userId,
       sessionId: sessionIdRaw === "-" ? null : sessionIdRaw,
       contactPhone: contactPhoneRaw === "-" ? null : contactPhoneRaw,
-      amountPaid: DOCTOR_CONSULTATION_PRICE, orderId,
+      provider: "paypal",
+      providerOrderId: orderId,
     });
 
     logV2.info("v2_consultation_completed", { user_id: auth.userId, order_id: orderId });

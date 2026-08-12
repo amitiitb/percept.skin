@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
 import { captureOrderRaw } from "@/lib/v2/paypal";
-import { priceFor, DOCTOR_CONSULTATION_PRICE, type ModuleId } from "@/lib/v2/reportModules";
+import { fulfilReportPurchase } from "@/lib/v2/fulfilPurchase";
+import { type ModuleId } from "@/lib/v2/reportModules";
 import { logV2 } from "@/lib/v2/log";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
-import { sendConsultationLead } from "@/lib/v2/consultationLead";
 
 function serviceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
@@ -51,38 +51,20 @@ export async function POST(req: NextRequest) {
     }
 
     const modules = modulesRaw.split(",") as ModuleId[];
-    const amount = priceFor(modules);
     const includeConsultation = consultFlag === "1";
 
-    const supabase = serviceClient();
-    const { error } = await supabase.from("report_purchases_v2").upsert({
-      session_id: sessionId, user_id: auth.userId, modules, amount_paid: amount,
-      provider: "paypal", provider_order_id: orderId,
-    }, { onConflict: "session_id" });
-    if (error) throw error;
-
-    // Same PayPal order pays for both, one atomic combined checkout instead
-    // of the two separate charges the "combo" path used to require. Written
-    // best-effort: if this write fails, the report purchase above already
-    // succeeded and must not be rolled back over it, log loudly instead.
-    if (includeConsultation) {
-      const { error: consultErr } = await supabase.from("doctor_consultations_v2").upsert({
-        session_id: sessionId, user_id: auth.userId,
-        contact_phone: contactPhoneRaw && contactPhoneRaw !== "-" ? contactPhoneRaw : null,
-        amount_paid: DOCTOR_CONSULTATION_PRICE, provider: "paypal", provider_order_id: orderId,
-      }, { onConflict: "provider_order_id" });
-      if (consultErr) {
-        logV2.error("v2_combo_consultation_write_failed", { user_id: auth.userId, session_id: sessionId, order_id: orderId, message: consultErr.message });
-      }
-      // A combo buyer is a paid consultation lead too, and previously nothing
-      // told anyone about it, so the report email went out while the promised
-      // callback had no owner.
-      await sendConsultationLead({
-        supabase, userId: auth.userId, sessionId,
-        contactPhone: contactPhoneRaw && contactPhoneRaw !== "-" ? contactPhoneRaw : null,
-        amountPaid: DOCTOR_CONSULTATION_PRICE, orderId,
-      });
-    }
+    // Shared with the Razorpay verify route — see lib/v2/fulfilPurchase.ts for
+    // why post-payment fulfilment is provider-agnostic.
+    const { amount } = await fulfilReportPurchase({
+      supabase: serviceClient(),
+      userId: auth.userId,
+      sessionId,
+      modules,
+      includeConsultation,
+      contactPhone: contactPhoneRaw && contactPhoneRaw !== "-" ? contactPhoneRaw : null,
+      provider: "paypal",
+      providerOrderId: orderId,
+    });
 
     logV2.info("v2_report_purchase_completed", { user_id: auth.userId, session_id: sessionId, modules: modules.join(","), amount, include_consultation: includeConsultation });
 

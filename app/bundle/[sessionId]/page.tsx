@@ -4,6 +4,8 @@ import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { MODULES, BUNDLE_PRICE, INDIVIDUAL_TOTAL, BUNDLE_SAVINGS, BUNDLE_DISCOUNT_PCT, DOCTOR_CONSULTATION_PRICE, priceFor, type ModuleId } from "@/lib/v2/reportModules";
+import { usdToInr, formatInr } from "@/lib/v2/inrPricing";
+import { RazorpayCheckout } from "@/components/v2/RazorpayCheckout";
 import { IconCheck } from "@/components/ui/icons";
 
 // Real backend stages written by app/api/analyse/route.ts — not decoration.
@@ -45,14 +47,37 @@ declare global {
   interface Window { paypal?: { Buttons: (opts: unknown) => { render: (el: HTMLElement) => void } }; }
 }
 
+// Which gateway takes the money. Razorpay bills in rupees and covers UPI,
+// netbanking and RuPay; PayPal bills in USD. Both stay available to everyone —
+// only the *default* is regional.
+type PayMethod = "razorpay" | "paypal";
+
+// Best-effort guess at an Indian buyer, used only to preselect the toggle.
+// Deliberately not a hard gate and deliberately not a geo-IP lookup: this runs
+// with no service dependency, and a wrong guess costs a tap rather than
+// trapping someone in a currency they can't pay in.
+function looksIndian(): boolean {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz === "Asia/Kolkata" || tz === "Asia/Calcutta") return true;
+  } catch {
+    // Intl unavailable — fall through to the language check.
+  }
+  const langs = navigator.languages ?? [navigator.language];
+  return langs.some((l) => l.toLowerCase().endsWith("-in"));
+}
+
 // Cart summary, right above whichever checkout button is currently active —
 // what's actually in the cart, plus a one-tap cross-sell for the thing
 // that isn't in it yet (consultation from the report view, or vice versa).
+// `format` follows the selected gateway so the cart never quotes dollars above
+// a rupee button.
 function CartSummary({
-  lines, crossSell,
+  lines, crossSell, format,
 }: {
   lines: { label: string; price: number }[];
   crossSell?: { label: string; price: number; onClick: () => void };
+  format: (usd: number) => string;
 }) {
   const total = lines.reduce((s, l) => s + l.price, 0);
   return (
@@ -63,12 +88,12 @@ function CartSummary({
       {lines.map((l) => (
         <div key={l.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", padding: "0.4rem 0" }}>
           <span style={{ fontSize: "1.4rem", color: "var(--secondary)" }}>{l.label}</span>
-          <span style={{ fontSize: "1.4rem", color: "var(--primary)", fontWeight: 600 }}>${l.price}</span>
+          <span style={{ fontSize: "1.4rem", color: "var(--primary)", fontWeight: 600 }}>{format(l.price)}</span>
         </div>
       ))}
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid var(--line)" }}>
         <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total</span>
-        <strong style={{ fontSize: "2.4rem", fontWeight: 300, color: "var(--primary)" }}>${total}</strong>
+        <strong style={{ fontSize: "2.4rem", fontWeight: 300, color: "var(--primary)" }}>{format(total)}</strong>
       </div>
       {crossSell && (
         <button
@@ -81,9 +106,45 @@ function CartSummary({
           }}
         >
           <span style={{ fontSize: "1.4rem", color: "var(--primary)", fontWeight: 500 }}>+ {crossSell.label}</span>
-          <span style={{ fontSize: "1.3rem", color: "var(--rose)", fontWeight: 700, flexShrink: 0 }}>Add for ${crossSell.price} →</span>
+          <span style={{ fontSize: "1.3rem", color: "var(--rose)", fontWeight: 700, flexShrink: 0 }}>Add for {format(crossSell.price)} →</span>
         </button>
       )}
+    </div>
+  );
+}
+
+// Gateway switch, shown directly above whichever checkout button is active.
+// Always available in both directions: the regional default is only a guess,
+// and someone with an Indian card abroad (or an Indian buyer who'd rather use
+// PayPal) has to be able to overrule it.
+function PayMethodToggle({ value, onChange }: { value: PayMethod; onChange: (m: PayMethod) => void }) {
+  const options: { key: PayMethod; label: string; sub: string }[] = [
+    { key: "razorpay", label: "Pay in ₹", sub: "UPI · Cards · Netbanking" },
+    { key: "paypal", label: "Pay in $", sub: "PayPal · Intl. cards" },
+  ];
+  return (
+    <div style={{ display: "flex", gap: "0.8rem", marginBottom: "1.6rem" }}>
+      {options.map((o) => {
+        const active = value === o.key;
+        return (
+          <button
+            key={o.key}
+            type="button"
+            onClick={() => onChange(o.key)}
+            aria-pressed={active}
+            style={{
+              flex: 1, cursor: "pointer", textAlign: "left", minWidth: 0,
+              padding: "1.2rem 1.6rem", borderRadius: "1rem",
+              border: `2px solid ${active ? "var(--primary)" : "var(--line)"}`,
+              background: active ? "var(--wash)" : "var(--canvas)",
+              transition: "border-color 0.15s, background 0.15s",
+            }}
+          >
+            <span style={{ display: "block", fontSize: "1.5rem", fontWeight: 600, color: "var(--primary)" }}>{o.label}</span>
+            <span style={{ display: "block", fontSize: "1.2rem", color: "var(--muted)", marginTop: "0.2rem" }}>{o.sub}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -101,6 +162,14 @@ export default function V2BundlePage() {
   const [failReason, setFailReason] = useState<string | null>(null);
   const [payState, setPayState] = useState<PayState>("idle");
   const [payError, setPayError] = useState("");
+  // Rupees are preselected for buyers who look Indian, USD for everyone else.
+  // Resolved in the initialiser rather than an effect: on the server there is
+  // no navigator to read, so it falls back to PayPal there — safe, because
+  // nothing below `authChecked` renders until after mount, so the server's
+  // markup and the first client render are the same blank shell either way.
+  const [payMethod, setPayMethod] = useState<PayMethod>(
+    () => (typeof window !== "undefined" && looksIndian() ? "razorpay" : "paypal"),
+  );
 
   // Doctor Consultation — separate paid tier, own PayPal button + state,
   // independent of the report-module purchase above (unless purchasePath is
@@ -128,6 +197,32 @@ export default function V2BundlePage() {
   // button is never clickable in a state the server will reject.
   const phoneValid = consultPhone.trim().length >= 6;
   const price = priceFor([...selected]);
+
+  const isInr = payMethod === "razorpay";
+  const formatPrice = (usd: number) => (isInr ? formatInr(usdToInr(usd)) : `$${usd}`);
+  // Derived exactly the way the server derives the order amount — one
+  // conversion of the summed dollars, never a sum of separate conversions, so
+  // the figure on the button is the figure that gets charged.
+  const comboTotalUsd = price + DOCTOR_CONSULTATION_PRICE;
+
+  // The report and combo paths both land on a report page, so they wait out
+  // the tail of the background analysis rather than showing "still processing"
+  // straight after payment. Shared by the PayPal and Razorpay success paths.
+  async function waitForAnalysis() {
+    for (let i = 0; i < 20 && !analysisReadyRef.current; i++) {
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+
+  function handleReportPayState(state: PayState, message?: string) {
+    setPayState(state);
+    setPayError(message ?? "");
+  }
+
+  function handleConsultPayState(state: PayState, message?: string) {
+    setConsultPayState(state);
+    setConsultPayError(message ?? "");
+  }
 
   // Auth + existing-purchase guard — don't let a user pay twice for the same session.
   useEffect(() => {
@@ -541,6 +636,13 @@ export default function V2BundlePage() {
           )}
         </div>
 
+        {/* Currency first, above every price on the page. It used to sit down
+            beside each pay button, which meant the whole card was quoting USD
+            with the control that changes it out of sight below the fold. */}
+        <div style={{ marginBottom: "2.4rem" }}>
+          <PayMethodToggle value={payMethod} onChange={setPayMethod} />
+        </div>
+
         {/* ── 3 clear paths: report only, consultation only, or both. Picking
             a segment toggles which checkout section is visible below — both
             sections stay permanently mounted (never unmount buttonRef/
@@ -575,7 +677,7 @@ export default function V2BundlePage() {
                   />
                 )}
                 <span style={{ fontSize: "1.3rem", fontWeight: 600, color: active ? "#fff" : "var(--secondary)", lineHeight: 1.2, transition: "color 0.2s" }}>{tile.label}</span>
-                <span style={{ fontSize: "1.9rem", fontWeight: 800, color: active ? "#fff" : "var(--primary)", transition: "color 0.2s" }}>${tile.price}</span>
+                <span style={{ fontSize: "1.9rem", fontWeight: 800, color: active ? "#fff" : "var(--primary)", transition: "color 0.2s" }}>{formatPrice(tile.price)}</span>
               </button>
             );
           })}
@@ -618,7 +720,7 @@ export default function V2BundlePage() {
                   transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
                   style={{ background: "var(--rose)", color: "#fff", fontSize: "1.3rem", fontWeight: 700, borderRadius: "9999px", padding: "0.6rem 1.6rem", whiteSpace: "nowrap" }}
                 >
-                  {BUNDLE_DISCOUNT_PCT}% OFF · Save ${BUNDLE_SAVINGS}
+                  {BUNDLE_DISCOUNT_PCT}% OFF · Save {formatPrice(BUNDLE_SAVINGS)}
                 </motion.span>
               )}
             </div>
@@ -647,15 +749,15 @@ export default function V2BundlePage() {
                       </span>
                       <span style={{ fontSize: "1.5rem", color: checked ? "#fff" : "rgba(255,255,255,0.5)", overflowWrap: "break-word", transition: "color 0.15s" }}>{m.label}</span>
                     </div>
-                    <span style={{ fontSize: "1.4rem", color: checked ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.4)", flexShrink: 0, transition: "color 0.15s" }}>${m.price}</span>
+                    <span style={{ fontSize: "1.4rem", color: checked ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.4)", flexShrink: 0, transition: "color 0.15s" }}>{formatPrice(m.price)}</span>
                   </button>
                 );
               })}
             </div>
 
             <div style={{ display: "flex", alignItems: "baseline", gap: "1.2rem" }}>
-              {isBundle && <span style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.4)", textDecoration: "line-through" }}>${INDIVIDUAL_TOTAL}</span>}
-              <span style={{ fontSize: "3.6rem", fontWeight: 300, color: "#fff" }}>${price}</span>
+              {isBundle && <span style={{ fontSize: "1.8rem", color: "rgba(255,255,255,0.4)", textDecoration: "line-through" }}>{formatPrice(INDIVIDUAL_TOTAL)}</span>}
+              <span style={{ fontSize: "3.6rem", fontWeight: 300, color: "#fff" }}>{formatPrice(price)}</span>
               {isBundle && <span style={{ fontSize: "1.3rem", color: "var(--rose)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}><IconCheck size={1.4} strokeWidth={2.4} /> Bundle applied</span>}
             </div>
           </div>
@@ -663,7 +765,7 @@ export default function V2BundlePage() {
 
         {!isBundle && (
           <p style={{ fontSize: "1.3rem", color: "var(--rose)", marginBottom: "2.4rem" }}>
-            Select all 4 to save ${BUNDLE_SAVINGS} with the bundle
+            Select all 4 to save {formatPrice(BUNDLE_SAVINGS)} with the bundle
           </p>
         )}
 
@@ -687,7 +789,7 @@ export default function V2BundlePage() {
             {purchasePath === "combo" ? <IconCheck size={1.6} strokeWidth={2.6} /> : "+"}
           </motion.button>
           <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "var(--primary)" }}>
-            {purchasePath === "combo" ? "Consultation added" : `Add Consultation · $${DOCTOR_CONSULTATION_PRICE}`}
+            {purchasePath === "combo" ? "Consultation added" : `Add Consultation · ${formatPrice(DOCTOR_CONSULTATION_PRICE)}`}
           </span>
         </div>
 
@@ -697,17 +799,34 @@ export default function V2BundlePage() {
             <CartSummary
               lines={[{ label: isBundle ? "Complete Beauty Report" : `${selected.size} report module${selected.size > 1 ? "s" : ""}`, price }]}
               crossSell={{ label: "Add a dermatologist consultation", price: DOCTOR_CONSULTATION_PRICE, onClick: () => setPurchasePath("combo") }}
+              format={formatPrice}
             />
             {payState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{payError}</p>}
             {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
             {payState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
 
             <div style={{ opacity: payState === "confirming" ? 0.4 : 1, pointerEvents: payState === "confirming" ? "none" : "auto" }}>
-              <div ref={buttonRef} />
+              {isInr && (
+                <RazorpayCheckout
+                  createOrderPath="/api/razorpay/report-purchase/create-order"
+                  verifyPath="/api/razorpay/report-purchase/verify"
+                  buildBody={() => ({ sessionId, modules: [...selected] })}
+                  description={isBundle ? "Percept Complete Beauty Report" : `Percept Report (${selected.size} modules)`}
+                  amountInr={usdToInr(price)}
+                  onState={handleReportPayState}
+                  onSuccess={waitForAnalysis}
+                />
+              )}
+              {/* Hidden rather than unmounted: the PayPal SDK renders into this
+                  node once and re-rendering it on every currency switch would
+                  tear down and rebuild the iframe for no reason. */}
+              <div style={{ display: isInr ? "none" : "block" }}>
+                <div ref={buttonRef} />
+              </div>
             </div>
 
             <p style={{ fontSize: "1.2rem", color: "var(--muted)", textAlign: "center", marginTop: "2.4rem" }}>
-              Sandbox mode · no real charge · secure checkout via PayPal
+              Test mode · no real charge · secure checkout via {isInr ? "Razorpay" : "PayPal"}
             </p>
           </>
         )}
@@ -753,6 +872,7 @@ export default function V2BundlePage() {
                     <CartSummary
                       lines={[{ label: "Doctor Consultation", price: DOCTOR_CONSULTATION_PRICE }]}
                       crossSell={{ label: "Add your AI beauty report", price, onClick: () => setPurchasePath("combo") }}
+                      format={formatPrice}
                     />
                     {consultPayState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{consultPayError}</p>}
                     {consultPayState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
@@ -765,13 +885,27 @@ export default function V2BundlePage() {
                     )}
                     {/* Gated rather than left clickable: the server rejects a
                         consultation order without a phone, and hitting that
-                        error inside the PayPal popup is a confusing place to
+                        error inside the payment popup is a confusing place to
                         discover a missing field. */}
                     <div style={{
                       opacity: consultPayState === "confirming" || !phoneValid ? 0.4 : 1,
                       pointerEvents: consultPayState === "confirming" || !phoneValid ? "none" : "auto",
                     }}>
-                      <div ref={consultButtonRef} />
+                      {isInr && (
+                        <RazorpayCheckout
+                          createOrderPath="/api/razorpay/consultation/create-order"
+                          verifyPath="/api/razorpay/consultation/verify"
+                          buildBody={() => ({ sessionId, contactPhone: consultPhoneRef.current || undefined })}
+                          description="Percept: Doctor Consultation"
+                          amountInr={usdToInr(DOCTOR_CONSULTATION_PRICE)}
+                          disabled={!phoneValid}
+                          onState={handleConsultPayState}
+                          onSuccess={() => {}}
+                        />
+                      )}
+                      <div style={{ display: isInr ? "none" : "block" }}>
+                        <div ref={consultButtonRef} />
+                      </div>
                     </div>
                   </>
                 )}
@@ -789,6 +923,7 @@ export default function V2BundlePage() {
                 { label: isBundle ? "Complete Beauty Report" : `${selected.size} report module${selected.size > 1 ? "s" : ""}`, price },
                 { label: "Doctor Consultation", price: DOCTOR_CONSULTATION_PRICE },
               ]}
+              format={formatPrice}
             />
 
             {payState === "failed" && <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>{payError}</p>}
@@ -804,11 +939,29 @@ export default function V2BundlePage() {
               opacity: payState === "confirming" || !phoneValid ? 0.4 : 1,
               pointerEvents: payState === "confirming" || !phoneValid ? "none" : "auto",
             }}>
-              <div ref={comboButtonRef} />
+              {isInr && (
+                <RazorpayCheckout
+                  createOrderPath="/api/razorpay/report-purchase/create-order"
+                  verifyPath="/api/razorpay/report-purchase/verify"
+                  buildBody={() => ({
+                    sessionId, modules: [...selected],
+                    includeConsultation: true,
+                    contactPhone: consultPhoneRef.current || undefined,
+                  })}
+                  description="Percept Report + Doctor Consultation"
+                  amountInr={usdToInr(comboTotalUsd)}
+                  disabled={!phoneValid}
+                  onState={handleReportPayState}
+                  onSuccess={waitForAnalysis}
+                />
+              )}
+              <div style={{ display: isInr ? "none" : "block" }}>
+                <div ref={comboButtonRef} />
+              </div>
             </div>
 
             <p style={{ fontSize: "1.2rem", color: "var(--muted)", textAlign: "center", marginTop: "2.4rem" }}>
-              Sandbox mode · no real charge · secure checkout via PayPal
+              Test mode · no real charge · secure checkout via {isInr ? "Razorpay" : "PayPal"}
             </p>
           </div>
         )}

@@ -1,0 +1,12 @@
+# Local-only artifacts and design sources — none of this is needed to build.
+node_modules
+.next
+glowmetry-v2
+.playwright-mcp
+design-reference-screenshots
+report copy
+docs
+*.png
+!public/**
+tsconfig.tsbuildinfo
+VERCEL-GOOGLE-SERVICE-ACCOUNT.json

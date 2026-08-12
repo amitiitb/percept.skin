@@ -46,3 +46,10 @@ next-env.d.ts
 /report copy
 /design-reference-screenshots
 VERCEL-GOOGLE-SERVICE-ACCOUNT.json
+# Root-level design sources only (~10MB of PNGs). Assets under public/ are
+# still tracked normally — this pattern is anchored to the repo root.
+/*.png
+
+# local tooling scratch
+/.playwright-mcp
+/glowmetry-v2
