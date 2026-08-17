@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import { ReactLenis } from "@/utils/lenis";
 import { ConsentBanner } from "@/components/ConsentBanner";
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  display: "swap",
+});
 
 const description =
   "Personalised AI skin analysis and practical, dermatologist-backed plans, without surgery-first recommendations.";
@@ -55,15 +62,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // suppressHydrationWarning: the inline script below sets data-theme on this
     // element before React hydrates, so server and client markup differ here by
     // design. Scoped to <html>, so a real mismatch anywhere else still warns.
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={geist.variable}>
       <head>
-        {/* Fontshare serves the CSS from api.fontshare.com but the @font-face
-            src urls it returns point at cdn.fontshare.com — preconnect both
-            so the render-blocking stylesheet's actual font fetch isn't cold. */}
-        <link rel="preconnect" href="https://api.fontshare.com" />
-        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
-        {/* Satoshi via Fontshare's CDN API, self-hosting the font file needs ITF's written consent */}
-        <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

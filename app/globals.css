@@ -9,12 +9,22 @@
    license requires ITF's written consent to self-host the font file). */
 :root {
   color-scheme: light;
-  --font-display: "Satoshi", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-display: var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 
   /* Canvas — warm beige, SkyClinics background */
   --canvas:        #E8E7E5;
   --surface:       #EFEEEC;
   --wash:          #E1DFDB;
+
+  /* Neutral system — homepage redesign (2026-08-17), FaceIQ-style premium
+     minimal surface. Additive to the tokens above: /report, /dashboard etc.
+     keep using --canvas/--surface/--primary untouched, the homepage opts
+     into these instead. --rose/--primary become accent-only there. */
+  --bg-neutral:     #F8F8F6;
+  --surface-neutral:#FFFFFF;
+  --ink:            #111111;
+  --ink-secondary:  #666666;
+  --border-neutral: rgba(0,0,0,0.08);
 
   /* Text — forest-teal, lightened from the original near-black #003934
      (still ~6.4:1 against --canvas, comfortably above the 4.5:1 AA floor). */
@@ -112,6 +122,12 @@
   --scrim-top:     rgba(33,37,34,0.2);
   --scrim-bottom:  rgba(33,37,34,0.92);
   --shadow-strong: rgba(0,0,0,0.6);
+
+  --bg-neutral:     #101110;
+  --surface-neutral:#171816;
+  --ink:            #F5F5F3;
+  --ink-secondary:  #9A9C97;
+  --border-neutral: rgba(255,255,255,0.1);
 }
 
 :root[data-theme="light"] { color-scheme: light; }
@@ -170,6 +186,78 @@ input, textarea { font: inherit; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
   line-height: 1.3;
+}
+
+/* ─── Homepage design system (2026-08-17 redesign) ─────────────────────
+   Shared container/rhythm/type-scale so every rebuilt section pulls from
+   one scale instead of the previous one-off clamp()/max-width per section. */
+.pg-container {
+  max-width: 128rem;
+  margin: 0 auto;
+  padding-inline: 3.2rem;
+}
+@media (min-width: 1600px) {
+  .pg-container { max-width: 136rem; }
+}
+.pg-section {
+  padding-block: clamp(12rem, 12vw, 16rem);
+  border-top: 1px solid var(--border-neutral);
+}
+@media (max-width: 700px) {
+  .pg-section { padding-block: clamp(7.2rem, 18vw, 9.6rem); }
+}
+.pg-eyebrow {
+  color: var(--ink-secondary);
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+.pg-hero-h1 {
+  font-size: clamp(4.4rem, 6vw, 8.8rem);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  color: var(--ink);
+  margin: 0;
+}
+.pg-h2 {
+  font-size: clamp(3.6rem, 4vw, 6.4rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  margin: 0;
+}
+.pg-card-h {
+  font-size: clamp(2.4rem, 2vw, 3.2rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin: 0;
+}
+.pg-body {
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+  max-width: 58rem;
+}
+.pg-card {
+  background: var(--surface-neutral);
+  border: 1px solid var(--border-neutral);
+  border-radius: 2rem;
+  box-shadow: none;
+}
+/* Scoped override so the homepage's primary button reads black-on-light
+   (per the redesign brief) without touching --btn-fill globally — every
+   other page (/report, /dashboard, /splash...) keeps the teal button. */
+.pg-scope {
+  --btn-fill: var(--ink);
+  --btn-fill-ink: var(--bg-neutral);
+  --btn-fill-hover: color-mix(in srgb, var(--ink) 82%, var(--bg-neutral) 18%);
+  background: var(--bg-neutral);
 }
 
 /* ─── Animations ──────────────────────────────────── */

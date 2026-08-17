@@ -12,8 +12,8 @@ interface MenuLink {
 
 const LINKS: MenuLink[] = [
   { label: "What you get", href: "#what-you-get" },
-  { label: "Why Percept", href: "#why" },
-  { label: "Experts", href: "#experts" },
+  { label: "How it works", href: "#how-it-works" },
+  { label: "Science", href: "#experts" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
 ];
@@ -55,6 +55,11 @@ export function SiteMenu({ open, onClose }: Props) {
             position: "fixed", inset: 0, zIndex: 100,
             background: "var(--header-bg)", backdropFilter: "blur(18px)",
             display: "flex", flexDirection: "column",
+            // Short/landscape viewports can't fit the centered nav + CTA +
+            // footer all at once — without scroll, the lower items (Pricing,
+            // FAQ, CTA, login) render past the bottom edge with no way to
+            // reach them, since this overlay is fixed with no other scroll path.
+            overflowY: "auto",
           }}
         >
           <div aria-hidden style={{
