@@ -116,14 +116,6 @@
 
 :root[data-theme="light"] { color-scheme: light; }
 
-/* Logo swap: two fixed-colour SVGs (light-surface / dark-surface), toggled
-   by the same [data-theme] attribute everything else uses. The wordmark's
-   "per" segment is too dark to read on the dark theme's --surface, so it
-   needs an actual recoloured asset rather than a CSS filter. */
-.logo-dark-mark { display: none; }
-:root[data-theme="dark"] .logo-light-mark { display: none; }
-:root[data-theme="dark"] .logo-dark-mark { display: inline; }
-
 /* ─── Fluid font scaling ──────────────────────────── */
 html {
   box-sizing: border-box;
