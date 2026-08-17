@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Newsreader } from "next/font/google";
 import "./globals.css";
 import { ReactLenis } from "@/utils/lenis";
 import { ConsentBanner } from "@/components/ConsentBanner";
@@ -7,6 +7,15 @@ import { ConsentBanner } from "@/components/ConsentBanner";
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
+  display: "swap",
+});
+
+// Editorial serif for major display headlines only (hero, section titles) —
+// everything else (body copy, nav, buttons) stays on Geist. Matches the
+// serif-headline/sans-body pairing the FaceIQ reference site uses.
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -62,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // suppressHydrationWarning: the inline script below sets data-theme on this
     // element before React hydrates, so server and client markup differ here by
     // design. Scoped to <html>, so a real mismatch anywhere else still warns.
-    <html lang="en" suppressHydrationWarning className={geist.variable}>
+    <html lang="en" suppressHydrationWarning className={`${geist.variable} ${newsreader.variable}`}>
       <head>
         <script
           type="application/ld+json"

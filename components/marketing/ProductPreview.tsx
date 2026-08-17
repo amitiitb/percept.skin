@@ -100,7 +100,7 @@ export function ProductPreview({
             percept.skin/report
           </span>
           <a href="/perceptgpt" className="pv-gpt-link" style={{ fontSize: "1.2rem", fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            Ask PerceptGPT →
+            <span className="pv-gpt-text">Ask PerceptGPT</span> →
           </a>
         </div>
 
@@ -177,7 +177,7 @@ export function ProductPreview({
           .pv-tab-label { display: none; }
         }
         @media (max-width: 560px) {
-          .pv-gpt-link { display: none !important; }
+          .pv-gpt-text { display: none; }
         }
       `}</style>
     </div>

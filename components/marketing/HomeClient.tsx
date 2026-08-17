@@ -7,18 +7,10 @@ import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { WhatYouGet } from "@/components/marketing/WhatYouGet";
 import { ProductPreview } from "@/components/marketing/ProductPreview";
 import { Logo } from "@/components/ui/Logo";
-import { IconCheck, IconArrowRight, IconShield, IconSparkle, IconClock } from "@/components/ui/icons";
+import { IconCheck, IconArrowRight } from "@/components/ui/icons";
 import { BUNDLE_PRICE, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 import { FAQS } from "@/lib/v2/homeFaqs";
 import { OPEN_COOKIE_PREFS_EVENT } from "@/components/ConsentBanner";
-
-const HEADLINE_WORDS = "See your skin, face, and hair more clearly".split(" ");
-
-const TRUST_BADGES = [
-  { Icon: IconShield, label: "Private & Secure" },
-  { Icon: IconSparkle, label: "AI-Powered Analysis" },
-  { Icon: IconClock, label: "Under 2 minutes" },
-] as const;
 
 const NAV_LINKS = [
   { label: "Product", href: "#what-you-get" },
@@ -58,11 +50,11 @@ const RECOMMENDATIONS = [
   "One personalised report, yours to keep",
 ];
 
-const TESTIMONIALS: { quote: string; name: string }[] = [
-  { quote: "I expected a basic face analysis, but Percept picked up details I had never really noticed before. The skin and colour recommendations felt surprisingly personal, and the report was actually easy to understand.", name: "Priyanka Vaish" },
-  { quote: "What I liked most was that it didn't just give me scores. It explained what those scores meant and what I could actually do with them. The eyewear and face-shape suggestions were especially useful.", name: "Amit Singh" },
-  { quote: "I've tried a few AI appearance tools before, but most of them feel gimmicky. Percept felt much more considered. The analysis was detailed, the interface was clean, and the recommendations made sense for my face.", name: "Abhinav Soni" },
-  { quote: "The colour analysis was the part that surprised me most. Some shades I usually wear were clearly not doing me any favours, and the suggested palette made an immediate difference. It felt practical rather than generic.", name: "Saket Tiwari" },
+const TESTIMONIALS: { quote: string; name: string; rating: number }[] = [
+  { quote: "I expected a basic face analysis, but Percept picked up details I had never really noticed before. The skin and colour recommendations felt surprisingly personal, and the report was actually easy to understand.", name: "Priyanka Vaish", rating: 5 },
+  { quote: "What I liked most was that it didn't just give me scores. It explained what those scores meant and what I could actually do with them. The eyewear and face-shape suggestions were especially useful.", name: "Amit Singh", rating: 5 },
+  { quote: "I've tried a few AI appearance tools before, but most of them feel gimmicky. Percept felt much more considered. The analysis was detailed, the interface was clean, and the recommendations made sense for my face.", name: "Abhinav Soni", rating: 4 },
+  { quote: "The colour analysis was the part that surprised me most. Some shades I usually wear were clearly not doing me any favours, and the suggested palette made an immediate difference. It felt practical rather than generic.", name: "Saket Tiwari", rating: 5 },
 ];
 
 const PRICING_FEATURES = [
@@ -70,7 +62,6 @@ const PRICING_FEATURES = [
   "Hairstyle recommendations, rendered on your photo",
   "Eyewear recommendations, previewed on you",
   "Personalised morning / evening / weekly routine",
-  "One-time payment, no subscription",
 ];
 
 function AnimatedPrice({ value }: { value: number }) {
@@ -125,6 +116,18 @@ function Reveal({ children, className, style }: { children: ReactNode; className
     >
       {children}
     </motion.div>
+  );
+}
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <div aria-label={`${rating} out of 5 stars`} style={{ display: "flex", gap: "0.3rem", marginBottom: "1.2rem" }}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill={i < rating ? "#D9A62E" : "none"} stroke="#D9A62E" strokeWidth="1.5" aria-hidden>
+          <path strokeLinejoin="round" d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.3l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3.5z" />
+        </svg>
+      ))}
+    </div>
   );
 }
 
@@ -232,67 +235,6 @@ export function HomeClient() {
         </motion.div>
       </section>
 
-      {/* ── Hero ── */}
-      <section className="desktop-home-hero" style={{ position: "relative", padding: "6.4rem 3.2rem 8rem" }}>
-        <div className="percept-hero-grid" style={{ position: "relative", maxWidth: "120rem", margin: "0 auto", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "5.6rem", alignItems: "center" }}>
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <p style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--ink)", textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: "1.6rem" }}>
-              Personal beauty analysis
-            </p>
-            <h1 style={{ fontSize: "clamp(3.4rem, 5.5vw, 5.6rem)", fontWeight: 600, color: "var(--ink)", lineHeight: 1.05, letterSpacing: "-0.02em", marginBottom: "2.4rem" }}>
-              {HEADLINE_WORDS.map((word, i) => {
-                const isLast = i === HEADLINE_WORDS.length - 1;
-                return (
-                  <span key={i} style={{ display: "inline-block", overflow: "hidden", verticalAlign: "top" }}>
-                    <motion.span
-                      style={{ display: "inline-block", color: isLast ? "var(--ink-secondary)" : undefined }}
-                      initial={{ y: "110%" }}
-                      animate={{ y: "0%" }}
-                      transition={{ duration: 0.6, delay: 0.15 + i * 0.07, ease: [0.24, 0.43, 0.15, 0.97] }}
-                    >
-                      {word}&nbsp;
-                    </motion.span>
-                  </span>
-                );
-              })}
-            </h1>
-            <p className="pg-body" style={{ marginBottom: "2.8rem" }}>
-              A guided photo scan, read by AI. Clear, specific, and easy to track over time.
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: "1.4rem", flexWrap: "wrap", marginBottom: "3.2rem" }}>
-              {TRUST_BADGES.map(({ Icon, label }, i) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", gap: "1.4rem" }}>
-                  {i > 0 && <span aria-hidden style={{ width: "0.4rem", height: "0.4rem", borderRadius: "50%", background: "var(--border-neutral)", flexShrink: 0 }} />}
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "1.4rem", fontWeight: 500, color: "var(--ink-secondary)" }}>
-                    <Icon size={1.5} strokeWidth={1.75} />
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: "flex", gap: "1.2rem", flexWrap: "wrap" }}>
-              <a href="/splash"><PrimaryButton size="sm" fullWidth={false}>Start my journey →</PrimaryButton></a>
-              <a href="#how-it-works"><PrimaryButton size="sm" variant="outline" fullWidth={false}>How it works</PrimaryButton></a>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }}
-            style={{ position: "relative" }}
-          >
-            <Image
-              src="/images/skincare-portraits/portrait-deep-brown.png"
-              alt="Close-up portrait showing clear, healthy skin"
-              width={1024}
-              height={1536}
-              priority
-              sizes="(max-width: 900px) 100vw, 50vw"
-              style={{ width: "100%", height: "auto", display: "block", borderRadius: "2rem" }}
-            />
-          </motion.div>
-        </div>
-      </section>
-
       {/* ── Proof strip: continuous marquee, not a wrapping row — avoids the
           awkward divider-orphan look a flex-wrap row gets on narrow screens
           once items drop to a second line. ── */}
@@ -334,6 +276,72 @@ export function HomeClient() {
 
       {/* ── Five systems ── */}
       <WhatYouGet />
+
+      {/* ── Pricing: moved right after the value section (you just saw what
+          you get, here's the price) rather than buried near the bottom.
+          Two cards — report, and the bundle of report + consultation — the
+          consultation's own detail lives inside the bundle card rather than
+          repeating a third standalone tile for it. Dark inverted cards on
+          the normal light page, not a full dark section, so it doesn't sit
+          back-to-back with the dark command centre below it. Bundle total
+          ($20) matches the real combo price computed in
+          app/bundle/[sessionId]/page.tsx (report + consultation, no extra
+          discount — same math, not a new number invented here). ── */}
+      <section id="pricing" className="pg-section pg-container" style={{ paddingBlock: "clamp(5.6rem, 7vw, 7.2rem)" }}>
+        <Reveal>
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <p className="pg-eyebrow" style={{ marginBottom: "1.2rem" }}>Pricing</p>
+            <h2 className="pg-h2" style={{ fontSize: "clamp(2.8rem, 3vw, 3.8rem)" }}>The best value in personal analysis.</h2>
+          </div>
+          <div className="pricing-grid">
+            {/* Report */}
+            <div className="pricing-tile">
+              <p className="pg-eyebrow" style={{ margin: "0 0 1.2rem", color: "rgba(255,255,255,0.5)" }}>AI report</p>
+              <div style={{ display: "flex", alignItems: "flex-start", marginBottom: "1.6rem" }}>
+                <span style={{ fontSize: "2.2rem", fontWeight: 600, marginTop: "0.5rem", color: "#F2C85B" }}>$</span>
+                <span style={{ fontSize: "5.6rem", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1, color: "#F2C85B" }}>{BUNDLE_PRICE}</span>
+              </div>
+              <ul style={{ margin: "0 0 2.4rem", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1rem", flex: 1 }}>
+                {PRICING_FEATURES.map((f) => (
+                  <li key={f} style={{ display: "flex", gap: "0.9rem", fontSize: "1.4rem", color: "rgba(255,255,255,0.85)" }}>
+                    <span style={{ flexShrink: 0, marginTop: "0.2rem", display: "flex", color: "#F2C85B" }}><IconCheck size={1.3} strokeWidth={2.4} /></span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="/splash"><PrimaryButton variant="onDark" fullWidth>Get my report · ${BUNDLE_PRICE}</PrimaryButton></a>
+            </div>
+
+            {/* Bundle — featured */}
+            <div className="pricing-tile pricing-tile-featured">
+              <div aria-hidden style={{ position: "absolute", top: "-30%", right: "-20%", width: "30rem", height: "30rem", borderRadius: "50%", background: "radial-gradient(circle, rgba(217,166,46,0.3) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <span style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#082f2b", background: "#F2C85B", padding: "0.4rem 1rem", borderRadius: "999px", marginBottom: "1.2rem" }}>
+                Best value
+              </span>
+              <p className="pg-eyebrow" style={{ position: "relative", margin: "0 0 1.2rem", color: "rgba(255,255,255,0.55)" }}>Report + Consultation</p>
+              <div style={{ position: "relative", display: "flex", alignItems: "flex-start", marginBottom: "1.6rem" }}>
+                <span style={{ fontSize: "2.6rem", fontWeight: 600, marginTop: "0.6rem", color: "#F2C85B" }}>$</span>
+                <span style={{ fontSize: "7.2rem", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1, color: "#F2C85B", textShadow: "0 0.4rem 3.2rem rgba(242,200,91,0.4)" }}><AnimatedPrice value={BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE} /></span>
+              </div>
+              <ul style={{ position: "relative", margin: "0 0 2.4rem", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1rem", flex: 1 }}>
+                <li style={{ display: "flex", gap: "0.9rem", fontSize: "1.4rem", color: "rgba(255,255,255,0.92)", fontWeight: 600 }}>
+                  <span style={{ flexShrink: 0, marginTop: "0.2rem", display: "flex", color: "#F2C85B" }}><IconCheck size={1.3} strokeWidth={2.4} /></span>
+                  Everything in the AI report
+                </li>
+                <li style={{ display: "flex", gap: "0.9rem", fontSize: "1.4rem", color: "rgba(255,255,255,0.92)", fontWeight: 600 }}>
+                  <span style={{ flexShrink: 0, marginTop: "0.2rem", display: "flex", color: "#F2C85B" }}><IconCheck size={1.3} strokeWidth={2.4} /></span>
+                  Everything in the consultation
+                </li>
+                <li style={{ display: "flex", gap: "0.9rem", fontSize: "1.4rem", color: "rgba(255,255,255,0.85)" }}>
+                  <span style={{ flexShrink: 0, marginTop: "0.2rem", display: "flex", color: "#F2C85B" }}><IconCheck size={1.3} strokeWidth={2.4} /></span>
+                  One checkout, no extra steps
+                </li>
+              </ul>
+              <a href="/splash" style={{ position: "relative", display: "block" }}><PrimaryButton variant="onDark" fullWidth>Get the bundle · ${BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
+            </div>
+          </div>
+        </Reveal>
+      </section>
 
       {/* ── Command centre ── */}
       <section id="command-centre" className="pg-section" style={{ background: "var(--ink)", color: "var(--bg-neutral)", borderTopColor: "rgba(255,255,255,0.1)" }}>
@@ -393,95 +401,82 @@ export function HomeClient() {
                 </li>
               ))}
             </ul>
+            <a href="/perceptgpt" style={{ display: "inline-flex", alignItems: "center", gap: "0.8rem", marginTop: "2.4rem", fontSize: "1.4rem", fontWeight: 600, color: "var(--ink)" }}>
+              💬 Have a question about your report? Ask PerceptGPT →
+            </a>
           </div>
         </Reveal>
       </section>
 
       {/* ── Progress ── */}
-      <section id="progress" className="pg-section pg-container" style={{ textAlign: "center", background: "var(--surface-neutral)" }}>
-        <Reveal>
-          <h2 className="pg-h2" style={{ marginBottom: "1.6rem" }}>See what changes over time.</h2>
-          <p className="pg-body" style={{ margin: "0 auto 5.6rem" }}>Every scan stays in your history, so progress is a comparison, not a guess.</p>
+      <section id="progress" className="pg-section pg-container" style={{ background: "var(--surface-neutral)", paddingBlock: "clamp(5.6rem, 7vw, 7.2rem)" }}>
+        <Reveal className="progress-band">
+          <div>
+            <p className="pg-eyebrow" style={{ marginBottom: "0.8rem" }}>Progress</p>
+            <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(2.4rem, 2.4vw, 3rem)", fontWeight: 400, letterSpacing: "-0.01em", color: "var(--ink)", margin: 0 }}>
+              See what changes over time.
+            </h2>
+          </div>
           <div className="progress-compare">
-            <div className="pg-card progress-card">
-              <span className="pg-eyebrow">First scan</span>
-              <span className="progress-score">68</span>
+            <div className="progress-chip">
+              <span>First scan</span>
+              <strong>68</strong>
             </div>
-            <IconArrowRight size={2.4} strokeWidth={1.6} className="progress-arrow" />
-            <div className="pg-card progress-card" style={{ borderColor: "var(--ink)" }}>
-              <span className="pg-eyebrow">Latest scan</span>
-              <span className="progress-score">84</span>
+            <IconArrowRight size={2} strokeWidth={1.8} className="progress-arrow" />
+            <div className="progress-chip progress-chip-latest">
+              <span>Latest scan</span>
+              <strong>84</strong>
             </div>
           </div>
         </Reveal>
       </section>
 
       {/* ── Expert / Science ── */}
-      <section id="experts" className="pg-section">
-        <div className="pg-container" style={{ maxWidth: "88rem" }}>
-          <Reveal>
-            <p className="pg-eyebrow" style={{ marginBottom: "1.6rem" }}>Expert review</p>
-            <div className="experts-grid">
-              <div style={{ position: "relative", width: "9.6rem", height: "9.6rem", borderRadius: "50%", overflow: "hidden", flexShrink: 0 }}>
-                <Image src="/images/expert_dermatologist.png" alt="Dermatologist" fill sizes="96px" style={{ objectFit: "cover" }} />
-              </div>
-              <div>
-                <h2 className="pg-card-h" style={{ marginBottom: "0.6rem" }}>Reviewed by a licensed dermatologist</h2>
-                <p style={{ fontSize: "1.5rem", color: "var(--ink-secondary)", lineHeight: 1.6, marginBottom: "1.2rem" }}>
-                  Your Percept report is a starting point. A real dermatologist reviews your case and follows up directly, usually within 24 hours.
-                </p>
-                <p style={{ fontSize: "1.3rem", color: "var(--ink-secondary)", marginBottom: "1.6rem" }}>
-                  First impressions form in under 100ms, Willis &amp; Todorov, <em>Psychological Science</em>, 2006.
-                </p>
-                <a href="/splash" style={{ fontSize: "1.5rem", fontWeight: 600, color: "var(--ink)" }}>
-                  Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE} →
-                </a>
-              </div>
+      <section id="experts" className="pg-section" style={{ background: "var(--ink)", color: "var(--bg-neutral)", paddingBlock: "clamp(6rem, 8vw, 9rem)" }}>
+        <div className="pg-container" style={{ maxWidth: "96rem" }}>
+          <Reveal className="experts-grid">
+            <div style={{ position: "relative", width: "100%", maxWidth: "22rem", aspectRatio: "4/5", borderRadius: "1.6rem", overflow: "hidden", flexShrink: 0 }}>
+              <Image src="/images/expert_dermatologist.png" alt="Dermatologist" fill sizes="(max-width: 700px) 100vw, 22rem" style={{ objectFit: "cover" }} />
+            </div>
+            <div>
+              <p className="pg-eyebrow" style={{ color: "rgba(255,255,255,0.5)", marginBottom: "1.2rem" }}>Expert review</p>
+              <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(2.6rem, 2.6vw, 3.4rem)", fontWeight: 400, letterSpacing: "-0.01em", lineHeight: 1.15, color: "var(--bg-neutral)", marginBottom: "1.4rem" }}>
+                Every report is reviewed by a licensed dermatologist.
+              </h2>
+              <p style={{ fontSize: "1.5rem", color: "rgba(255,255,255,0.72)", lineHeight: 1.6, marginBottom: "1.4rem", maxWidth: "44rem" }}>
+                A real dermatologist reviews your case and follows up directly, usually within 24 hours. Not a chatbot reply, a licensed professional.
+              </p>
+              <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.4)", marginBottom: "2rem" }}>
+                First impressions form in under 100ms, Willis &amp; Todorov, <em>Psychological Science</em>, 2006.
+              </p>
+              <a href="/splash"><PrimaryButton size="md" variant="onDark" fullWidth={false}>Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
-      <section id="testimonials" className="pg-section pg-container" style={{ background: "var(--surface-neutral)" }}>
-        <Reveal>
-          <p className="pg-eyebrow" style={{ marginBottom: "1.6rem" }}>Testimonials</p>
-          <h2 className="pg-h2" style={{ marginBottom: "4rem", maxWidth: "56rem" }}>What people notice first.</h2>
-          <div className="testimonial-grid">
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i}>
-                <p style={{ fontSize: "clamp(1.8rem, 2vw, 2.2rem)", fontWeight: 500, letterSpacing: "-0.015em", lineHeight: 1.4, color: "var(--ink)", marginBottom: "1.6rem" }}>
+      {/* ── Testimonials: auto-scrolling carousel, same marquee technique as
+          the proof strip, so cards keep moving rather than sitting static. ── */}
+      <section id="testimonials" className="pg-section" style={{ background: "var(--surface-neutral)" }}>
+        <div className="pg-container">
+          <Reveal>
+            <p className="pg-eyebrow" style={{ marginBottom: "1.6rem" }}>Testimonials</p>
+            <h2 className="pg-h2" style={{ marginBottom: "4rem", maxWidth: "56rem" }}>What people notice first.</h2>
+          </Reveal>
+        </div>
+        <div className="testi-track-wrap">
+          <div className="testi-track">
+            {[...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
+              <div key={i} className="pg-card testi-card">
+                <StarRating rating={t.rating} />
+                <p style={{ fontSize: "1.5rem", fontWeight: 400, letterSpacing: "-0.01em", lineHeight: 1.5, color: "var(--ink)", marginBottom: "1.6rem" }}>
                   &ldquo;{t.quote}&rdquo;
                 </p>
-                <p style={{ fontSize: "1.4rem", color: "var(--ink-secondary)", fontWeight: 600 }}>{t.name}</p>
+                <p style={{ fontSize: "1.3rem", fontWeight: 500, color: "var(--ink-secondary)", margin: 0 }}>{t.name}</p>
               </div>
             ))}
           </div>
-        </Reveal>
-      </section>
-
-      {/* ── Pricing ── */}
-      <section id="pricing" className="pg-section pg-container" style={{ display: "flex", justifyContent: "center" }}>
-        <Reveal className="pg-card" style={{ maxWidth: "56rem", width: "100%", padding: "4.8rem" }}>
-          <p className="pg-eyebrow" style={{ marginBottom: "1.6rem" }}>Full Percept report</p>
-          <div style={{ display: "flex", alignItems: "flex-start", marginBottom: "3.2rem" }}>
-            <span style={{ fontSize: "3.2rem", fontWeight: 600, marginTop: "0.6rem" }}>$</span>
-            <span style={{ fontSize: "8rem", fontWeight: 600, letterSpacing: "-0.04em", lineHeight: 1 }}><AnimatedPrice value={BUNDLE_PRICE} /></span>
-            <span style={{ fontSize: "1.5rem", color: "var(--ink-secondary)", marginTop: "1.2rem", marginLeft: "0.8rem" }}>one time</span>
-          </div>
-          <ul style={{ margin: "0 0 3.6rem", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
-            {PRICING_FEATURES.map((f) => (
-              <li key={f} style={{ display: "flex", gap: "1rem", fontSize: "1.5rem" }}>
-                <span style={{ flexShrink: 0, marginTop: "0.2rem", display: "flex" }}><IconCheck size={1.4} strokeWidth={2.4} /></span>
-                {f}
-              </li>
-            ))}
-          </ul>
-          <a href="/splash"><PrimaryButton size="lg">Get my report · ${BUNDLE_PRICE}</PrimaryButton></a>
-          <p style={{ textAlign: "center", fontSize: "1.3rem", color: "var(--ink-secondary)", marginTop: "1.6rem" }}>
-            Want a dermatologist&apos;s opinion too? <a href="/splash" style={{ color: "var(--ink)", fontWeight: 600 }}>Add a consultation · ${DOCTOR_CONSULTATION_PRICE}</a>
-          </p>
-        </Reveal>
+        </div>
       </section>
 
       {/* ── FAQ ── */}
@@ -509,7 +504,7 @@ export function HomeClient() {
       <footer style={{ borderTop: "1px solid var(--border-neutral)", padding: "6rem 0" }}>
         <div className="pg-container footer-grid">
           <div>
-            <Logo height="2.4rem" />
+            <Logo height="clamp(2.6rem, 7vw, 4.2rem)" />
             <p style={{ fontSize: "1.3rem", color: "var(--ink-secondary)", marginTop: "1.6rem", maxWidth: "32rem", lineHeight: 1.6 }}>
               AI skin, face and hair analysis. Cosmetic insight, not a medical diagnosis.
             </p>
@@ -569,7 +564,6 @@ export function HomeClient() {
         .pg-nav-signin { font-size: 1.45rem; font-weight: 500; color: var(--ink-secondary); }
         .pg-menu-btn { display: none; align-items: center; justify-content: center; }
 
-        .desktop-home-hero { display: none !important; }
         .mobile-first-hero {
           position: relative;
           display: block;
@@ -597,8 +591,9 @@ export function HomeClient() {
         }
         .mobile-hero-kicker { margin-bottom: 1.2rem; font-size: 1.4rem; font-weight: 500; color: rgba(255,255,255,0.9); }
         .mobile-hero-copy h1 {
-          max-width: 55rem; margin: 0 0 1.6rem;
-          font-size: clamp(4rem, 4.2vw, 6rem); font-weight: 600; line-height: 0.98; letter-spacing: -0.05em;
+          font-family: var(--font-serif), Georgia, serif;
+          max-width: 58rem; margin: 0 0 1.6rem;
+          font-size: clamp(4rem, 4.2vw, 6.4rem); font-weight: 400; line-height: 1.06; letter-spacing: -0.01em;
         }
         .mobile-hero-sub { max-width: 50rem; margin-bottom: 2.8rem; font-size: 1.6rem; line-height: 1.5; color: rgba(255,255,255,0.78); }
         .mobile-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 40rem; }
@@ -662,7 +657,7 @@ export function HomeClient() {
         .reveal-colour-bar span { width: 3.2rem; height: 0.8rem; border-radius: 999px; }
 
         /* :global — all of these (reveal-grid, command-grid, steps-grid,
-           experts-grid, testimonial-grid) are now applied directly to the
+           experts-grid) are now applied directly to the
            Reveal wrapper's motion.div, which — same root cause noted above —
            never receives styled-jsx's scope class, so a scoped selector here
            would silently never match. */
@@ -691,13 +686,38 @@ export function HomeClient() {
         :global(.steps-grid) { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; }
         .step-number { font-size: clamp(3.6rem, 4vw, 5.2rem); font-weight: 600; letter-spacing: -0.03em; color: var(--border-neutral); }
 
-        .progress-compare { display: flex; align-items: center; justify-content: center; gap: 3.2rem; }
-        .progress-card { padding: 3.2rem 4rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-        .progress-score { font-size: 4.8rem; font-weight: 600; letter-spacing: -0.03em; }
+        :global(.progress-band) { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2.4rem; }
+        .progress-compare { display: flex; align-items: center; gap: 1.2rem; }
+        .progress-chip {
+          display: flex; align-items: center; gap: 0.9rem;
+          padding: 0.9rem 1.6rem; border-radius: 999px; border: 1px solid var(--border-neutral); background: var(--bg-neutral);
+        }
+        .progress-chip span { font-size: 1.2rem; color: var(--ink-secondary); }
+        .progress-chip strong { font-size: 1.8rem; font-weight: 600; color: var(--ink); }
+        .progress-chip-latest { border-color: var(--ink); }
         .progress-arrow { color: var(--ink-secondary); flex-shrink: 0; }
 
+        .pricing-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 2.4rem; align-items: stretch; max-width: 84rem; margin: 0 auto; }
+        .pricing-tile {
+          position: relative; display: flex; flex-direction: column;
+          padding: 3.2rem; border-radius: 2rem; background: #0B2420; border: 1px solid rgba(217,166,46,0.18);
+        }
+        .pricing-tile-featured {
+          overflow: hidden; padding: 3.6rem 3.2rem; border-color: rgba(217,166,46,0.5);
+          box-shadow: 0 3.2rem 8rem -2rem rgba(0,0,0,0.5);
+          transform: scale(1.03);
+        }
         :global(.experts-grid) { display: flex; gap: 3.2rem; align-items: flex-start; }
-        :global(.testimonial-grid) { display: grid; grid-template-columns: 1fr 1fr; gap: 5.6rem; }
+        .testi-track-wrap {
+          overflow: hidden;
+          -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+        }
+        .testi-track { display: flex; width: max-content; gap: 2.4rem; padding: 0 3.2rem; animation: marquee 42s linear infinite; }
+        .testi-card { width: 38rem; flex-shrink: 0; padding: 3.2rem; }
+        @media (prefers-reduced-motion: reduce) {
+          .testi-track { animation: none; }
+        }
         .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 4rem; }
 
         #what-you-get, #how-it-works, #experts, #pricing, #faq, #command-centre, #recommendations, #progress, #testimonials {
@@ -706,9 +726,6 @@ export function HomeClient() {
 
         @media (max-width: 1099px) {
           .pg-nav-links { display: none; }
-        }
-        @media (max-width: 900px) {
-          .percept-hero-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 700px) {
           .pg-nav-signin { display: none; }
@@ -731,7 +748,7 @@ export function HomeClient() {
           }
           .mobile-hero-copy { position: absolute; z-index: 2; left: 2rem; right: 2rem; top: auto; bottom: 2rem; color: #fff; }
           .mobile-hero-kicker { margin-bottom: 0.8rem; font-size: 1.25rem; font-weight: 500; color: rgba(255,255,255,0.9); }
-          .mobile-hero-copy h1 { max-width: 34rem; margin: 0 0 1rem; font-size: clamp(2.7rem, 7.8vw, 3.5rem); font-weight: 600; line-height: 1.02; letter-spacing: -0.045em; }
+          .mobile-hero-copy h1 { max-width: 34rem; margin: 0 0 1rem; font-size: clamp(2.9rem, 8.4vw, 3.8rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.01em; }
           .mobile-hero-sub { max-width: 36rem; margin-bottom: 2.4rem; font-size: 1.35rem; line-height: 1.45; color: rgba(255,255,255,0.78); }
           .mobile-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
           .mobile-hero-actions a { min-height: 4.8rem; display: flex; align-items: center; justify-content: center; padding: 0 1.4rem; border-radius: 999px; background: #fff; color: #123f39; font-size: 1.4rem; font-weight: 700; text-align: center; }
@@ -741,10 +758,10 @@ export function HomeClient() {
           :global(.reveal-grid-reverse) > div:first-child, :global(.reveal-grid-reverse) > div:last-child { order: initial; }
           :global(.steps-grid) { grid-template-columns: 1fr 1fr; gap: 3.2rem; }
           :global(.experts-grid) { flex-direction: column; }
-          :global(.testimonial-grid) { grid-template-columns: 1fr; gap: 3.2rem; }
+          .pricing-grid { grid-template-columns: 1fr; }
+          .pricing-tile-featured { transform: none; order: -1; }
           .footer-grid { grid-template-columns: 1fr 1fr; gap: 3.2rem; }
-          .progress-compare { gap: 1.6rem; }
-          .progress-card { padding: 2.4rem 2rem; }
+          :global(.progress-band) { flex-direction: column; align-items: flex-start; }
         }
       `}</style>
     </div>
