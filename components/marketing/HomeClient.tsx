@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -191,12 +191,26 @@ function FaqRow({ q, a }: { q: string; a: string }) {
 export function HomeClient() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const updateHeader = () => setHeaderScrolled(window.scrollY > 32);
+    // Flip point was a flat 32px, which triggered on any tiny scroll nudge —
+    // including accidental touch drift — while the full-bleed hero photo was
+    // still filling the whole screen behind it, so the opaque pill popped in
+    // as a mismatched seam over the image. Tying it to the hero's own height
+    // means the header stays transparent-over-image for as long as the hero
+    // is actually on screen, and only goes opaque once you've scrolled past it.
+    const updateHeader = () => {
+      const heroBottom = heroRef.current?.offsetHeight ?? 32;
+      setHeaderScrolled(window.scrollY > Math.max(32, heroBottom - 72));
+    };
     updateHeader();
     window.addEventListener("scroll", updateHeader, { passive: true });
-    return () => window.removeEventListener("scroll", updateHeader);
+    window.addEventListener("resize", updateHeader, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", updateHeader);
+      window.removeEventListener("resize", updateHeader);
+    };
   }, []);
 
   return (
@@ -234,7 +248,7 @@ export function HomeClient() {
 
       {/* Mobile gets a dedicated, image-led first impression. Keeping it
           separate avoids compromising the more spacious desktop hero. */}
-      <section className="mobile-first-hero" aria-labelledby="mobile-hero-title">
+      <section ref={heroRef} className="mobile-first-hero" aria-labelledby="mobile-hero-title">
         <Image
           src="/assets/percept-hero-desktop-v3.png"
           alt="Editorial portrait showing natural skin texture"
@@ -706,7 +720,12 @@ export function HomeClient() {
         .mobile-first-hero {
           position: relative;
           display: block;
-          min-height: 100svh;
+          /* dvh, not svh: svh locks to the smallest (toolbar-shown) height,
+             so when the browser toolbar auto-hides mid-scroll the real
+             viewport grows past that locked height and the next section
+             peeks in underneath. dvh tracks the live viewport instead. */
+          min-height: 100vh;
+          min-height: 100dvh;
           overflow: hidden;
           background: #909ca4;
         }
@@ -849,7 +868,7 @@ export function HomeClient() {
              subject's hair, and the previous 88rem cap could land shorter
              than the real viewport on a tall phone, leaving the next
              section peeking in at the bottom before any scroll. */
-          .mobile-first-hero { min-height: 100svh; }
+          .mobile-first-hero { min-height: 100vh; min-height: 100dvh; }
           .mobile-hero-image {
             display: block;
             object-fit: cover;
