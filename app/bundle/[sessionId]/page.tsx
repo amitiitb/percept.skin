@@ -165,6 +165,50 @@ function PayMethodToggle({ value, onChange }: { value: PayMethod; onChange: (m: 
   );
 }
 
+// Collapsed by default — this is a demo/investor path, not something a
+// paying customer should be invited to go looking for on the real checkout.
+function PromoRedeem({
+  open, onToggle, code, onCodeChange, state, error, onSubmit,
+}: {
+  open: boolean; onToggle: () => void;
+  code: string; onCodeChange: (v: string) => void;
+  state: "idle" | "checking" | "failed"; error: string;
+  onSubmit: () => void;
+}) {
+  return (
+    <div style={{ marginBottom: "1.6rem", textAlign: "center" }}>
+      {!open ? (
+        <button type="button" onClick={onToggle} style={{ background: "none", border: "none", padding: 0, color: "var(--muted)", fontSize: "1.2rem", cursor: "pointer", textDecoration: "underline" }}>
+          Have a promo code?
+        </button>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "0.8rem", width: "100%", maxWidth: "36rem" }}>
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => onCodeChange(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
+              placeholder="Promo code"
+              disabled={state === "checking"}
+              style={{ flex: 1, height: "4.4rem", padding: "0 1.6rem", borderRadius: "0.9rem", border: "1px solid var(--line)", background: "var(--surface)", color: "var(--primary)", fontSize: "1.4rem" }}
+            />
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={state === "checking" || !code.trim()}
+              style={{ height: "4.4rem", padding: "0 2rem", borderRadius: "0.9rem", border: "none", background: "var(--btn-fill)", color: "var(--btn-fill-ink)", fontSize: "1.4rem", fontWeight: 650, cursor: state === "checking" ? "default" : "pointer", opacity: state === "checking" || !code.trim() ? 0.6 : 1 }}
+            >
+              {state === "checking" ? "Checking…" : "Apply"}
+            </button>
+          </div>
+          {state === "failed" && error && <p style={{ margin: 0, color: "#C8503A", fontSize: "1.25rem" }}>{error}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function V2BundlePage() {
   const router = useRouter();
   const params = useParams();
@@ -202,6 +246,44 @@ export default function V2BundlePage() {
   // be silently dropped from the order — read the ref instead for the real
   // current value regardless of when the button instance was created.
   const consultPhoneRef = useRef("");
+
+  // Investor/demo path: a server-validated code that unlocks the report
+  // without touching Razorpay or PayPal at all — neither gateway accepts a
+  // ₹0/$0 order, so this is a real bypass of the gateway, not a fake free
+  // charge through one. See app/api/report-purchase/redeem-promo.
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoState, setPromoState] = useState<"idle" | "checking" | "failed">("idle");
+  const [promoError, setPromoError] = useState("");
+
+  async function handlePromoRedeem() {
+    if (!promoCode.trim() || promoState === "checking") return;
+    setPromoState("checking"); setPromoError("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Please log in again.");
+      const res = await fetch("/api/report-purchase/redeem-promo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          sessionId, modules: [...selected],
+          includeConsultation: purchasePath === "combo",
+          contactPhone: purchasePath === "combo" ? (consultPhoneRef.current || undefined) : undefined,
+          code: promoCode.trim(),
+        }),
+      });
+      const body = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(body.error ?? "Could not redeem code");
+      // Same success path a real payment takes — confetti, "waiting on
+      // analysis", then the report — so a demo walks the identical UI a
+      // paying customer sees from this point on.
+      handleReportPayState("success");
+      await waitForAnalysis();
+    } catch (e) {
+      setPromoState("failed");
+      setPromoError(e instanceof Error ? e.message : "Could not redeem code");
+    }
+  }
 
   const buttonRef = useRef<HTMLDivElement>(null);
   const consultButtonRef = useRef<HTMLDivElement>(null);
@@ -841,6 +923,13 @@ export default function V2BundlePage() {
             {payState === "cancelled" && <p style={{ color: "var(--muted)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Payment cancelled. No charge was made.</p>}
             {payState === "confirming" && <p style={{ color: "var(--secondary)", fontSize: "1.4rem", marginBottom: "1.6rem", textAlign: "center" }}>Confirming payment…</p>}
 
+            <PromoRedeem
+              open={promoOpen} onToggle={() => setPromoOpen(true)}
+              code={promoCode} onCodeChange={setPromoCode}
+              state={promoState} error={promoError}
+              onSubmit={handlePromoRedeem}
+            />
+
             <div style={{ opacity: payState === "confirming" ? 0.4 : 1, pointerEvents: payState === "confirming" ? "none" : "auto" }}>
               {isInr && (
                 <RazorpayCheckout
@@ -972,6 +1061,14 @@ export default function V2BundlePage() {
               <p style={{ fontSize: "1.3rem", color: "var(--muted)", textAlign: "center", marginBottom: "1.2rem" }}>
                 Enter your phone number in the consultation section above to continue.
               </p>
+            )}
+            {phoneValid && (
+              <PromoRedeem
+                open={promoOpen} onToggle={() => setPromoOpen(true)}
+                code={promoCode} onCodeChange={setPromoCode}
+                state={promoState} error={promoError}
+                onSubmit={handlePromoRedeem}
+              />
             )}
             <div style={{
               opacity: payState === "confirming" || !phoneValid ? 0.4 : 1,

@@ -18,7 +18,13 @@ import { priceFor, DOCTOR_CONSULTATION_PRICE, type ModuleId } from "@/lib/v2/rep
 import { sendConsultationLead } from "@/lib/v2/consultationLead";
 import { logV2 } from "@/lib/v2/log";
 
-export type PaymentProvider = "paypal" | "razorpay";
+// "promo" is a server-validated code redemption (see
+// app/api/report-purchase/redeem-promo), not a real payment — used for
+// investor/sales demos where a real gateway charge isn't the point. It goes
+// through the exact same fulfilment path as a paid order so nothing about
+// report generation, email, or the purchased-modules gate has to know the
+// difference.
+export type PaymentProvider = "paypal" | "razorpay" | "promo";
 
 export interface ReportPurchaseFulfilment {
   supabase: SupabaseClient;

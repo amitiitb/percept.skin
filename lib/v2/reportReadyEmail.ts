@@ -82,13 +82,19 @@ function emailHtml(name: string, reportUrl: string) {
 type Purchase = {
   modules: ModuleId[];
   amount_paid: number;
-  provider: "paypal" | "razorpay";
+  provider: "paypal" | "razorpay" | "promo";
   provider_order_id: string;
   created_at: string;
 };
 
 async function invoiceAmount(purchase: Purchase, includesConsultation: boolean) {
   const totalUsd = Number(purchase.amount_paid) + (includesConsultation ? DOCTOR_CONSULTATION_PRICE : 0);
+  // A promo redemption took no payment at all — showing the USD list price
+  // here (the "else" branch below, meant for a real PayPal charge) would
+  // print a real-looking invoice for money that was never charged.
+  if (purchase.provider === "promo") {
+    return { amount: 0, currency: "USD", test: false };
+  }
   if (purchase.provider === "razorpay") {
     try {
       const order = await fetchRazorpayOrder(purchase.provider_order_id);
@@ -123,9 +129,10 @@ function buildInvoice(
   row("Payment date", new Date(purchase.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }));
   row("Billed to", name || email);
   if (name) row("Account email", email);
-  row("Payment provider", purchase.provider === "razorpay" ? "Razorpay" : "PayPal");
+  row("Payment provider", purchase.provider === "razorpay" ? "Razorpay" : purchase.provider === "promo" ? "Promo code" : "PayPal");
   row("Transaction reference", purchase.provider_order_id);
-  if (charge.test) row("Payment mode", "TEST / SANDBOX — no real charge");
+  if (purchase.provider === "promo") row("Payment mode", "PROMO REDEMPTION — no charge was made");
+  else if (charge.test) row("Payment mode", "TEST / SANDBOX — no real charge");
   y += 22;
   pdf.setDrawColor("#D6DFDB"); pdf.line(48, y, 547, y); y += 34;
   pdf.setFontSize(12); pdf.setTextColor("#0D3028"); pdf.setFont("helvetica", "bold"); pdf.text("Description", 48, y); pdf.text("Amount", 470, y);
@@ -136,7 +143,12 @@ function buildInvoice(
   y += 42; pdf.line(48, y, 547, y); y += 34;
   pdf.setFont("helvetica", "bold"); pdf.setFontSize(15); pdf.text("Total paid", 365, y); pdf.text(money, 470, y);
   y += 60; pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor("#71827D");
-  pdf.text(charge.test ? "This document records a test transaction and is not a tax invoice." : "This receipt confirms payment for the services listed above.", 48, y);
+  pdf.text(
+    purchase.provider === "promo" ? "This report was unlocked via a promo code. No payment was collected and this document is not a receipt."
+      : charge.test ? "This document records a test transaction and is not a tax invoice."
+      : "This receipt confirms payment for the services listed above.",
+    48, y,
+  );
   return Buffer.from(pdf.output("arraybuffer"));
 }
 
