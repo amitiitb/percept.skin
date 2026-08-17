@@ -1,7 +1,11 @@
 "use client";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { IconRefresh } from "@/components/ui/icons";
+import { IconRefresh, IconSparkle } from "@/components/ui/icons";
+
+// Matches TAB_LABELS.hairstyle.accent in app/report/[id]/page.tsx — beard
+// previews live inside the Hair tab, so they carry that tab's accent.
+const ACCENT = "#C08420";
 import { GenerationLoader } from "@/components/v2/GenerationLoader";
 import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
@@ -63,8 +67,19 @@ function GroomingGrid({ sessionId, photo, isPremium, onRequirePremium, kind, end
   }
 
   return (
-    <div style={{ marginBottom: "3.2rem" }}>
-      <h3 style={{ fontSize: "1.7rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.6rem" }}>{title}</h3>
+    // Same elevated card treatment as HairstylePanel's own header — this used
+    // to be a plain h3 sitting directly under GroomingPanel's near-duplicate
+    // h2 ("Beard Style Suggestions" above "Beard Styles" below, with two
+    // separate blurbs saying the same thing). That outer heading is gone now;
+    // this is the only header for the block.
+    <div style={{
+      marginBottom: "3.2rem", padding: "2.8rem", background: "var(--surface)",
+      border: "1px solid var(--line)", borderTop: `0.4rem solid ${ACCENT}`, borderRadius: "1.6rem",
+    }}>
+      <p style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", fontSize: "1.1rem", fontWeight: 800, color: ACCENT, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>
+        <IconSparkle size={1.3} strokeWidth={2} />AI-generated preview
+      </p>
+      <h3 style={{ fontSize: "2.1rem", fontWeight: 800, color: "var(--primary)", letterSpacing: "-0.015em", marginBottom: "0.6rem" }}>{title}</h3>
       <p style={{ fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "1.8rem" }}>{blurb}</p>
 
       {url ? (
@@ -136,16 +151,15 @@ const BEARD_LABELS = ["Clean-shaven", "Light stubble", "Short boxed beard", "Ful
 // six copies of the same photo labeled as six different looks.
 export default function GroomingPanel({ sessionId, photo, isPremium, onRequirePremium, initialBeardPath, initialBeardRemaining }: Props) {
   return (
-    <div style={{ marginTop: "4rem", paddingTop: "4rem", borderTop: "1px solid var(--line)" }}>
-      <h2 style={{ fontSize: "2rem", fontWeight: 600, color: "var(--primary)", marginBottom: "0.8rem" }}>Beard Style Suggestions</h2>
-      <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "2.8rem" }}>
-        Compare six facial-hair options on the same real source photo before you commit. Illustrative only, actual results vary.
-      </p>
-
+    // GroomingGrid below carries its own header now (title "Beard Styles" +
+    // its own blurb) — this wrapper used to duplicate both with "Beard Style
+    // Suggestions" and a second, near-identical sentence. Only exists today to
+    // give the block its top spacing from whatever sits above it in the tab.
+    <div style={{ marginTop: "4rem" }}>
       <GroomingGrid
         sessionId={sessionId} photo={photo} isPremium={isPremium} onRequirePremium={onRequirePremium}
-        kind="beard" endpoint="/api/beard/grid" title="Beard Styles"
-        blurb="From clean-shaven to a full beard, previewed on your own face."
+        kind="beard" endpoint="/api/beard/grid" title="Beard Style Previews"
+        blurb="Compare six facial-hair options, from clean-shaven to a full beard, on your own photo. Illustrative only, actual results vary."
         styleLabels={BEARD_LABELS} initialPath={initialBeardPath} initialRemaining={initialBeardRemaining}
       />
     </div>

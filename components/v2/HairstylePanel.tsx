@@ -2,7 +2,12 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { IconRefresh } from "@/components/ui/icons";
+import { IconRefresh, IconSparkle } from "@/components/ui/icons";
+
+// Matches TAB_LABELS.hairstyle.accent in app/report/[id]/page.tsx — not
+// imported directly since that file has no exported constants module, but
+// the two must stay in sync or this panel's card reads as a different module.
+const ACCENT = "#C08420";
 import { GenerationLoader } from "@/components/v2/GenerationLoader";
 import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
@@ -80,8 +85,19 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
   }
 
   return (
-    <div style={{ marginTop: "4rem", paddingTop: "4rem", borderTop: "1px solid var(--line)" }}>
-      <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.8rem" }}>Hairstyles For You</h2>
+    // Was a bare h2 after a 1px divider — visually the quietest heading on the
+    // whole report despite sitting on the actual payoff (six AI-generated
+    // images of the user's own face). A real card with a top accent and an
+    // "AI-generated" eyebrow gives it presence at least equal to the metric
+    // sections above it, instead of reading as an afterthought under them.
+    <div style={{
+      marginTop: "4rem", padding: "2.8rem", background: "var(--surface)",
+      border: "1px solid var(--line)", borderTop: `0.4rem solid ${ACCENT}`, borderRadius: "1.6rem",
+    }}>
+      <p style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", fontSize: "1.1rem", fontWeight: 800, color: ACCENT, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>
+        <IconSparkle size={1.3} strokeWidth={2} />AI-generated preview
+      </p>
+      <h2 style={{ fontSize: "2.3rem", fontWeight: 800, color: "var(--primary)", letterSpacing: "-0.015em", marginBottom: "0.8rem" }}>Hairstyles For You</h2>
       <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "2.4rem" }}>
         A look for each occasion, previewed on your own photo. Illustrative only, actual results vary by stylist.
       </p>
@@ -126,8 +142,13 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
               <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>
               <PrimaryButton fullWidth={false} onClick={generate}>Try again</PrimaryButton>
             </>
-          ) : (
+          ) : state === "loading" ? (
             <GenerationLoader kind="hairstyle" title="Creating your hairstyle previews…" detail="Testing six styles while keeping your face and clothing consistent." />
+          ) : (
+            <>
+              <p style={{ color: "var(--secondary)", fontSize: "1.35rem", margin: "0 0 1.35rem" }}>Your preview was not completed during report preparation.</p>
+              <PrimaryButton fullWidth={false} onClick={generate}>Generate hairstyle previews</PrimaryButton>
+            </>
           )}
         </div>
       )}

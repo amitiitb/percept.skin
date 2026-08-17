@@ -111,8 +111,13 @@ export function FrameGrid({ sessionId, photo, initialPath, initialRemaining = 0 
           <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>
           <PrimaryButton fullWidth={false} onClick={generate}>Try again</PrimaryButton>
         </>
-      ) : (
+      ) : state === "loading" ? (
         <GenerationLoader kind="frame" title="Fitting six frame styles to your face…" detail="Matching frame shape, scale and bridge position to your proportions." />
+      ) : (
+        <>
+          <p style={{ color: "var(--secondary)", fontSize: "1.35rem", margin: "0 0 1.35rem" }}>Your preview was not completed during report preparation.</p>
+          <PrimaryButton fullWidth={false} onClick={generate}>Generate frame previews</PrimaryButton>
+        </>
       )}
     </div>
   );

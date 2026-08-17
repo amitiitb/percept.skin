@@ -40,13 +40,27 @@ function SwatchRow({ title, items }: { title: string; items: ColourSwatch[] }) {
   );
 }
 
-// Every section is a numbered, boxed "chapter" — bold badge + label above a card
-// with its own background — so the report reads as a printed reference document,
-// not a thin-divider AI-tool output.
-function Section({ title, subtitle, children, tone = "surface" }: { title: string; subtitle?: string; children: React.ReactNode; tone?: "surface" | "wash" }) {
+// Matches TAB_LABELS.colour.accent in app/report/[id]/page.tsx.
+const ACCENT = "#C8503A";
+
+// Every section is a numbered, boxed "chapter" — bold badge + label above a
+// card with its own background — so the report reads as a printed reference
+// document, not a thin-divider AI-tool output. The comment above described
+// this before the badge actually existed; `index`/`total` were unused.
+function Section({ index, total, title, subtitle, children, tone = "surface" }: {
+  index: number; total: number; title: string; subtitle?: string; children: React.ReactNode; tone?: "surface" | "wash";
+}) {
   return (
     <div style={{ marginTop: "2rem" }}>
       <div style={{ background: tone === "wash" ? "var(--wash)" : "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "3.2rem" }}>
+        <p style={{ display: "inline-flex", alignItems: "center", gap: "0.7rem", fontSize: "1.1rem", fontWeight: 800, color: ACCENT, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>
+          <span aria-hidden style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            width: "1.9rem", height: "1.9rem", borderRadius: "50%", background: ACCENT, color: "#fff",
+            fontSize: "1.05rem", fontWeight: 800, fontVariantNumeric: "tabular-nums",
+          }}>{index}</span>
+          PART {index} OF {total}
+        </p>
         <h2 style={{ fontSize: "2.2rem", fontWeight: 700, color: "var(--primary)", margin: "0 0 0.6rem", letterSpacing: "-0.01em" }}>{title}</h2>
         {subtitle && <p style={{ fontSize: "1.5rem", color: "var(--secondary)", margin: "0 0 2.4rem", lineHeight: 1.5 }}>{subtitle}</p>}
         {!subtitle && <div style={{ marginBottom: "2rem" }} />}
@@ -142,12 +156,12 @@ export default function ColourAnalysisPanel({ sessionId, photo, initialAnalysis 
       </div>
 
       {/* ── 2. You, wearing it ── */}
-      <Section title="How These Colours Look On You" subtitle={`Your ${analysis.sub_season} palette, on your own photo.`}>
+      <Section index={1} total={2} title="How These Colours Look On You" subtitle={`Your ${analysis.sub_season} palette, on your own photo.`}>
         <ColourGrid sessionId={sessionId} photo={photo} analysis={analysis} />
       </Section>
 
       {/* ── 3. The palette: wear / avoid / neutrals in one card ── */}
-      <Section title="Your Palette">
+      <Section index={2} total={2} title="Your Palette">
         <SwatchRow title="Wear these" items={analysis.best_colours} />
         {analysis.worst_colours.length > 0 && <SwatchRow title="Avoid these" items={analysis.worst_colours} />}
         {analysis.neutrals.length > 0 && <SwatchRow title="Neutrals that always work" items={analysis.neutrals} />}

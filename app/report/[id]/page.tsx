@@ -16,7 +16,7 @@ import { guideFor } from "@/lib/v2/metricGuide";
 import { trackEvent } from "@/lib/analytics";
 import { logV2 } from "@/lib/v2/log";
 import { HARMONY_METRIC_NAMES, ANGULARITY_METRIC_NAMES } from "@/lib/v2/faceMetricGroups";
-import { IconFaceScan, IconScissors, IconPalette, IconGlasses, IconLock, IconCheck, IconSparkle, IconSun, IconMoon, IconStrands } from "@/components/ui/icons";
+import { IconFaceScan, IconScissors, IconPalette, IconGlasses, IconLock, IconCheck, IconSparkle, IconSun, IconMoon, IconStrands, IconArrowRight, IconInfo } from "@/components/ui/icons";
 import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
 import type { ModuleId } from "@/lib/v2/reportModules";
 
@@ -110,12 +110,19 @@ function MetricRow({ m }: { m: AnalysisMetric }) {
             <div className="v2-metric-detail" style={{ paddingBottom: "2.4rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
               <div className="v2-metric-finding" style={{ display: "flex", flexDirection: "column", gap: "1.4rem", borderLeft: `2px solid ${band.color}`, paddingLeft: "1.8rem" }}>
                 <div>
-                  <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.5rem" }}>In your scan</p>
+                  {/* An icon per subsection so "what we saw" and "what to do" read
+                      apart at a glance — both used to be identical grey eyebrow
+                      text, so telling them apart meant actually reading the label. */}
+                  <p style={{ display: "inline-flex", alignItems: "center", gap: "0.55rem", fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.5rem" }}>
+                    <IconFaceScan size={1.25} strokeWidth={2} />In your scan
+                  </p>
                   <p style={{ fontSize: "1.6rem", color: "var(--primary)", lineHeight: 1.65, margin: 0 }}>{m.explanation}</p>
                 </div>
                 {m.recommendation && (
                   <div>
-                    <p style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.5rem" }}>Suggested next step</p>
+                    <p style={{ display: "inline-flex", alignItems: "center", gap: "0.55rem", fontSize: "1.1rem", fontWeight: 700, color: band.color, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.5rem" }}>
+                      <IconArrowRight size={1.25} strokeWidth={2.4} />Suggested next step
+                    </p>
                     <p style={{ fontSize: "1.6rem", color: "var(--primary)", lineHeight: 1.65, margin: 0 }}>{m.recommendation}</p>
                   </div>
                 )}
@@ -305,8 +312,12 @@ function MetricFilterBar({ value, onChange, metrics }: {
   );
 }
 
-function Section({ index: _index, id, title, intro, metrics, locked, filter = "all" }: {
-  index: number; id: string; title: string; intro?: string; metrics: AnalysisMetric[]; locked?: boolean; filter?: BandKey;
+// `total` is the number of sections rendering within the same tab (e.g. Skin
+// tab: Skin, Harmony, Angularity → total 3). The numbered badge only appears
+// when there's an actual sequence to number — "Part 1 of 1" tells a reader
+// nothing a lone section header doesn't already say.
+function Section({ index, total = 1, id, title, intro, metrics, locked, filter = "all" }: {
+  index: number; total?: number; id: string; title: string; intro?: string; metrics: AnalysisMetric[]; locked?: boolean; filter?: BandKey;
 }) {
   const [expanded, setExpanded] = useState(false);
   if (metrics.length === 0) return null;
@@ -340,8 +351,15 @@ function Section({ index: _index, id, title, intro, metrics, locked, filter = "a
           before a single score appeared. */}
       <header className="v2-section-header" style={{ borderTop: `0.4rem solid ${accent}`, padding: "2rem 2.4rem 1.6rem", borderBottom: "1px solid var(--line)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.2rem", marginBottom: "0.7rem" }}>
-          <p style={{ fontSize: "1.1rem", fontWeight: 700, color: accent, letterSpacing: "0.12em", margin: 0 }}>
-            {scored.length} MEASUREMENT{scored.length === 1 ? "" : "S"}
+          <p style={{ display: "inline-flex", alignItems: "center", gap: "0.9rem", fontSize: "1.1rem", fontWeight: 700, color: accent, letterSpacing: "0.12em", margin: 0 }}>
+            {total > 1 && (
+              <span aria-hidden style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                width: "1.9rem", height: "1.9rem", borderRadius: "50%", background: accent, color: "#fff",
+                fontSize: "1.05rem", fontWeight: 800, fontVariantNumeric: "tabular-nums",
+              }}>{index}</span>
+            )}
+            {total > 1 ? `PART ${index} OF ${total} · ` : ""}{scored.length} MEASUREMENT{scored.length === 1 ? "" : "S"}
           </p>
           {avg !== null && !locked && (
             <span style={{
@@ -545,15 +563,25 @@ const TAB_LABELS: Record<TabId, { label: string; short: string; Icon: (p: { size
 // on purpose: a tab you cannot open still tells you what the scan produced,
 // which a hidden tab does not. They stay clickable so the panel behind them
 // can make its own case.
-function TabBar({ tabs, active, onChange, locked }: {
-  tabs: TabId[]; active: TabId; onChange: (t: TabId) => void; locked?: Set<TabId>;
+// `variant="hero"` renders a second, bigger, non-sticky copy of the same
+// control near the top of the page — same tabs, same onChange, same active
+// state, so the two instances can never disagree about which category is
+// selected. The real navigation was previously sticky-positioned inside the
+// tab content itself, which only reads as sticky once you've already
+// scrolled past the hero, priority cards, category cards and photo strip
+// that come before it — meaning the actual category picker was invisible
+// until four other sections had gone by. This puts the same control where a
+// reader hits it first.
+function TabBar({ tabs, active, onChange, locked, variant = "sticky" }: {
+  tabs: TabId[]; active: TabId; onChange: (t: TabId) => void; locked?: Set<TabId>; variant?: "sticky" | "hero";
 }) {
   if (tabs.length < 2) return null;
+  const hero = variant === "hero";
   return (
     <div
-      id="v2-tabs"
-      className="v2-tabbar"
-      style={{
+      id={hero ? undefined : "v2-tabs"}
+      className={`v2-tabbar${hero ? " v2-tabbar-hero" : ""}`}
+      style={hero ? { marginBottom: 0 } : {
         position: "sticky", top: 0, zIndex: 20, marginBottom: "2.4rem",
         padding: "1rem 0 1.2rem", background: "var(--canvas)",
       }}
@@ -561,8 +589,18 @@ function TabBar({ tabs, active, onChange, locked }: {
       <div
         role="tablist"
         aria-label="Report sections"
-        className="v2-tabrail"
-        style={{
+        className={`v2-tabrail${hero ? " v2-tabrail-hero" : ""}`}
+        style={hero ? {
+          // A single scrolling row of four full-label, hero-scale tabs
+          // doesn't actually fit most viewports — it overflowed its own
+          // card and got visually clipped by the rounded corner instead of
+          // scrolling cleanly. A wrapping grid (4-across when there's room,
+          // 2x2 or 1-per-row when there isn't) never needs to scroll, so it
+          // can't clip.
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(21rem, 1fr))", gap: "0.6rem",
+          background: "var(--wash)", borderRadius: "1.6rem", padding: "0.6rem",
+          border: "1px solid var(--line)", width: "100%",
+        } : {
           display: "flex", gap: "0.4rem", overflowX: "auto", scrollbarWidth: "none",
           background: "var(--wash)", borderRadius: "9999px", padding: "0.5rem",
           border: "1px solid var(--line)",
@@ -572,7 +610,7 @@ function TabBar({ tabs, active, onChange, locked }: {
           width: "100%",
         }}
       >
-        {tabs.map((t) => {
+        {tabs.map((t, i) => {
           const on = t === active;
           const meta = TAB_LABELS[t];
           return (
@@ -585,20 +623,34 @@ function TabBar({ tabs, active, onChange, locked }: {
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.96 }}
               style={{
-                position: "relative", flex: "1 1 0", minWidth: 0, display: "inline-flex", alignItems: "center",
-                justifyContent: "center",
-                gap: "0.8rem", padding: "1.25rem 2rem", borderRadius: "1.2rem", border: "none",
-                background: "none", cursor: "pointer", whiteSpace: "nowrap",
-                fontSize: "1.55rem", fontWeight: 800,
-                color: on ? "#fff" : "var(--secondary)", transition: "color 0.2s",
+                position: "relative",
+                // Hero tabs are grid items — sizing comes from the grid track
+                // (auto-fit minmax), not from flex-grow, so they can wrap to a
+                // second row instead of forcing one overflowing line.
+                ...(hero ? { width: "100%" } : { flex: "1 1 0", minWidth: 0 }),
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                gap: "0.8rem", padding: hero ? "1.5rem 1.8rem" : "1.25rem 2rem", borderRadius: hero ? "1.4rem" : "1.2rem",
+                // An inactive tab used to be background:none against the rail's
+                // own --wash fill — no edge, no shadow, nothing marking it as a
+                // pressable button. Three of four tabs read as plain text, which
+                // is the actual reason the bar was easy to skim past. Each tab
+                // now carries its own card even at rest; only the active one
+                // additionally gets the sliding gradient pill below.
+                border: on ? "none" : "1px solid var(--line)",
+                background: on ? "none" : "var(--surface)",
+                cursor: "pointer", whiteSpace: "nowrap",
+                fontSize: hero ? "1.7rem" : "1.55rem", fontWeight: 800,
+                color: on ? "#fff" : "var(--secondary)",
+                boxShadow: on ? "none" : "0 0.3rem 0.9rem -0.6rem rgba(23,62,53,0.35)",
+                transition: "color 0.2s, background 0.2s, border-color 0.2s",
               }}
             >
               {on && (
                 <motion.span
-                  layoutId="v2-tab-pill"
+                  layoutId={hero ? "v2-tab-pill-hero" : "v2-tab-pill"}
                   aria-hidden
                   style={{
-                    position: "absolute", inset: 0, borderRadius: "1.2rem",
+                    position: "absolute", inset: 0, borderRadius: hero ? "1.4rem" : "1.2rem",
                     background: `linear-gradient(135deg, var(--panel), ${meta.accent})`,
                     boxShadow: `0 1rem 2.6rem -1rem ${meta.accent}`,
                   }}
@@ -606,9 +658,20 @@ function TabBar({ tabs, active, onChange, locked }: {
                 />
               )}
               <span style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: "0.8rem" }}>
+                {/* Numbered so the bar reads as a sequence — "1 of 4 parts" —
+                    not four unrelated buttons a reader might stop partway
+                    through, thinking they've seen the whole report. */}
+                {!hero && <span aria-hidden className="v2-tab-number" style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                  width: hero ? "2.3rem" : "2.1rem", height: hero ? "2.3rem" : "2.1rem", borderRadius: "50%",
+                  fontSize: hero ? "1.3rem" : "1.2rem", fontWeight: 800,
+                  fontVariantNumeric: "tabular-nums",
+                  background: on ? "rgba(255,255,255,0.22)" : `color-mix(in srgb, ${meta.accent} 16%, transparent)`,
+                  color: on ? "#fff" : meta.accent,
+                }}>{i + 1}</span>}
                 <span aria-hidden className="v2-tab-icon" style={{
                   display: "flex", color: on ? "#fff" : meta.accent, transition: "color 0.2s",
-                }}><meta.Icon size={1.85} strokeWidth={2.2} /></span>
+                }}><meta.Icon size={hero ? 2 : 1.85} strokeWidth={2.2} /></span>
                 <span className="v2-tab-full">{meta.label}</span>
                 <span className="v2-tab-short" style={{ display: "none" }}>{meta.short}</span>
                 {locked?.has(t) && (
@@ -1079,6 +1142,7 @@ export default function V2ReportPage() {
               padding: 1rem 0.4rem !important; font-size: 1.3rem !important; gap: 0 !important;
             }
             .v2-tab-icon { display: none !important; }
+            .v2-tab-number { display: none !important; }
             .v2-tab-full { display: none !important; }
             .v2-tab-short { display: inline !important; }
             .v2-metric-bar > div:first-child { display: none !important; }
@@ -1134,6 +1198,8 @@ export default function V2ReportPage() {
   const qualityLabel = (session.image_quality_score ?? 0) >= 75 ? "Strong scan quality" : "Review with care";
   const nextScanDate = new Date(new Date(session.created_at).getTime() + 21 * 24 * 60 * 60 * 1000)
     .toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const reportDate = new Date(session.created_at)
+    .toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
 
   // positiveObservations/limitations/recommendations are generated from
   // whatever photos existed at analysis time, not tagged per module — only
@@ -1173,10 +1239,8 @@ export default function V2ReportPage() {
   function openCategory(tabId: TabId) {
     setTab(tabId);
     setMetricFilter("all");
-    // The overview cards sit well above the tab panels on mobile. Changing the
-    // tab without moving the viewport made the tap appear to do nothing.
     window.setTimeout(() => {
-      document.getElementById("v2-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("v2-analysis")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
   }
 
@@ -1184,7 +1248,7 @@ export default function V2ReportPage() {
     <div className="v2-report-page" style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
+        <div className="v2-report-toolbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
           <button
             onClick={() => router.push("/dashboard")}
             style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0 }}
@@ -1192,25 +1256,35 @@ export default function V2ReportPage() {
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             Dashboard
           </button>
-          <PrimaryButton size="sm" fullWidth={false} onClick={() => router.push(`/perceptgpt?session=${sessionId}`)}>Ask PerceptGPT →</PrimaryButton>
+          <div className="v2-report-actions">
+            <PrimaryButton size="sm" fullWidth={false} variant="outline" onClick={() => router.push(`/report/${sessionId}/print`)}>
+              Download report ↓
+            </PrimaryButton>
+            <PrimaryButton size="sm" fullWidth={false} onClick={() => router.push(`/perceptgpt?session=${sessionId}`)}>Ask PerceptGPT →</PrimaryButton>
+          </div>
         </div>
 
-        <div className="v2-hero-grid" style={{ display: "grid", gridTemplateColumns: photo ? "26rem 1fr" : "1fr", gap: "4rem", alignItems: "center", padding: "3.2rem", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "2rem", marginBottom: "2rem" }}>
+        <div className="v2-hero-grid" style={{ display: "grid", gridTemplateColumns: photo ? "28rem 1fr" : "1fr", gap: "4rem", alignItems: "center", padding: "3.2rem", borderRadius: "2rem", marginBottom: "2.4rem" }}>
           {photo && (
-            <div style={{ position: "relative", aspectRatio: "4/5", borderRadius: "2rem", overflow: "hidden", boxShadow: "0 2.4rem 4.8rem -1.2rem rgba(12, 92, 81,0.28)" }}>
+            <div className="v2-hero-photo" style={{ position: "relative", aspectRatio: "4/5", borderRadius: "1.6rem", overflow: "hidden" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photo} alt="Your guided-capture photo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <span>Percept scan</span>
             </div>
           )}
           <div className="v2-overview-copy">
+            <div className="v2-report-meta"><span>Personal beauty intelligence</span><time dateTime={session.created_at}>{reportDate}</time></div>
+            <p className="v2-hero-kicker">Your personal report</p>
+            <h1 className="v2-hero-title">Understand what suits you.<br /><em>Act on what matters.</em></h1>
             <div style={{ display: "flex", alignItems: "center", gap: "1.4rem", flexWrap: "wrap" }}>
-              <div className="v2-score-compact"><ScoreReveal score={score} size={10} /></div>
-              <div><p style={{ margin: 0, color: "var(--muted)", fontSize: "1.2rem", textTransform: "uppercase", letterSpacing: "0.1em" }}>Your report at a glance</p><h1 style={{ margin: "0.4rem 0 0", color: "var(--primary)", fontSize: "2.6rem" }}>{verdictFor(score)} overall</h1></div>
+              <div className="v2-score-compact"><ScoreReveal score={score} size={10} ringColor="#72E0C8" trackColor="rgba(255,255,255,.18)" textColor="#FFFFFF" /></div>
+              <div><p className="v2-score-label">Percept score</p><h2 className="v2-score-verdict">{verdictFor(score)} overall</h2><p className="v2-score-caption">A clear baseline across your visible features.</p></div>
             </div>
-            <p style={{ margin: "1.8rem 0", color: "var(--secondary)", fontSize: "1.5rem", lineHeight: 1.65, maxWidth: "58rem" }}>
-              Your scan shows a strong baseline. Protect what is working, then focus on the few areas where consistent changes can be most useful.
-            </p>
-            <div className="v2-overview-pills" style={{ display: "flex", gap: "0.8rem", flexWrap: "wrap" }}>
+            {/* The sentence that used to sit here ("Your scan shows a strong
+                baseline...") was static copy, unchanged regardless of the actual
+                score, and said nothing the pills below don't already say in three
+                words each — pure duplicate prose. Cut, not shortened. */}
+            <div className="v2-overview-pills" style={{ display: "flex", gap: "0.8rem", flexWrap: "wrap", marginTop: "1.8rem" }}>
               <span>{qualityLabel}</span>
               {session.skin_age !== null && <span>Estimated skin age: <strong>{session.skin_age}</strong></span>}
               <span>{assessed.length} measurements assessed</span>
@@ -1218,6 +1292,21 @@ export default function V2ReportPage() {
             {limitations.length > 0 && <p className="v2-quality-note">Some results are less certain because the scan was underexposed or a requested photo was missing. Those items are marked as not assessed.</p>}
           </div>
         </div>
+
+        {tabs.length > 1 && (<>
+          <section className="v2-hero-picker" aria-labelledby="report-categories-title">
+            <div className="v2-picker-heading">
+              <div>
+                <p className="v2-eyebrow">Your report, your way</p>
+                <h2 id="report-categories-title">Choose what to explore</h2>
+              </div>
+              <p>Your categories stay within reach as you move through the report.</p>
+            </div>
+          </section>
+          <nav className="v2-category-dock" aria-label="Report categories">
+            <TabBar tabs={tabs} active={activeTab ?? "skin"} onChange={openCategory} variant="hero" />
+          </nav>
+        </>)}
 
         {assessed.length > 0 && (
           <section className="v2-priority-panel">
@@ -1273,25 +1362,15 @@ export default function V2ReportPage() {
         {/* One module per tab, so the page is only ever as long as the thing
             being read. Replaces the old anchor-link contents list, which still
             left every module stacked in one scroll. */}
-        <section className="v2-analysis-block">
+        <section id="v2-analysis" className="v2-analysis-block">
         <div className="v2-analysis-heading">
-          <div className="v2-analysis-heading-icon" aria-hidden><IconSparkle size={2.4} /></div>
+          <div className="v2-analysis-heading-icon" aria-hidden><IconSparkle size={1.8} /></div>
           <div className="v2-analysis-heading-copy">
-            <p className="v2-eyebrow">Your personalised report</p>
-            <h2>Explore what makes you, you.</h2>
-            <p>Choose a category to reveal your scores, tailored recommendations and visual previews.</p>
+            <p className="v2-eyebrow">Detailed analysis</p>
+            <h2>Explore your personalised report</h2>
           </div>
           <span className="v2-category-count"><b>{tabs.length}</b> categories ready <span aria-hidden>↓</span></span>
         </div>
-        <TabBar
-          tabs={tabs}
-          active={activeTab ?? "skin"}
-          onChange={(t) => {
-            setTab(t);
-            setMetricFilter("all");
-            document.getElementById("v2-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
-        />
         <div className="v2-score-legend" aria-label="Score colour guide"><strong>How to read your scores</strong><span><i className="strong" />Strong</span><span><i className="watch" />Watch</span><span><i className="focus" />Needs attention</span><span><i className="unknown" />Not assessed</span></div>
 
         {/* Every purchased panel stays mounted, with inactive ones hidden,
@@ -1307,7 +1386,7 @@ export default function V2ReportPage() {
           {hasSkin && (
             <div hidden={activeTab !== "skin"}>
               {skinParts.map((p, i) => (
-                <Section key={p.id} index={i + 1} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
+                <Section key={p.id} index={i + 1} total={skinParts.length} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
               ))}
               <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="skin" recommendations={recommendations} /></div>
             </div>
@@ -1316,7 +1395,7 @@ export default function V2ReportPage() {
           {hasHairstyle && (
             <div hidden={activeTab !== "hairstyle"}>
               {hairParts.map((p, i) => (
-                <Section key={p.id} index={i + 1} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
+                <Section key={p.id} index={i + 1} total={hairParts.length} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
               ))}
               <HairstylePanel
                 sessionId={sessionId}
@@ -1346,10 +1425,21 @@ export default function V2ReportPage() {
 
           {hasFrame && photo && (
             <div hidden={activeTab !== "frame"}>
-              <h2 style={{ fontSize: "2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.8rem" }}>Frames For Your Face</h2>
-              <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2.4rem", lineHeight: 1.5 }}>
-                Try on frames matched to your face shape{colourAnalysis ? " and colour season" : ""}.
-              </p>
+              {/* Same elevated card as the hairstyle/beard/colour previews —
+                  was a bare h2, the quietest heading in a tab whose entire
+                  point is the generated try-on image below it. */}
+              <div style={{
+                marginBottom: "2.4rem", padding: "2.8rem", background: "var(--surface)",
+                border: "1px solid var(--line)", borderTop: `0.4rem solid ${TAB_LABELS.frame.accent}`, borderRadius: "1.6rem",
+              }}>
+                <p style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", fontSize: "1.1rem", fontWeight: 800, color: TAB_LABELS.frame.accent, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>
+                  <IconSparkle size={1.3} strokeWidth={2} />AI-generated preview
+                </p>
+                <h2 style={{ fontSize: "2.3rem", fontWeight: 800, color: "var(--primary)", letterSpacing: "-0.015em", marginBottom: "0.6rem" }}>Frames For Your Face</h2>
+                <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.5 }}>
+                  Try on frames matched to your face shape{colourAnalysis ? " and colour season" : ""}.
+                </p>
+              </div>
               <FrameGrid sessionId={sessionId} photo={photo} initialPath={frameGridPath} initialRemaining={Math.max(0, MAX_GENERATIONS - frameUsed)} />
               <GlassesVirtualTryOn photoUrl={photo} seasonalColour={colourAnalysis?.season ?? null} />
               <FrameAIPanel sessionId={sessionId} photo={photo} isPremium onRequirePremium={() => {}} />
@@ -1376,22 +1466,26 @@ export default function V2ReportPage() {
 
         {limitations.length > 0 && (
           <div className="v2-limitations" style={{ marginTop: "3.2rem", padding: "2.4rem 2.8rem", background: "var(--wash)", borderRadius: "1.2rem" }}>
-            <p style={{ fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>Good to know</p>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-              {limitations.map((l, i) => <li key={i} style={{ fontSize: "1.3rem", color: "var(--secondary)", lineHeight: 1.6 }}>{l}</li>)}
+            <p style={{ display: "inline-flex", alignItems: "center", gap: "0.6rem", fontSize: "1.2rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.2rem" }}>
+              <IconInfo size={1.35} strokeWidth={2} />Good to know
+            </p>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {limitations.map((l, i) => (
+                <li key={i} style={{ display: "flex", gap: "1rem", fontSize: "1.3rem", color: "var(--secondary)", lineHeight: 1.6 }}>
+                  <span aria-hidden style={{ color: "var(--muted)", flexShrink: 0, display: "flex", alignItems: "center", height: "1.9rem" }}>
+                    <IconInfo size={1.3} strokeWidth={2} />
+                  </span>
+                  <span>{l}</span>
+                </li>
+              ))}
             </ul>
           </div>
         )}
 
-        <div style={{ textAlign: "center", marginTop: "4.8rem" }}>
-          <PrimaryButton fullWidth={false} variant="outline" onClick={() => router.push(`/report/${sessionId}/print`)}>
-            Download report →
-          </PrimaryButton>
-        </div>
       </div>
       <style>{`
         .v2-report-page {
-          --canvas: #F3F1EC;
+          --canvas: #F4F2ED;
           --surface: #FCFBF8;
           --wash: #EEECE6;
           --line: #DCD8CF;
@@ -1400,8 +1494,23 @@ export default function V2ReportPage() {
           --muted: #5F746D;
           --panel: #173E35;
           --rose: #3E7B68;
-          background-image: radial-gradient(circle at 82% 4%, rgba(133,164,151,0.13), transparent 28rem);
+          background-image: radial-gradient(circle at 84% 1%, rgba(133,164,151,0.18), transparent 32rem), linear-gradient(180deg, #F8F6F1 0, #F4F2ED 36rem);
         }
+        .v2-report-actions { display: flex; align-items: center; gap: .8rem; }
+        .v2-hero-grid { position: relative; overflow: hidden; color: #fff; border: 1px solid rgba(255,255,255,.1); background: linear-gradient(132deg, #082A23 0%, #103E34 57%, #1C5D4E 100%); box-shadow: 0 3rem 7rem -4rem rgba(8,42,35,.85); }
+        .v2-hero-grid:after { content: ""; position: absolute; width: 34rem; height: 34rem; right: -15rem; top: -20rem; border: 1px solid rgba(255,255,255,.09); border-radius: 50%; box-shadow: 0 0 0 5rem rgba(255,255,255,.025), 0 0 0 10rem rgba(255,255,255,.018); pointer-events: none; }
+        .v2-hero-photo { z-index: 1; border: 1px solid rgba(255,255,255,.18); box-shadow: 0 2.5rem 5rem -2rem rgba(0,0,0,.62); }
+        .v2-hero-photo:after { content: ""; position: absolute; inset: 45% 0 0; background: linear-gradient(transparent, rgba(3,20,16,.72)); pointer-events: none; }
+        .v2-hero-photo span { position: absolute; z-index: 1; left: 1.4rem; bottom: 1.2rem; color: rgba(255,255,255,.84); font-size: 1rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+        .v2-overview-copy { position: relative; z-index: 1; }
+        .v2-report-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 2.2rem; padding-bottom: 1.2rem; border-bottom: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.62); font-size: 1rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+        .v2-hero-kicker { margin: 0 0 .8rem; color: #8FD9C8; font-size: 1.05rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+        .v2-hero-title { margin: 0 0 2.4rem; color: #fff; font-size: clamp(3rem, 4vw, 4.8rem); font-weight: 500; letter-spacing: -.045em; line-height: 1.02; }
+        .v2-hero-title em { color: #B9E1D6; font-family: Georgia, serif; font-weight: 400; }
+        .v2-score-label { margin: 0; color: #8FD9C8; font-size: 1rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+        .v2-score-verdict { margin: .35rem 0 0; color: #fff; font-size: 2.2rem; letter-spacing: -.025em; }
+        .v2-score-caption { margin: .45rem 0 0; color: rgba(255,255,255,.62); font-size: 1.15rem; }
+        .v2-hero-grid .v2-overview-pills span { color: rgba(255,255,255,.84); border-color: rgba(255,255,255,.16); background: rgba(255,255,255,.08); }
         .v2-score-compact { width: 10rem; height: 10rem; display: grid; place-items: center; flex: 0 0 auto; }
         .v2-score-legend { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 1.5rem; margin: -.6rem 0 1.8rem; padding: .9rem 1.2rem; border: 1px solid var(--line); border-radius: 1rem; background: #F7F5F0; }
         .v2-score-legend > strong { margin-right: auto; color: var(--primary); font-size: 1.08rem; font-weight: 800; }
@@ -1424,7 +1533,7 @@ export default function V2ReportPage() {
         .v2-report-block, .v2-analysis-block { margin: 3.2rem 0; padding: 2.6rem 2.8rem; border: 1px solid #D8D4CA; border-radius: 1.6rem; background: rgba(252,251,248,0.82); box-shadow: 0 1.6rem 4rem -4rem rgba(23,62,53,0.5); }
         .v2-category-block { position: relative; border: 1px solid #CEDCD7; border-top: 0.45rem solid #3A8D78; background: linear-gradient(145deg, #FCFBF8 0%, #F0F7F4 100%); }
         .v2-photo-block { border-top: 0.35rem solid #A38B69; }
-        .v2-analysis-block { position: relative; overflow: hidden; border: 1px solid #BFD4CC; border-top: 0.45rem solid #20A58F; background: linear-gradient(180deg, rgba(229,246,240,.92) 0, rgba(252,251,248,.96) 24rem); box-shadow: 0 2.2rem 5rem -3.5rem rgba(13,48,40,.62); }
+        .v2-analysis-block { position: relative; overflow: hidden; scroll-margin-top: 9rem; border: 1px solid #BFD4CC; border-top: 0.45rem solid #20A58F; background: linear-gradient(180deg, rgba(229,246,240,.92) 0, rgba(252,251,248,.96) 24rem); box-shadow: 0 2.2rem 5rem -3.5rem rgba(13,48,40,.62); }
         .v2-block-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.6rem; margin-bottom: 1.8rem; padding-bottom: 1.4rem; border-bottom: 1px solid var(--line); }
         .v2-block-heading h2 { margin: 0; color: var(--primary); font-size: 2.1rem; }
         .v2-block-heading > span { padding: 0.55rem 0.9rem; border: 1px solid var(--line); border-radius: 9999px; background: #F5F3EE; color: var(--muted); font-size: 1.05rem; font-weight: 700; white-space: nowrap; }
@@ -1432,30 +1541,41 @@ export default function V2ReportPage() {
         .v2-category-intro h2 { margin: 0; color: var(--primary); font-size: clamp(2.5rem, 3vw, 3.35rem); font-weight: 850; letter-spacing: -.035em; line-height: 1.08; }
         .v2-category-intro > div > p:last-child { margin: .75rem 0 0; color: var(--secondary); font-size: 1.25rem; line-height: 1.5; }
         .v2-category-intro > span { display: inline-flex; align-items: center; gap: .55rem; padding: .75rem 1rem; border: 1px solid #BFD7CF; border-radius: 9999px; background: #E4F3EE; color: #176D5C; font-size: 1.05rem; font-weight: 800; white-space: nowrap; }
-        .v2-analysis-heading { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.5rem; margin: -1rem -1.1rem 2rem; padding: 2.1rem 2.2rem; overflow: hidden; border: 1px solid rgba(255,255,255,.13); border-radius: 1.4rem; background: linear-gradient(125deg, #092F27 0%, #11594C 62%, #168D78 100%); box-shadow: 0 1.8rem 3.8rem -2.2rem rgba(9,47,39,.7); }
-        .v2-analysis-heading:before, .v2-analysis-heading:after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
-        .v2-analysis-heading:before { width: 18rem; height: 18rem; right: -6rem; top: -11rem; border: 1px solid rgba(255,255,255,.16); box-shadow: 0 0 0 2.8rem rgba(255,255,255,.035), 0 0 0 5.6rem rgba(255,255,255,.02); animation: v2-analysis-orbit 7s ease-in-out infinite; }
-        .v2-analysis-heading:after { width: 9rem; height: 9rem; left: 38%; bottom: -8rem; background: rgba(238,185,57,.16); filter: blur(1px); animation: v2-analysis-glow 4s ease-in-out infinite alternate; }
-        .v2-analysis-heading-icon { position: relative; z-index: 1; display: grid; place-items: center; width: 5.3rem; height: 5.3rem; border: 1px solid rgba(255,255,255,.25); border-radius: 1.35rem; background: linear-gradient(145deg, rgba(255,255,255,.2), rgba(255,255,255,.08)); color: #FFD166; box-shadow: inset 0 1px rgba(255,255,255,.22), 0 .8rem 2rem rgba(0,0,0,.16); animation: v2-analysis-float 3.6s ease-in-out infinite; }
+        /* This banner introduces the tab bar — it is not a section of its own,
+           and previously outsized everything inside the tabs it introduces,
+           including the actual generated hairstyle/colour/frame preview
+           images, which is the part users are paying to see. Shrunk from a
+           hero (up to 3.35rem type, animated glow, 5.3rem icon) to a slim
+           strip: real content below now reads as the peak of the page. */
+        .v2-analysis-heading { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.2rem; margin: -1rem -1.1rem 1.6rem; padding: 1.3rem 1.8rem; overflow: hidden; border: 1px solid rgba(255,255,255,.13); border-radius: 1.2rem; background: linear-gradient(125deg, #092F27 0%, #11594C 62%, #168D78 100%); box-shadow: 0 1rem 2.4rem -1.8rem rgba(9,47,39,.7); }
+        .v2-analysis-heading-icon { position: relative; z-index: 1; display: grid; place-items: center; width: 3.6rem; height: 3.6rem; flex-shrink: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 1rem; background: linear-gradient(145deg, rgba(255,255,255,.2), rgba(255,255,255,.08)); color: #FFD166; box-shadow: inset 0 1px rgba(255,255,255,.22); }
         .v2-analysis-heading-copy { position: relative; z-index: 1; }
-        .v2-analysis-heading .v2-eyebrow { margin-bottom: .65rem; color: #70E1CD; font-size: 1.08rem; }
-        .v2-analysis-heading h2 { margin: 0; max-width: 54rem; color: #fff; font-size: clamp(2.4rem, 3vw, 3.35rem); font-weight: 850; letter-spacing: -.035em; line-height: 1.05; }
-        .v2-analysis-heading-copy > p:last-child { margin: .85rem 0 0; max-width: 58rem; color: rgba(255,255,255,.78); font-size: 1.25rem; font-weight: 520; line-height: 1.5; }
+        .v2-analysis-heading .v2-eyebrow { margin-bottom: .3rem; color: #70E1CD; font-size: .98rem; }
+        .v2-analysis-heading h2 { margin: 0; max-width: 54rem; color: #fff; font-size: clamp(1.7rem, 1.6vw, 2rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
         .v2-category-count { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: .45rem; padding: .75rem 1rem; border: 1px solid rgba(255,255,255,.22); border-radius: 9999px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.86); font-size: 1rem; font-weight: 750; white-space: nowrap; backdrop-filter: blur(8px); }
         .v2-category-count b { color: #FFD166; font-size: 1.25rem; }
         .v2-category-count span { color: #70E1CD; font-size: 1.25rem; animation: v2-analysis-nudge 1.5s ease-in-out infinite; }
         .v2-analysis-block .v2-tabbar { background: transparent !important; margin-bottom: 1.8rem !important; padding-top: 0 !important; }
         .v2-analysis-block .v2-tabrail { gap: .65rem !important; padding: .65rem !important; border-color: #D1DDD8 !important; border-radius: 1.55rem !important; background: rgba(255,255,255,.76) !important; box-shadow: inset 0 1px rgba(255,255,255,.9), 0 1.2rem 3rem -2.5rem rgba(13,48,40,.55); }
         .v2-tab-option:not(.is-active):hover { background: rgba(23,62,53,.06) !important; }
-        @keyframes v2-analysis-float { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-.35rem) rotate(3deg); } }
         @keyframes v2-analysis-nudge { 0%,100% { transform: translateY(-.1rem); } 50% { transform: translateY(.2rem); } }
-        @keyframes v2-analysis-orbit { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-1rem,1rem); } }
-        @keyframes v2-analysis-glow { from { transform: scale(.8); opacity: .5; } to { transform: scale(1.35); opacity: 1; } }
         .v2-analysis-block .v2-report-section { box-shadow: 0 1rem 2.8rem -2.8rem rgba(23,62,53,0.5); }
         .v2-limitations { border: 1px solid #DDD5C5; border-left: 0.35rem solid #A97931; }
         .v2-overview-pills span { padding: 0.7rem 1.1rem; border-radius: 9999px; background: #F0EEE8; border: 1px solid #E2DED5; color: #425E56; font-size: 1.15rem; }
         .v2-quality-note { margin: 1.4rem 0 0; padding: 1rem 1.2rem; border-left: 3px solid #A97931; background: #F6EFE3; color: #66553A; font-size: 1.2rem; line-height: 1.5; }
         .v2-eyebrow { margin: 0 0 0.5rem; color: var(--rose); font-size: 1.1rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+        .v2-hero-picker { position: relative; padding: 2.6rem 2.8rem 2rem; overflow: hidden; border: 1px solid #D4DDD9; border-bottom: 0; border-radius: 1.8rem 1.8rem 0 0; background: linear-gradient(145deg, #FFFDF9, #F2F7F4); }
+        .v2-hero-picker:before { content: ""; position: absolute; inset: 0 0 auto; height: .35rem; background: linear-gradient(90deg, #13A895 0 25%, #D39A32 25% 50%, #D35F47 50% 75%, #347B5C 75%); }
+        .v2-picker-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
+        .v2-picker-heading h2 { margin: 0; color: var(--primary); font-size: clamp(2.5rem, 3vw, 3.4rem); font-weight: 850; letter-spacing: -.04em; line-height: 1.05; }
+        .v2-picker-heading > p { max-width: 35rem; margin: 0; color: var(--secondary); font-size: 1.25rem; line-height: 1.5; text-align: right; }
+        .v2-category-dock { position: sticky; top: .8rem; z-index: 40; margin-bottom: 2.8rem; padding: .8rem; border: 1px solid #D4DDD9; border-radius: 0 0 1.8rem 1.8rem; background: rgba(250,249,245,.88); box-shadow: 0 1.4rem 3.5rem -2.6rem rgba(13,48,40,.5); backdrop-filter: blur(18px) saturate(1.2); }
+        .v2-category-dock .v2-tabbar { margin: 0 !important; }
+        .v2-tabrail-hero { padding: .45rem !important; gap: .5rem !important; border: 0 !important; background: transparent !important; }
+        .v2-tabrail-hero .v2-tab-option { min-height: 5.8rem; border-color: transparent !important; border-radius: 1.15rem !important; background: transparent !important; font-size: 1.45rem !important; box-shadow: none !important; }
+        .v2-tabrail-hero .v2-tab-option:not(.is-active):hover { border-color: #D8E1DD !important; background: #fff !important; }
+        .v2-tabrail-hero .v2-tab-icon { display: grid !important; place-items: center; width: 3rem; height: 3rem; border-radius: .85rem; background: color-mix(in srgb, currentColor 11%, transparent); }
+        .v2-tabrail-hero .is-active { box-shadow: 0 1.2rem 2.6rem -1.8rem rgba(13,48,40,.8) !important; }
         .v2-priority-panel { padding: 2.8rem 3.2rem 3.2rem; border: 1px solid var(--line); border-radius: 1.6rem; background: #FCFBF8; margin-bottom: 3.2rem; box-shadow: 0 1.8rem 5rem -4.2rem rgba(23,62,53,0.55); }
         .v2-priority-intro { display: flex; align-items: end; gap: 1.8rem; margin-bottom: 2rem; }
         .v2-priority-intro .v2-eyebrow { flex: 0 0 auto; margin-bottom: 0.35rem; }
@@ -1535,15 +1655,17 @@ export default function V2ReportPage() {
         .v2-tabbar [role="tablist"]::-webkit-scrollbar { display: none; }
         @media (max-width: 600px) {
           .v2-report-page { padding: 2rem 1.4rem 6rem !important; overflow-x: hidden; }
+          .v2-report-toolbar { align-items: flex-start !important; margin-bottom: 2rem !important; }
+          .v2-report-actions { align-items: stretch; flex-direction: column-reverse; }
+          .v2-report-actions button { min-width: 14rem; }
           .v2-report-block, .v2-analysis-block { margin: 2rem 0; padding: 1.6rem 1.4rem; border-radius: 1.3rem; }
           .v2-block-heading { align-items: center; margin-bottom: 1.4rem; padding-bottom: 1.2rem; }
           .v2-block-heading h2 { font-size: 1.8rem; }
           .v2-block-heading > span { font-size: 0.95rem; }
           .v2-analysis-block { padding: 1.1rem !important; background: linear-gradient(180deg, rgba(229,246,240,.96) 0, rgba(252,251,248,.98) 22rem); }
-          .v2-analysis-heading { grid-template-columns: auto minmax(0, 1fr); gap: 1rem; margin: 0 0 1.3rem; padding: 1.5rem 1.3rem; border-radius: 1.2rem; }
-          .v2-analysis-heading-icon { width: 4.2rem; height: 4.2rem; border-radius: 1.05rem; }
-          .v2-analysis-heading h2 { font-size: 2rem; line-height: 1.08; }
-          .v2-analysis-heading-copy > p:last-child { font-size: 1.05rem; line-height: 1.4; }
+          .v2-analysis-heading { grid-template-columns: auto minmax(0, 1fr); gap: 1rem; margin: 0 0 1.3rem; padding: 1.2rem 1.3rem; border-radius: 1.2rem; }
+          .v2-analysis-heading-icon { width: 3.2rem; height: 3.2rem; border-radius: 0.9rem; }
+          .v2-analysis-heading h2 { font-size: 1.6rem; line-height: 1.15; }
           .v2-category-count { grid-column: 1 / -1; justify-self: start; margin-left: 5.2rem; }
           .v2-score-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-top: -.5rem; }
           .v2-score-legend > strong { grid-column: 1 / -1; }
@@ -1552,6 +1674,20 @@ export default function V2ReportPage() {
           .v2-hero-grid > div:first-child { max-width: 18rem !important; }
           .v2-score-compact { width: 10rem; height: 10rem; }
           .v2-overview-copy h1 { font-size: 2.2rem !important; }
+          .v2-report-meta { align-items: flex-start; flex-direction: column; margin-bottom: 1.6rem; }
+          .v2-hero-title { margin-bottom: 2rem; font-size: 3.2rem; }
+          .v2-score-caption { max-width: 18rem; }
+          .v2-hero-picker { padding: 2rem 1.4rem 1.2rem; border-radius: 1.4rem 1.4rem 0 0; }
+          .v2-picker-heading { display: block; margin-bottom: 1.4rem; }
+          .v2-picker-heading h2 { font-size: 2.35rem; }
+          .v2-picker-heading > p { margin-top: .7rem; text-align: left; }
+          .v2-category-dock { top: .6rem; margin-bottom: 2rem; padding: .45rem; border-radius: 0 0 1.4rem 1.4rem; }
+          .v2-tabrail-hero { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; padding: 0 !important; gap: .25rem !important; }
+          .v2-tabrail-hero .v2-tab-option { min-height: 5.2rem; padding: .7rem .3rem !important; font-size: 1.1rem !important; }
+          .v2-tabrail-hero .v2-tab-icon { display: flex !important; }
+          .v2-tabrail-hero .v2-tab-option > span { flex-direction: column; gap: .3rem !important; }
+          .v2-tabrail-hero .v2-tab-full { display: none !important; }
+          .v2-tabrail-hero .v2-tab-short { display: inline !important; }
           .v2-priority-panel { padding: 2rem 1.6rem; border-radius: 1.3rem; }
           .v2-priority-grid article { min-height: 0; padding: 1.4rem; }
           .v2-priority-card-top { margin-bottom: 1rem; }
@@ -1578,6 +1714,7 @@ export default function V2ReportPage() {
             padding: 1rem 0.4rem !important; font-size: 1.3rem !important; gap: 0 !important;
           }
           .v2-tab-icon { display: none !important; }
+          .v2-tab-number { display: none !important; }
           .v2-tab-full { display: none !important; }
           .v2-tab-short { display: inline !important; }
           /* Two columns keep labels and counts readable without horizontal overflow. */
@@ -1620,7 +1757,7 @@ export default function V2ReportPage() {
           .v2-routine-content li { gap: 0.8rem !important; font-size: 1.3rem !important; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .v2-analysis-heading:before, .v2-analysis-heading:after, .v2-analysis-heading-icon, .v2-category-count span { animation: none !important; }
+          .v2-category-count span { animation: none !important; }
         }
       `}</style>
     </div>
