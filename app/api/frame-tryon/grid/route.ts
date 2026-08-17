@@ -12,6 +12,10 @@ import { signedFrontPhotoForSession } from "@/lib/v2/sessionPhoto";
 // One composite grid of five frame styles, the overview shot. The existing
 // per-frame route (/api/frame-tryon/generate) stays as the interactive path
 // for trying a single style at full size, so this does not replace it.
+// Panel 3's cat-eye is a suggestion, not a hard requirement — generateFrameGrid's
+// own prompt overrides it with a rounded panto/aviator shape for masculine-
+// presenting subjects, since cat-eye is a conventionally feminine silhouette
+// and previously rendered on every subject regardless of presentation.
 const FRAMES = [
   "thin gunmetal rectangular eyeglasses",
   "black and gold Clubmaster browline eyeglasses",

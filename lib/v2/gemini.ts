@@ -7,11 +7,11 @@
 
 import { GoogleAuth } from "google-auth-library";
 
-// Nano Banana Pro: Google's highest-quality model for complex image editing.
-// Keep this configurable so an environment can fall back without a deploy if
-// regional capacity or quota differs. The GA model is global-only.
-const GEMINI_MODEL = process.env.GEMINI_IMAGE_MODEL ?? "gemini-3-pro-image";
-const VERTEX_IMAGE_LOCATION = process.env.GOOGLE_VERTEX_IMAGE_LOCATION ?? "global";
+// Automated report preparation favours Flash: these are six-up recommendation
+// previews, where predictable latency matters more than Pro's extra fidelity.
+// A deployment can still opt into another model explicitly.
+const GEMINI_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image";
+const VERTEX_IMAGE_LOCATION = process.env.GOOGLE_VERTEX_IMAGE_LOCATION || "global";
 
 // Vertex AI, not the Gemini Developer API (generativelanguage.googleapis.com).
 // Both serve the same models, but they bill through different rails: the
@@ -22,8 +22,12 @@ const VERTEX_IMAGE_LOCATION = process.env.GOOGLE_VERTEX_IMAGE_LOCATION ?? "globa
 // API call returned 429 RESOURCE_EXHAUSTED even for a two-word text prompt.
 // Vertex sidesteps that entirely. Verified working on this project before the
 // switch: text and a real 1.1MB image edit both returned 200.
-export const VERTEX_LOCATION = process.env.GOOGLE_VERTEX_LOCATION ?? "us-central1";
-export const VERTEX_PROJECT = process.env.GOOGLE_CLOUD_PROJECT ?? "glowmetry";
+// Treat blank .env placeholders the same as missing variables. `??` only
+// catches null/undefined, so GOOGLE_CLOUD_PROJECT="" previously produced a
+// Vertex URL containing `/projects//locations//` and every analysis returned
+// Google's HTML 404 page.
+export const VERTEX_LOCATION = process.env.GOOGLE_VERTEX_LOCATION || "us-central1";
+export const VERTEX_PROJECT = process.env.GOOGLE_CLOUD_PROJECT || "glowmetry";
 
 export class GeminiGenerationError extends Error {}
 export class GeminiEmptyResponseError extends Error {}
@@ -37,8 +41,10 @@ function wait(ms: number) {
 
 async function requestGeneratedImage(url: string, init: RequestInit): Promise<Response> {
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120_000);
     try {
-      const response = await fetch(url, init);
+      const response = await fetch(url, { ...init, signal: controller.signal });
       if (response.status !== 429) return response;
 
       const details = await response.text();
@@ -52,6 +58,8 @@ async function requestGeneratedImage(url: string, init: RequestInit): Promise<Re
           `Gemini request failed: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+    } finally {
+      clearTimeout(timeout);
     }
 
     // Small jitter prevents two users whose calls failed together from retrying
@@ -171,6 +179,53 @@ export async function generateImageEdit(
   return { mimeType: imagePart.mimeType, base64: imagePart.data };
 }
 
+// Pure text-to-image — no source photo, unlike generateImageEdit above. Used
+// to generate standalone product-shot assets (e.g. the sunglasses cutouts in
+// scripts/generate-sunglasses.ts) rather than editing a user's own scan
+// photo. Shares the same auth/retry/error-handling path as generateImageEdit;
+// only the request body differs (no inlineData part).
+export async function generateProductShot(
+  prompt: string,
+  aspectRatio: "1:1" | "16:9" | "4:3" = "16:9"
+): Promise<{ mimeType: string; base64: string }> {
+  const token = await vertexAccessToken();
+
+  const imageVertexHost = VERTEX_IMAGE_LOCATION === "global"
+    ? "aiplatform.googleapis.com"
+    : `${VERTEX_IMAGE_LOCATION}-aiplatform.googleapis.com`;
+  const url =
+    `https://${imageVertexHost}/v1/projects/${VERTEX_PROJECT}` +
+    `/locations/${VERTEX_IMAGE_LOCATION}/publishers/google/models/${GEMINI_MODEL}:generateContent`;
+
+  const res = await requestGeneratedImage(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseModalities: ["TEXT", "IMAGE"],
+        imageConfig: { aspectRatio, imageSize: "2K" },
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    if (res.status === 429 && /RESOURCE_EXHAUSTED|quota/i.test(errText)) {
+      throw new GeminiQuotaError(`Gemini quota exceeded: ${errText}`);
+    }
+    throw new GeminiGenerationError(`Gemini API error: ${res.status} ${errText}`);
+  }
+
+  const json = await res.json() as {
+    candidates?: Array<{ content?: { parts?: Array<{ inlineData?: { mimeType: string; data: string } }> } }>;
+  };
+  const imagePart = json.candidates?.[0]?.content?.parts?.filter((p) => p.inlineData).at(-1)?.inlineData;
+  if (!imagePart) throw new GeminiEmptyResponseError("Gemini returned no image — the request may have been refused");
+
+  return { mimeType: imagePart.mimeType, base64: imagePart.data };
+}
+
 // Shared by every grid generator below (colour/frame/hairstyle/beard) so a
 // reliability tweak — panel count, no repeated looks, consistent expression —
 // only has to change in one place instead of four near-identical copies.
@@ -234,8 +289,8 @@ export function generateColourGrid(photoDataUrl: string, colourNames: string[]) 
     SUBJECT_ADAPTATION_RULES +
     `Each panel shows them dressed for a different occasion, in this exact order: ${COLOUR_OCCASIONS.join("; then ")}. ` +
     `Every outfit must use colours drawn from this palette: ${colourNames.join(", ")}. ` +
-    `The six clothing silhouettes, garment types and levels of formality must be unmistakably different. Use EXACTLY ONE full suit in the entire grid, only for the investor or formal meeting panel. Do not repeat a suit, blazer combination, shirt-and-tie combination, or near-identical outfit in another panel. ` +
-    `EDIT CLOTHING ONLY. Copy the source face, facial proportions, skin tone, skin texture, hairline, scalp hair, facial hair, expression, head angle and eye direction without reinterpretation into all six panels. Do not beautify, slim, age, de-age, masculinize, feminize or replace the person. ` +
+    `The six clothing silhouettes, garment types and levels of formality must be unmistakably different — no two panels may share the same garment type and formality level (for example, two panels both reading as "casual knit" is a failure, even in different colours). Use EXACTLY ONE full suit in the entire grid, only for the investor or formal meeting panel. Do not repeat a suit, blazer combination, shirt-and-tie combination, or near-identical outfit in another panel. ` +
+    `EDIT CLOTHING ONLY. Everything above the collar must remain visually identical to the source photograph in every one of the six panels: exact facial identity, face shape, skin tone, skin texture, hairline, scalp hair, facial hair, expression, head angle and eye direction, copied rather than reinterpreted. Do not beautify, slim, age, de-age, masculinize, feminize, relight the face, or replace the person — a face that drifts between panels, even slightly, makes the comparison meaningless, since the whole point is judging the same face against six different colours. ` +
     `Keep the same close chest-up crop and the same real background from the supplied photo in every panel. Do not create a studio model, grey studio backdrop, full-body portrait or a different camera perspective. Show enough upper torso to make each garment clearly readable while keeping the face at the same scale as the source. ` +
     `Preserve the subject's body proportions and existing gender presentation. All six outfits must be coherent with the same presentation visible in the source. ` +
     GRID_CONSISTENCY_RULES +
@@ -269,7 +324,8 @@ export function generateFrameGrid(photoDataUrl: string, frameNames: string[]) {
     `Every panel must show a visibly distinct frame shape and material, never the same design twice. ` +
     GRID_CONSISTENCY_RULES +
     `First assess the subject's face shape and proportions. Each prescribed frame must be adapted in width, lens height and scale to flatter this specific face; do not use an oversized or poorly proportioned frame merely to exaggerate variety. ` +
-    `The six silhouettes must remain unmistakably different: rectangular, browline, cat-eye, hexagonal, rimless, and trapezoidal Wayfarer respectively. In particular panels 4 and 6 must not both become rectangular. ` +
+    `The six silhouettes must remain unmistakably different from each other — no two panels may share the same base shape (e.g. two rectangular frames, or two rounded frames), even if the colour or material differs. ` +
+    `Panel 3 is prescribed as a cat-eye shape, but cat-eye is a conventionally feminine silhouette: only render it if the subject was classified above as adult feminine-presenting or ambiguous/neutral. If the subject is adult masculine-presenting, replace panel 3 with a rounded panto or soft aviator shape instead — still distinct from every other panel's silhouette, still elegant enough for the formal/wedding occasion it is styled for, but never a cat-eye upsweep on a masculine-presenting face. ` +
     `In each panel the glasses must sit correctly on the face: temple width matching face width, bridge centred on the nose, ` +
     `a subtle realistic shadow on the nose bridge and under the brow, and a faint lens sheen rather than flat opaque glass. ` +
     `No warping, no floating frames, no misaligned temples. ` +
@@ -296,9 +352,10 @@ export function generateHairstyleGrid(photoDataUrl: string, styleNames: string[]
     `Use the supplied photograph as an IMMUTABLE identity reference and create a single clean grid collage of THIS EXACT person. ` +
     SUBJECT_ADAPTATION_RULES +
     `Render these six prescribed and visibly different hairstyles in this exact panel order: ${requiredPanels}. ` +
-    `Every panel must show a visibly distinct cut and styling, never the same look twice. ` +
+    `Every panel must show a visibly distinct cut and styling, never the same look twice — no two panels may share the same combination of length and texture (for example, two panels both reading as "short and neat" is a failure even if one is slightly shorter than the other; the difference has to be obvious at a glance). ` +
     GRID_CONSISTENCY_RULES +
     `Before rendering, determine the single styling presentation already expressed by the subject in the source photograph. Keep that same presentation consistently across all six panels. Do not mix conventionally masculine and conventionally feminine hairstyle families in one grid. Do not introduce ponytails, buns, curtain bangs, bobs or long flowing layers unless they are consistent with the source subject's existing presentation. ` +
+    `Determine which side the subject's hair is parted on in the source photograph (left or right — look at where the parting line actually sits, not just which way the hair falls). Every one of the six panels must keep that exact same side part; never switch sides and never introduce a centre part or a part-free brushed-back look, even for the short or textured panels. The six styles vary in length, texture and finish, not in which side the hair is parted. If the source has no visible part (e.g. a buzz cut or shaved sides), keep every panel equally part-free rather than inventing one. ` +
     `EDIT ONLY THE HAIR PIXELS ON THE TOP AND SIDES OF THE HEAD. Preserve the original hairline and natural hair colour. ` +
     `Preserve the subject's presentation exactly as shown in the source. Do not masculinize, feminize, or change their apparent gender presentation. ` +
     `Facial-hair presence is immutable: if the source has no beard, mustache or stubble, every panel must remain completely free of beard, mustache and stubble; if facial hair is present, preserve it pixel-for-pixel. ` +
@@ -355,6 +412,7 @@ export function generateBeardGrid(photoDataUrl: string, styleNames: string[]) {
     `Every panel must show a visibly distinct facial hair style, never the same look twice. ` +
     GRID_CONSISTENCY_RULES +
     `The coverage geometry is mandatory: panel 1 has zero facial hair; panel 2 is sparse short stubble over beard areas; panel 3 is a short sharply edged boxed beard; panel 4 is a visibly longer full beard extending well below the chin; panel 5 has completely clean-shaven cheeks and jaw with hair only around the mouth and chin; panel 6 has completely clean-shaven cheeks, chin and jaw with hair only on the upper lip. Panels 4 and 5 must never share the same full-beard coverage. ` +
+    `First assess the subject's face shape (round, oval, square, heart or long). Within that mandatory coverage geometry, adapt the beard's lineup and density in panels 3 and 4 to flatter this specific face — for example, keep the cheek line higher and tighter on a round face to add visual length, or extend the lineup slightly wider on a narrow face to add width at the jaw. This is a styling adjustment within each panel's prescribed shape, not a license to change which panel gets which coverage. ` +
     `EDIT ONLY THE FACIAL-HAIR PIXELS around the upper lip, cheeks, chin and jaw. Keep the person's own hair colour, jawline and bone structure completely unchanged. ` +
     `Preserve the source face, skin texture, hairstyle, clothing, pose, lighting, shadows and background exactly. Do not beautify, retouch, smooth skin, relight or reconstruct the person. ` +
     `The result must look like the original unedited photo with only the facial hair changed. Identical framing and thin white gutters between panels. ` +

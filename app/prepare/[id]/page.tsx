@@ -18,27 +18,6 @@ const BASE_STEPS: Step[] = [
   { id: "delivery", label: "Report delivery", detail: "Preparing your PDF and email", status: "waiting" },
 ];
 
-const INSIGHTS = [
-  { kind: "sun", eyebrow: "Skin insight", title: "Daily SPF is your strongest long-term habit", body: "Broad-spectrum SPF 30 or higher helps protect against premature visible ageing as well as sun damage." },
-  { kind: "water", eyebrow: "Hydration insight", title: "Hydration supports normal skin function", body: "Drink enough fluid for your body and climate. Extra water is not a cure-all, but dehydration can make skin and the under-eye area look less refreshed." },
-  { kind: "moisture", eyebrow: "Routine insight", title: "Moisturizer works best on slightly damp skin", body: "Applying it soon after cleansing helps trap water in the skin and supports a smoother-looking barrier." },
-  { kind: "food", eyebrow: "Nutrition insight", title: "A balanced plate usually beats a beauty supplement", body: "For most healthy adults, varied whole foods are the safest first source of nutrients that support skin, hair, and nails." },
-  { kind: "cleanse", eyebrow: "Skin insight", title: "Gentle cleansing beats aggressive scrubbing", body: "Scrubbing can irritate skin and make concerns such as acne or sensitivity look worse. Use fingertips and lukewarm water." },
-  { kind: "hair", eyebrow: "Hair insight", title: "Wet hair needs a lighter touch", body: "Hair is more vulnerable when wet. Blot instead of rubbing, detangle gently, and limit unnecessary heat." },
-  { kind: "frame", eyebrow: "Frame insight", title: "Comfort starts with fit, not just frame weight", body: "A well-sized bridge and balanced temples distribute pressure better. Lightweight materials can add comfort for long daily wear." },
-] as const;
-
-function InsightIcon({ kind }: { kind: typeof INSIGHTS[number]["kind"] }) {
-  const common = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  if (kind === "sun") return <svg viewBox="0 0 32 32"><circle {...common} cx="16" cy="16" r="5"/><path {...common} d="M16 3v4m0 18v4M3 16h4m18 0h4M7 7l3 3m12 12 3 3M25 7l-3 3M10 22l-3 3"/></svg>;
-  if (kind === "water") return <svg viewBox="0 0 32 32"><path {...common} d="M16 3S7 14 7 20a9 9 0 0 0 18 0c0-6-9-17-9-17Z"/><path {...common} d="M11 21c1 3 3 4 6 4"/></svg>;
-  if (kind === "moisture") return <svg viewBox="0 0 32 32"><path {...common} d="M6 24c4-8 8-12 12-12 5 0 8 4 8 8 0 5-4 8-9 8H8"/><path {...common} d="M11 14V7h9v5M13 7V4h5v3"/></svg>;
-  if (kind === "food") return <svg viewBox="0 0 32 32"><path {...common} d="M7 16h18a9 9 0 0 1-18 0Z"/><path {...common} d="M11 12c0-3 2-5 5-5m0 5c0-4 3-7 7-7"/></svg>;
-  if (kind === "cleanse") return <svg viewBox="0 0 32 32"><path {...common} d="M9 13h14l-2 14H11L9 13Z"/><path {...common} d="M13 13V8h6v5M23 5l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z"/></svg>;
-  if (kind === "hair") return <svg viewBox="0 0 32 32"><path {...common} d="M8 27V14C8 7 12 3 17 3c6 0 9 5 8 12-3-4-6-6-10-6-3 0-5 2-7 5"/><path {...common} d="M12 11c2 4 2 9-1 14m6-16c2 5 2 11 0 17m5-14c1 5 0 10-2 14"/></svg>;
-  return <svg viewBox="0 0 32 32"><rect {...common} x="3" y="10" width="11" height="9" rx="4"/><rect {...common} x="18" y="10" width="11" height="9" rx="4"/><path {...common} d="M14 13c2-2 2-2 4 0M3 13l-2-1m28 1 2-1"/></svg>;
-}
-
 function sleep(ms: number) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 function announceReportReady() {
@@ -86,13 +65,8 @@ export default function PrepareReportPage() {
   const runId = useRef(0);
   const [steps, setSteps] = useState(BASE_STEPS);
   const [error, setError] = useState("");
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [runKey, setRunKey] = useState(0);
-  const [insightIndex, setInsightIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => setInsightIndex((index) => (index + 1) % INSIGHTS.length), 6200);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     const previous = document.title;
@@ -110,6 +84,7 @@ export default function PrepareReportPage() {
 
     async function run() {
       setError("");
+      setWarnings([]);
       const supabase = createClient();
       const { data: { session: authSession } } = await supabase.auth.getSession();
       if (cancelled || currentRun !== runId.current) return;
@@ -158,9 +133,14 @@ export default function PrepareReportPage() {
             .eq("session_id", sessionId).eq("user_id", userId).eq("style_name", "Style grid");
           if (!hairCount) {
             mark("hairstyle", "active", "Creating six distinct hairstyle recommendations");
-            await call("/api/hairstyle/grid");
+            try {
+              await call("/api/hairstyle/grid");
+            } catch {
+              mark("hairstyle", "skipped", "Preview temporarily unavailable — retry it inside your report");
+              setWarnings((current) => [...current, "Hairstyle previews can be generated from the hairstyle section of your report."]);
+            }
           }
-          mark("hairstyle", "done", "Hairstyle recommendations complete");
+          setSteps((current) => current.map((step) => step.id === "hairstyle" && step.status !== "skipped" ? { ...step, status: "done", detail: "Hairstyle recommendations complete" } : step));
 
           const subjectResponse = await fetch("/api/report-preparation/subject", {
             method: "POST", headers, body: JSON.stringify({ sessionId }),
@@ -172,9 +152,22 @@ export default function PrepareReportPage() {
               .eq("session_id", sessionId).eq("user_id", userId).eq("kind", "beard");
             if (!beardCount) {
               mark("beard", "active", "Creating six distinct beard styles");
-              await call("/api/beard/grid");
+              // Every step in this section is its own real Vertex image-generation
+              // call. Firing them back to back was blowing through Vertex's
+              // per-minute quota for the model — see the beard/frame failure
+              // cluster in error_logs_v2 on 2026-08-07 and 2026-08-14, all
+              // RESOURCE_EXHAUSTED. A few seconds of spacing between calls costs
+              // one user a handful of extra seconds; retrying a quota-exhausted
+              // call costs them the whole preview.
+              await sleep(6000);
+              try {
+                await call("/api/beard/grid");
+              } catch {
+                mark("beard", "skipped", "Preview temporarily unavailable — retry it inside your report");
+                setWarnings((current) => [...current, "Beard previews were temporarily unavailable and have been omitted; the rest of the report is unaffected."]);
+              }
             }
-            mark("beard", "done", "Beard recommendations complete");
+            setSteps((current) => current.map((step) => step.id === "beard" && step.status !== "skipped" ? { ...step, status: "done", detail: "Beard recommendations complete" } : step));
           } else {
             mark("beard", "skipped", "Not applicable to this scanned subject");
           }
@@ -188,6 +181,9 @@ export default function PrepareReportPage() {
             .eq("session_id", sessionId).eq("user_id", userId).maybeSingle();
           if (!colourRow?.data) {
             mark("colour", "active", "Finding your season and best clothing colours");
+            // No spacing needed here: this call is gemini-2.5-flash (text),
+            // a separate quota bucket from the image model the grid/draping
+            // calls below share — it was never part of the failure cluster.
             await call("/api/colour-analysis");
             ({ data: colourRow } = await supabase.from("colour_analysis_v2").select("data")
               .eq("session_id", sessionId).eq("user_id", userId).maybeSingle());
@@ -195,7 +191,14 @@ export default function PrepareReportPage() {
           const colourData = colourRow?.data as { drapings?: unknown } | null;
           if (!colourData?.drapings) {
             mark("colour", "active", "Creating clothing previews in your palette");
-            await call("/api/colour-analysis/draping");
+            // Same quota spacing as the beard step above — generateColourGrid
+            // hits the same image model and quota bucket.
+            await sleep(6000);
+            try {
+              await call("/api/colour-analysis/draping");
+            } catch {
+              setWarnings((current) => [...current, "Clothing previews will be available to retry in your report."]);
+            }
           }
           mark("colour", "done", "Colour and clothing analysis complete");
         } else mark("colour", "skipped", "Not included in this purchase");
@@ -205,9 +208,16 @@ export default function PrepareReportPage() {
             .eq("session_id", sessionId).eq("user_id", userId).eq("frame_name", "Frame grid");
           if (!frameCount) {
             mark("frame", "active", "Fitting six distinct frame styles to your face");
-            await call("/api/frame-tryon/grid");
+            // Same quota spacing as the beard/draping steps above.
+            await sleep(6000);
+            try {
+              await call("/api/frame-tryon/grid");
+            } catch {
+              mark("frame", "skipped", "Preview temporarily unavailable — retry it inside your report");
+              setWarnings((current) => [...current, "Frame previews can be generated from the frames section of your report."]);
+            }
           }
-          mark("frame", "done", "Frame recommendations complete");
+          setSteps((current) => current.map((step) => step.id === "frame" && step.status !== "skipped" ? { ...step, status: "done", detail: "Frame recommendations complete" } : step));
         } else mark("frame", "skipped", "Not included in this purchase");
 
         mark("delivery", "active", "Creating your PDF and sending it to your account email");
@@ -239,6 +249,7 @@ export default function PrepareReportPage() {
   const complete = steps.filter((step) => step.status === "done" || step.status === "skipped").length;
   const active = steps.some((step) => step.status === "active") ? 0.35 : 0;
   const progress = Math.round(((complete + active) / steps.length) * 100);
+  const currentStep = steps.find((step) => step.status === "active");
 
   return (
     <main style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "clamp(3rem, 8vw, 7rem) 2rem" }}>
@@ -274,18 +285,19 @@ export default function PrepareReportPage() {
         </section>
 
         <aside className="v2-prepare-aside">
-        <section className="v2-insight-card" aria-label="Helpful insight while your report is prepared">
-          <div className="v2-insight-art" aria-hidden><InsightIcon kind={INSIGHTS[insightIndex].kind} /></div>
-          <div key={insightIndex} className="v2-insight-copy">
-            <p>{INSIGHTS[insightIndex].eyebrow}</p>
-            <h2>{INSIGHTS[insightIndex].title}</h2>
-            <span>{INSIGHTS[insightIndex].body}</span>
-          </div>
-          <div className="v2-insight-controls" aria-label="Choose an insight">
-            {INSIGHTS.map((insight, index) => <button key={insight.title} type="button" aria-label={`Show insight ${index + 1}`} aria-current={index === insightIndex} onClick={() => setInsightIndex(index)} />)}
-          </div>
+        <section className="v2-status-card" aria-label="Report preparation status">
+          <span className="v2-status-kicker">Now preparing</span>
+          <h2>{currentStep?.label ?? "Finishing your report"}</h2>
+          <p>{currentStep?.detail ?? "Your personalised report is almost ready."}</p>
+          <div className="v2-status-divider" />
+          <ul>
+            <li><i>✓</i><span><strong>Safe to switch tabs</strong>Your preparation continues in this window.</span></li>
+            <li><i>✓</i><span><strong>PDF sent by email</strong>No need to wait and watch the page.</span></li>
+            <li><i>✓</i><span><strong>Your payment is complete</strong>You will never be charged again for a retry.</span></li>
+          </ul>
         </section>
 
+        {warnings.length > 0 && <div className="v2-prepare-warning"><strong>Your report will still finish.</strong><span>{warnings.join(" ")}</span></div>}
         {error && <div style={{ marginTop: "2rem", padding: "1.6rem", borderRadius: "1.2rem", background: "#F8DEDA", color: "#8C3024", fontSize: "1.35rem" }}><p style={{ margin: "0 0 1rem" }}>{error}</p><button type="button" onClick={() => setRunKey((key) => key + 1)} style={{ border: 0, borderRadius: "999px", background: "var(--primary)", color: "#fff", padding: "0.9rem 1.5rem", fontWeight: 700, cursor: "pointer" }}>Retry preparation</button></div>}
         </aside>
         </div>
@@ -307,23 +319,22 @@ export default function PrepareReportPage() {
         .v2-active-status i { width:.28rem; height:.95rem; border-radius:999px; background:#13A897; animation:v2-status-bars .9s ease-in-out infinite; }
         .v2-active-status i:nth-child(2) { animation-delay:.14s; }.v2-active-status i:nth-child(3) { animation-delay:.28s; }
         .v2-active-status b { margin-left:.3rem; font-size:1rem; font-weight:950; letter-spacing:.09em; text-transform:uppercase; }
-        .v2-insight-card { position:relative; display:grid; grid-template-columns:1fr; gap:1.5rem; align-items:start; min-height:27rem; margin-top:0; padding:2.6rem 2.5rem 3rem; overflow:hidden; border:1px solid rgba(19,168,151,.24); border-radius:2rem; background:linear-gradient(145deg,#EAF8F3 0%,#FFF8E8 58%,#FCEDE8 100%); box-shadow:0 .8rem 2.5rem rgba(23,76,64,.07); }
-        .v2-insight-card:after { content:""; position:absolute; width:13rem; height:13rem; right:-5rem; top:-7rem; border-radius:50%; background:rgba(226,168,42,.14); filter:blur(.2rem); }
-        .v2-insight-art { width:6.4rem; height:6.4rem; display:grid; place-items:center; border-radius:1.6rem; background:#fff; color:#08796E; box-shadow:0 .55rem 1.5rem rgba(8,121,110,.13); }
-        .v2-insight-art svg { width:3.2rem; height:3.2rem; }
-        .v2-insight-copy { position:relative; z-index:1; min-width:0; animation:v2-insight-enter .55s ease both; }
-        .v2-insight-copy p { margin:0 0 .35rem; color:#0E8E80; font-size:1rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
-        .v2-insight-copy h2 { margin:0 0 .7rem; color:var(--primary); font-size:1.9rem; font-weight:850; line-height:1.2; letter-spacing:-.02em; }
-        .v2-insight-copy span { display:block; color:var(--secondary); font-size:1.35rem; font-weight:500; line-height:1.55; }
-        .v2-insight-controls { position:absolute; z-index:2; left:2.5rem; bottom:1.25rem; display:flex; gap:.38rem; }
-        .v2-insight-controls button { width:.48rem; height:.48rem; padding:0; border:0; border-radius:999px; background:rgba(8,121,110,.2); cursor:pointer; transition:width .2s ease,background .2s ease; }
-        .v2-insight-controls button[aria-current="true"] { width:1.5rem; background:#0E8E80; }
+        .v2-status-card { padding:2.4rem; border:1px solid var(--line); border-radius:2rem; background:var(--surface); box-shadow:0 .8rem 2.5rem rgba(23,76,64,.05); }
+        .v2-status-kicker { color:#0E8E80; font-size:.95rem; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
+        .v2-status-card h2 { margin:.7rem 0 .55rem; color:var(--primary); font-size:2rem; line-height:1.16; letter-spacing:-.025em; }
+        .v2-status-card > p { margin:0; color:var(--secondary); font-size:1.24rem; line-height:1.55; }
+        .v2-status-divider { height:1px; margin:1.8rem 0; background:var(--line); }
+        .v2-status-card ul { display:grid; gap:1.3rem; margin:0; padding:0; list-style:none; }
+        .v2-status-card li { display:grid; grid-template-columns:2rem 1fr; gap:.8rem; align-items:start; }
+        .v2-status-card li i { display:grid; place-items:center; width:1.75rem; height:1.75rem; border-radius:50%; background:#E2F2EC; color:#167A5A; font-size:.9rem; font-style:normal; font-weight:900; }
+        .v2-status-card li span { color:var(--muted); font-size:1.05rem; line-height:1.45; }
+        .v2-status-card li strong { display:block; margin-bottom:.12rem; color:var(--primary); font-size:1.12rem; }
+        .v2-prepare-warning { display:grid; gap:.35rem; margin-top:1.2rem; padding:1.25rem 1.35rem; border:1px solid #E8D39B; border-radius:1.15rem; background:#FFF9E9; color:#765C17; font-size:1.05rem; line-height:1.45; }
         @keyframes v2-prepare-pulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(.92); opacity:.72; } }
         @keyframes v2-status-bars { 0%,100% { transform:scaleY(.35); opacity:.4; } 50% { transform:scaleY(1); opacity:1; } }
         @keyframes v2-check-travel { 0% { top:0; opacity:0; } 20% { opacity:1; } 80% { opacity:1; } 100% { top:88%; opacity:0; } }
-        @keyframes v2-insight-enter { from { opacity:0; transform:translateY(.5rem); } to { opacity:1; transform:translateY(0); } }
         @keyframes v2-sound-pulse { 0%,100% { transform:scale(1); box-shadow:0 0 0 0 rgba(14,142,128,.24); } 50% { transform:scale(1.06); box-shadow:0 0 0 .55rem rgba(14,142,128,0); } }
-        @media (max-width:900px) { .v2-prepare-progress,.v2-prepare-percent { width:100%; } .v2-prepare-content { grid-template-columns:1fr; } .v2-prepare-aside { position:static; } .v2-insight-card { grid-template-columns:5.4rem 1fr; min-height:0; padding:2rem 2.2rem 2.3rem; } .v2-insight-controls { left:9.1rem; bottom:.75rem; } }
+        @media (max-width:900px) { .v2-prepare-progress,.v2-prepare-percent { width:100%; } .v2-prepare-content { grid-template-columns:1fr; } .v2-prepare-aside { position:static; } }
         @media (max-width:520px) {
           main { padding:2.4rem 1rem 4rem !important; overflow-x:hidden; }
           .v2-prepare-header h1 { font-size:3rem !important; overflow-wrap:anywhere; }
@@ -338,13 +349,9 @@ export default function PrepareReportPage() {
           .v2-active-status { align-self:flex-start; min-width:0; min-height:2rem; padding:.3rem .75rem .3rem .55rem; }
           .v2-active-status b { font-size:.86rem; letter-spacing:.07em; }
           .v2-step-copy > span { max-width:100%; font-size:1.08rem !important; overflow-wrap:anywhere; }
-          .v2-insight-card { grid-template-columns:4.4rem minmax(0,1fr); width:100%; box-sizing:border-box; padding:1.5rem 1.25rem 2.4rem; gap:1rem; border-radius:1.4rem; }
-          .v2-insight-art { width:4.4rem; height:4.4rem; }.v2-insight-art svg { width:2.7rem; height:2.7rem; }
-          .v2-insight-copy h2 { font-size:1.55rem; overflow-wrap:anywhere; }
-          .v2-insight-copy span { font-size:1.15rem; overflow-wrap:anywhere; }
-          .v2-insight-controls { left:6.7rem; }
+          .v2-status-card { padding:1.6rem 1.35rem; border-radius:1.4rem; }
         }
-        @media (prefers-reduced-motion:reduce) { .v2-step-connector i,.v2-active-status i,.v2-insight-copy,.v2-waiting-notice > span { animation:none; } }
+        @media (prefers-reduced-motion:reduce) { .v2-step-connector i,.v2-active-status i,.v2-waiting-notice > span { animation:none; } }
       `}</style>
     </main>
   );
