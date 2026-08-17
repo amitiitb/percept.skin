@@ -53,3 +53,4 @@ VERCEL-GOOGLE-SERVICE-ACCOUNT.json
 # local tooling scratch
 /.playwright-mcp
 /glowmetry-v2
+/.claude
