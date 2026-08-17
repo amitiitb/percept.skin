@@ -118,33 +118,49 @@ function CartSummary({
 // and someone with an Indian card abroad (or an Indian buyer who'd rather use
 // PayPal) has to be able to overrule it.
 function PayMethodToggle({ value, onChange }: { value: PayMethod; onChange: (m: PayMethod) => void }) {
-  const options: { key: PayMethod; label: string; sub: string }[] = [
-    { key: "razorpay", label: "Pay in ₹", sub: "UPI · Cards · Netbanking" },
-    { key: "paypal", label: "Pay in $", sub: "PayPal · Intl. cards" },
+  const options: { key: PayMethod; title: string; badge: string; sub: string; icon: string }[] = [
+    { key: "razorpay", title: "Indian payment", badge: "Pay in ₹ INR", sub: "UPI, Indian cards or netbanking", icon: "₹" },
+    { key: "paypal", title: "International payment", badge: "Pay in $ USD", sub: "PayPal or an international card", icon: "$" },
   ];
   return (
-    <div style={{ display: "flex", gap: "0.8rem", marginBottom: "1.6rem" }}>
-      {options.map((o) => {
-        const active = value === o.key;
-        return (
-          <button
-            key={o.key}
-            type="button"
-            onClick={() => onChange(o.key)}
-            aria-pressed={active}
-            style={{
-              flex: 1, cursor: "pointer", textAlign: "left", minWidth: 0,
-              padding: "1.2rem 1.6rem", borderRadius: "1rem",
-              border: `2px solid ${active ? "var(--primary)" : "var(--line)"}`,
-              background: active ? "var(--wash)" : "var(--canvas)",
-              transition: "border-color 0.15s, background 0.15s",
-            }}
-          >
-            <span style={{ display: "block", fontSize: "1.5rem", fontWeight: 600, color: "var(--primary)" }}>{o.label}</span>
-            <span style={{ display: "block", fontSize: "1.2rem", color: "var(--muted)", marginTop: "0.2rem" }}>{o.sub}</span>
-          </button>
-        );
-      })}
+    <div style={{ marginBottom: "2.8rem" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "1rem", marginBottom: "1.2rem" }}>
+        <p style={{ margin: 0, color: "var(--primary)", fontSize: "1.5rem", fontWeight: 650 }}>2. Choose how you’ll pay</p>
+        <span style={{ color: "var(--muted)", fontSize: "1.15rem" }}>This only changes currency and payment options</span>
+      </div>
+      <div className="v2-payment-options" role="radiogroup" aria-label="Payment region" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        {options.map((o) => {
+          const active = value === o.key;
+          return (
+            <button
+              key={o.key}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(o.key)}
+              style={{
+                cursor: "pointer", textAlign: "left", minWidth: 0, position: "relative",
+                display: "grid", gridTemplateColumns: "4rem 1fr auto", alignItems: "center", gap: "1.2rem",
+                padding: "1.5rem", borderRadius: "1.4rem",
+                border: `2px solid ${active ? "var(--rose)" : "var(--line)"}`,
+                background: active ? "color-mix(in srgb, var(--rose) 9%, var(--surface))" : "var(--surface)",
+                boxShadow: active ? "0 0 0 3px color-mix(in srgb, var(--rose) 12%, transparent)" : "none",
+                transition: "border-color 0.18s, background 0.18s, box-shadow 0.18s, transform 0.18s",
+              }}
+            >
+              <span style={{ width: "4rem", height: "4rem", borderRadius: "50%", display: "grid", placeItems: "center", background: active ? "var(--rose)" : "var(--wash)", color: active ? "#09231f" : "var(--primary)", fontSize: "1.7rem", fontWeight: 750 }}>{o.icon}</span>
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: "block", fontSize: "1.4rem", fontWeight: 650, color: "var(--primary)" }}>{o.title}</span>
+                <span style={{ display: "block", fontSize: "1.15rem", color: "var(--muted)", marginTop: "0.25rem" }}>{o.sub}</span>
+                <span style={{ display: "block", fontSize: "1.2rem", color: active ? "var(--rose)" : "var(--secondary)", fontWeight: 650, marginTop: "0.55rem" }}>{o.badge}</span>
+              </span>
+              <span aria-hidden="true" style={{ width: "2rem", height: "2rem", borderRadius: "50%", border: `2px solid ${active ? "var(--rose)" : "var(--line-strong)"}`, display: "grid", placeItems: "center" }}>
+                {active && <span style={{ width: "1rem", height: "1rem", borderRadius: "50%", background: "var(--rose)" }} />}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -162,6 +178,10 @@ export default function V2BundlePage() {
   const [failReason, setFailReason] = useState<string | null>(null);
   const [payState, setPayState] = useState<PayState>("idle");
   const [payError, setPayError] = useState("");
+  const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+  const [paypalStatus, setPaypalStatus] = useState<"loading" | "ready" | "missing" | "failed">(
+    paypalClientId ? "loading" : "missing",
+  );
   // Rupees are preselected for buyers who look Indian, USD for everyone else.
   // Resolved in the initialiser rather than an effect: on the server there is
   // no navigator to read, so it falls back to PayPal there — safe, because
@@ -200,6 +220,11 @@ export default function V2BundlePage() {
 
   const isInr = payMethod === "razorpay";
   const formatPrice = (usd: number) => (isInr ? formatInr(usdToInr(usd)) : `$${usd}`);
+  const paypalMessage = paypalStatus === "missing"
+    ? "PayPal Sandbox is not configured. Add a sandbox client ID and secret, then restart the app."
+    : paypalStatus === "failed"
+      ? "PayPal checkout could not load. Check your connection and try again."
+      : paypalStatus === "loading" ? "Loading secure PayPal checkout…" : "";
   // Derived exactly the way the server derives the order amount — one
   // conversion of the summed dollars, never a sum of separate conversions, so
   // the figure on the button is the figure that gets charged.
@@ -309,12 +334,13 @@ export default function V2BundlePage() {
   useEffect(() => {
     if (!authChecked || scriptLoadedRef.current) return;
     scriptLoadedRef.current = true;
-    const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
-    if (!clientId) return;
-    if (window.paypal) { renderButton(); renderConsultButton(); renderComboButton(); return; }
+    const clientId = paypalClientId;
+    if (!clientId) { setPaypalStatus("missing"); return; }
+    if (window.paypal) { setPaypalStatus("ready"); renderButton(); renderConsultButton(); renderComboButton(); return; }
     const script = document.createElement("script");
     script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
-    script.onload = () => { renderButton(); renderConsultButton(); renderComboButton(); };
+    script.onload = () => { setPaypalStatus("ready"); renderButton(); renderConsultButton(); renderComboButton(); };
+    script.onerror = () => setPaypalStatus("failed");
     document.body.appendChild(script);
   }, [authChecked]);
 
@@ -336,7 +362,7 @@ export default function V2BundlePage() {
     // re-ran it when the div actually mounted — the $20 button never
     // appeared at all. This effect firing again on that transition is what
     // actually renders it.
-  }, [selected, purchasePath]);
+  }, [selected, purchasePath, payMethod, paypalStatus]);
 
   function renderButton() {
     if (!window.paypal || !buttonRef.current) return;
@@ -618,14 +644,17 @@ export default function V2BundlePage() {
           @keyframes analysis-border-flow { to { background-position:0 0,300% 0; } }
           @keyframes analysis-breathe { 0%,100% { box-shadow:0 .8rem 2.4rem rgba(23,76,64,.08),0 0 0 0 rgba(19,168,151,.08); } 50% { box-shadow:0 1rem 3rem rgba(23,76,64,.14),0 0 0 .45rem rgba(19,168,151,.08); } }
           @keyframes analysis-shine { 0%,18% { left:-25%; opacity:0; } 45% { opacity:1; } 72%,100% { left:112%; opacity:0; } }
+          @media (max-width:600px) {
+            .v2-purchase-path-tiles,.v2-payment-options { grid-template-columns:1fr!important; }
+          }
           @media (prefers-reduced-motion:reduce) { .analysis-status-pill.is-active,.analysis-status-shine { animation:none; } }
         `}</style>
 
         <div style={{ textAlign: "center", marginBottom: "3.2rem" }}>
           <h1 style={{ fontSize: "clamp(2.8rem, 6vw, 3.8rem)", fontWeight: 400, color: "var(--primary)", letterSpacing: "-0.02em", marginBottom: "1.2rem" }}>
-            Choose your report
+            Choose what you want to unlock
           </h1>
-          <p style={{ fontSize: "1.6rem", color: "var(--secondary)" }}>Unlock the insights that matter to you</p>
+          <p style={{ fontSize: "1.6rem", color: "var(--secondary)" }}>Start with your AI beauty report, book an expert, or get both.</p>
           {stage === "complete" && (
             <button
               onClick={() => router.push(`/report/${sessionId}`)}
@@ -639,10 +668,6 @@ export default function V2BundlePage() {
         {/* Currency first, above every price on the page. It used to sit down
             beside each pay button, which meant the whole card was quoting USD
             with the control that changes it out of sight below the fold. */}
-        <div style={{ marginBottom: "2.4rem" }}>
-          <PayMethodToggle value={payMethod} onChange={setPayMethod} />
-        </div>
-
         {/* ── 3 clear paths: report only, consultation only, or both. Picking
             a segment toggles which checkout section is visible below — both
             sections stay permanently mounted (never unmount buttonRef/
@@ -651,10 +676,11 @@ export default function V2BundlePage() {
             segmented pill (shared-layout sliding highlight) instead of 3
             separate boxed tiles — reads as one deliberate control, not a
             grid of rectangles. ── */}
-        <div className="v2-purchase-path-tiles" style={{ position: "relative", marginBottom: "3.6rem", display: "flex", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "0.5rem" }}>
+        <p style={{ margin: "0 0 1.2rem", color: "var(--primary)", fontSize: "1.5rem", fontWeight: 650 }}>1. Choose your experience</p>
+        <div className="v2-purchase-path-tiles" role="radiogroup" aria-label="Choose your experience" style={{ position: "relative", marginBottom: "3.2rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
           {([
-            { key: "report" as const, label: "Report", price: BUNDLE_PRICE },
-            { key: "consultation" as const, label: "Consultation", price: DOCTOR_CONSULTATION_PRICE },
+            { key: "report" as const, label: "AI Beauty Report", description: "Instant personalized analysis and recommendations", price: BUNDLE_PRICE, tag: "Most popular", icon: "✦" },
+            { key: "consultation" as const, label: "Doctor Consultation", description: "One-to-one guidance from a skin professional", price: DOCTOR_CONSULTATION_PRICE, tag: "Expert advice", icon: "+" },
           ]).map((tile) => {
             // A tile click always lands on that single clean view — the "+"
             // button below either card is what combines them, not these tabs.
@@ -662,26 +688,36 @@ export default function V2BundlePage() {
             return (
               <button
                 key={tile.key}
+                type="button"
+                role="radio"
+                aria-checked={active}
                 onClick={() => setPurchasePath(tile.key)}
                 style={{
-                  position: "relative", flex: 1, zIndex: 1, cursor: "pointer", background: "none", border: "none",
-                  padding: "1.2rem 0.6rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.3rem",
-                  minWidth: 0,
+                  position: "relative", cursor: "pointer", textAlign: "left", minWidth: 0,
+                  padding: "1.8rem", display: "grid", gridTemplateColumns: "4rem 1fr", gap: "1.2rem",
+                  background: active ? "var(--panel)" : "var(--surface)", border: `2px solid ${active ? "var(--rose)" : "var(--line)"}`,
+                  borderRadius: "1.6rem", boxShadow: active ? "0 1.2rem 3.2rem color-mix(in srgb, var(--shadow-strong) 45%, transparent)" : "none",
+                  transition: "background .2s, border-color .2s, box-shadow .2s, transform .2s",
                 }}
               >
-                {active && (
-                  <motion.div
-                    layoutId="planPill"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    style={{ position: "absolute", inset: "0.2rem", background: "var(--panel)", borderRadius: "1.2rem", zIndex: -1 }}
-                  />
-                )}
-                <span style={{ fontSize: "1.3rem", fontWeight: 600, color: active ? "#fff" : "var(--secondary)", lineHeight: 1.2, transition: "color 0.2s" }}>{tile.label}</span>
-                <span style={{ fontSize: "1.9rem", fontWeight: 800, color: active ? "#fff" : "var(--primary)", transition: "color 0.2s" }}>{formatPrice(tile.price)}</span>
+                <span style={{ width: "4rem", height: "4rem", borderRadius: "1.1rem", display: "grid", placeItems: "center", background: active ? "var(--rose)" : "var(--wash)", color: active ? "#09231f" : "var(--primary)", fontSize: "1.8rem", fontWeight: 700 }}>{tile.icon}</span>
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: ".8rem" }}>
+                    <span style={{ fontSize: "1.45rem", fontWeight: 700, color: active ? "#fff" : "var(--primary)", lineHeight: 1.2 }}>{tile.label}</span>
+                    <span style={{ width: "2rem", height: "2rem", borderRadius: "50%", flexShrink: 0, border: `2px solid ${active ? "var(--rose)" : "var(--line-strong)"}`, display: "grid", placeItems: "center" }}>{active && <span style={{ width: "1rem", height: "1rem", borderRadius: "50%", background: "var(--rose)" }} />}</span>
+                  </span>
+                  <span style={{ display: "block", marginTop: ".55rem", fontSize: "1.15rem", lineHeight: 1.4, color: active ? "rgba(255,255,255,.67)" : "var(--muted)" }}>{tile.description}</span>
+                  <span style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "1rem", marginTop: "1.2rem" }}>
+                    <span style={{ fontSize: "1.05rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".07em", color: active ? "var(--rose)" : "var(--secondary)" }}>{tile.tag}</span>
+                    <strong style={{ fontSize: "1.8rem", fontWeight: 750, color: active ? "#fff" : "var(--primary)" }}>{formatPrice(tile.price)}</strong>
+                  </span>
+                </span>
               </button>
             );
           })}
         </div>
+
+        <PayMethodToggle value={payMethod} onChange={setPayMethod} />
 
         <div style={{ display: purchasePath === "report" || purchasePath === "combo" ? "block" : "none" }}>
         {purchasePath === "combo" && (
@@ -821,6 +857,7 @@ export default function V2BundlePage() {
                   node once and re-rendering it on every currency switch would
                   tear down and rebuild the iframe for no reason. */}
               <div style={{ display: isInr ? "none" : "block" }}>
+                {paypalMessage && <p role="status" style={{ padding: "1.4rem 1.6rem", border: "1px solid var(--line)", borderRadius: "1rem", background: "var(--surface)", color: paypalStatus === "failed" ? "#C8503A" : "var(--secondary)", fontSize: "1.25rem", lineHeight: 1.45, textAlign: "center" }}>{paypalMessage}</p>}
                 <div ref={buttonRef} />
               </div>
             </div>
@@ -904,6 +941,7 @@ export default function V2BundlePage() {
                         />
                       )}
                       <div style={{ display: isInr ? "none" : "block" }}>
+                        {paypalMessage && <p role="status" style={{ padding: "1.4rem 1.6rem", border: "1px solid var(--line)", borderRadius: "1rem", background: "var(--surface)", color: paypalStatus === "failed" ? "#C8503A" : "var(--secondary)", fontSize: "1.25rem", lineHeight: 1.45, textAlign: "center" }}>{paypalMessage}</p>}
                         <div ref={consultButtonRef} />
                       </div>
                     </div>
@@ -956,6 +994,7 @@ export default function V2BundlePage() {
                 />
               )}
               <div style={{ display: isInr ? "none" : "block" }}>
+                {paypalMessage && <p role="status" style={{ padding: "1.4rem 1.6rem", border: "1px solid var(--line)", borderRadius: "1rem", background: "var(--surface)", color: paypalStatus === "failed" ? "#C8503A" : "var(--secondary)", fontSize: "1.25rem", lineHeight: 1.45, textAlign: "center" }}>{paypalMessage}</p>}
                 <div ref={comboButtonRef} />
               </div>
             </div>
