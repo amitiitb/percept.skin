@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { IconPhoto } from "@/components/ui/icons";
+import {
+  LensTexture, RIGHT_EYE_UPPER, RIGHT_EYE_LOWER, LEFT_EYE_UPPER, LEFT_EYE_LOWER, drawContactLensEye,
+} from "./contactLens";
 
 interface FrameDef {
   id: string; name: string; file: string;
@@ -8,7 +11,13 @@ interface FrameDef {
   precision?: boolean;
 }
 
-export default function LiveEyewearTryOn({ frame }: { frame: FrameDef }) {
+interface Props {
+  frame: FrameDef;
+  lensType?: "eyeglasses" | "sunglasses" | "contacts";
+  contactLens?: LensTexture;
+}
+
+export default function LiveEyewearTryOn({ frame, lensType = "eyeglasses", contactLens }: Props) {
   const videoRef    = useRef<HTMLVideoElement>(null);
   const canvasRef   = useRef<HTMLCanvasElement>(null);
   const rafRef      = useRef<number>(0);
@@ -16,6 +25,9 @@ export default function LiveEyewearTryOn({ frame }: { frame: FrameDef }) {
   const detectorRef = useRef<{ detectForVideo: (v: HTMLVideoElement, ts: number) => { faceLandmarks?: { x: number; y: number }[][] }; close: () => void } | null>(null);
   const frameImgRef = useRef<HTMLImageElement | null>(null);
   const frameRef    = useRef(frame);
+  const lensTypeRef = useRef(lensType);
+  const lensImgRef  = useRef<HTMLImageElement | null>(null);
+  const lensDefRef  = useRef<LensTexture | undefined>(contactLens);
   const [status, setStatus] = useState<"starting" | "active" | "denied" | "error">("starting");
 
   useEffect(() => {
@@ -24,6 +36,15 @@ export default function LiveEyewearTryOn({ frame }: { frame: FrameDef }) {
     img.onload = () => { frameImgRef.current = img; };
     img.src = frame.file;
   }, [frame]);
+
+  useEffect(() => {
+    lensTypeRef.current = lensType;
+    lensDefRef.current = contactLens;
+    if (!contactLens) return;
+    const img = new window.Image();
+    img.onload = () => { lensImgRef.current = img; };
+    img.src = contactLens.file;
+  }, [lensType, contactLens]);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,33 +74,79 @@ export default function LiveEyewearTryOn({ frame }: { frame: FrameDef }) {
           ctx.save(); ctx.translate(cw, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0, cw, ch); ctx.restore();
           const result = det.detectForVideo(video, ts);
           const lm = result.faceLandmarks?.[0];
-          const fImg = frameImgRef.current; const fd = frameRef.current;
-          if (lm && fImg) {
-            function ec(irisIdx: number, fallback: number[]) {
-              const p = lm![irisIdx];
-              const raw = p ? { x: p.x, y: p.y } : (() => { const pts = fallback.map(i => lm![i]).filter(Boolean); return { x: pts.reduce((s,q)=>s+q.x,0)/pts.length, y: pts.reduce((s,q)=>s+q.y,0)/pts.length }; })();
-              return { x: (1-raw.x)*cw, y: raw.y*ch };
+          if (lensTypeRef.current === "contacts") {
+            const lensImg = lensImgRef.current; const lensDef = lensDefRef.current;
+            if (lm && lensImg && lensDef) {
+              // Same mirroring the frame path already applies to the iris
+              // centres (canvas is drawn flipped so the preview reads like a
+              // mirror) — extended here to every eyelid-contour point, since
+              // the aperture mask needs the full polygon in mirrored space,
+              // not just a centre point.
+              const mp = (idx: number) => { const p = lm[idx]; return p ? { x: (1 - p.x) * cw, y: p.y * ch } : null; };
+              const isPt = (p: { x: number; y: number } | null): p is { x: number; y: number } => p !== null;
+              function eyelidPolygon(upperIdx: number[], lowerIdx: number[]) {
+                const upper = upperIdx.map(mp).filter(isPt);
+                const lowerRev = lowerIdx.slice().reverse().map(mp).filter(isPt);
+                return [...upper, ...lowerRev];
+              }
+              function eyeAngle(outerIdx: number, innerIdx: number) {
+                const o = mp(outerIdx), inn = mp(innerIdx);
+                return o && inn ? Math.atan2(inn.y - o.y, inn.x - o.x) : 0;
+              }
+              function irisRadiusPx(centerIdx: number, ringIdxs: number[]) {
+                const c = mp(centerIdx);
+                if (!c) return 0;
+                const ring = ringIdxs.map(mp).filter(isPt);
+                if (!ring.length) return 0;
+                return ring.reduce((s, p) => s + Math.hypot(p.x - c.x, p.y - c.y), 0) / ring.length;
+              }
+              const lC = mp(468), rC = mp(473);
+              const lR = irisRadiusPx(468, [469, 470, 471, 472]);
+              const rR = irisRadiusPx(473, [474, 475, 476, 477]);
+              if (lC && lR > 0) {
+                drawContactLensEye({
+                  mainCtx: ctx, texture: lensImg, textureFill: lensDef.fill,
+                  cx: lC.x, cy: lC.y, rPx: lR, angle: eyeAngle(33, 133),
+                  lidPoly: eyelidPolygon(RIGHT_EYE_UPPER, RIGHT_EYE_LOWER),
+                });
+              }
+              if (rC && rR > 0) {
+                drawContactLensEye({
+                  mainCtx: ctx, texture: lensImg, textureFill: lensDef.fill,
+                  cx: rC.x, cy: rC.y, rPx: rR, angle: eyeAngle(263, 362),
+                  lidPoly: eyelidPolygon(LEFT_EYE_UPPER, LEFT_EYE_LOWER),
+                });
+              }
             }
-            const e468 = ec(468, [33,133,159,145]); const e473 = ec(473, [263,362,386,374]);
-            const [le,re] = e468.x < e473.x ? [e468,e473] : [e473,e468];
-            const angle = Math.atan2(re.y-le.y, re.x-le.x); const pd = Math.hypot(re.x-le.x, re.y-le.y);
-            const mx = (le.x+re.x)/2; const my = (le.y+re.y)/2;
-            const iw = fImg.naturalWidth; const ih = fImg.naturalHeight;
-            const precisionScale = pd / ((fd.rx - fd.lx) * iw);
-            const legacyScale = (pd * 1.15) / ((fd.rx - fd.lx) * iw);
-            const scale = fd.precision
-              ? Math.min(precisionScale, (cw * 0.96) / iw, (ch * 0.42) / ih)
-              : Math.min(legacyScale, (cw * 0.72) / iw, (ch * 0.35) / ih);
-            const dw=iw*scale; const dh=ih*scale;
-            ctx.save(); ctx.translate(mx,my); ctx.rotate(angle);
-            if (fd.precision) {
-              const anchorX = ((fd.lx + fd.rx) / 2) * dw;
-              const anchorY = ((fd.ly + fd.ry) / 2) * dh;
-              ctx.drawImage(fImg, -anchorX, -anchorY, dw, dh);
-            } else {
-              ctx.drawImage(fImg,-pd/2-fd.lx*dw,-fd.ly*dh,dw,dh);
+          } else {
+            const fImg = frameImgRef.current; const fd = frameRef.current;
+            if (lm && fImg) {
+              function ec(irisIdx: number, fallback: number[]) {
+                const p = lm![irisIdx];
+                const raw = p ? { x: p.x, y: p.y } : (() => { const pts = fallback.map(i => lm![i]).filter(Boolean); return { x: pts.reduce((s,q)=>s+q.x,0)/pts.length, y: pts.reduce((s,q)=>s+q.y,0)/pts.length }; })();
+                return { x: (1-raw.x)*cw, y: raw.y*ch };
+              }
+              const e468 = ec(468, [33,133,159,145]); const e473 = ec(473, [263,362,386,374]);
+              const [le,re] = e468.x < e473.x ? [e468,e473] : [e473,e468];
+              const angle = Math.atan2(re.y-le.y, re.x-le.x); const pd = Math.hypot(re.x-le.x, re.y-le.y);
+              const mx = (le.x+re.x)/2; const my = (le.y+re.y)/2;
+              const iw = fImg.naturalWidth; const ih = fImg.naturalHeight;
+              const precisionScale = pd / ((fd.rx - fd.lx) * iw);
+              const legacyScale = (pd * 1.15) / ((fd.rx - fd.lx) * iw);
+              const scale = fd.precision
+                ? Math.min(precisionScale, (cw * 0.96) / iw, (ch * 0.42) / ih)
+                : Math.min(legacyScale, (cw * 0.72) / iw, (ch * 0.35) / ih);
+              const dw=iw*scale; const dh=ih*scale;
+              ctx.save(); ctx.translate(mx,my); ctx.rotate(angle);
+              if (fd.precision) {
+                const anchorX = ((fd.lx + fd.rx) / 2) * dw;
+                const anchorY = ((fd.ly + fd.ry) / 2) * dh;
+                ctx.drawImage(fImg, -anchorX, -anchorY, dw, dh);
+              } else {
+                ctx.drawImage(fImg,-pd/2-fd.lx*dw,-fd.ly*dh,dw,dh);
+              }
+              ctx.restore();
             }
-            ctx.restore();
           }
           rafRef.current = requestAnimationFrame(loop);
         }
@@ -115,7 +182,7 @@ export default function LiveEyewearTryOn({ frame }: { frame: FrameDef }) {
       </div>
       {status === "active" && (
         <button
-          onClick={() => { const a = document.createElement("a"); a.href = canvasRef.current?.toDataURL("image/jpeg",0.92) ?? ""; a.download = `percept-live-${frame.id}.jpg`; a.click(); }}
+          onClick={() => { const label = lensType === "contacts" && contactLens ? `contacts-${contactLens.id}` : frame.id; const a = document.createElement("a"); a.href = canvasRef.current?.toDataURL("image/jpeg",0.92) ?? ""; a.download = `percept-live-${label}.jpg`; a.click(); }}
           style={{ marginTop: "1.2rem", height: "4.8rem", padding: "0 2.8rem", background: "var(--btn-fill)", color: "var(--btn-fill-ink)", border: "none", borderRadius: "9999px", fontSize: "1.5rem", fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.8rem" }}
         >
           <IconPhoto size={1.6} />

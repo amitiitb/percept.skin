@@ -95,6 +95,16 @@ export function IconGlasses(p: IconProps) {
   );
 }
 
+/** Contact lens try-on: an eye with an iris. */
+export function IconEye(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M2.4 12s3.8-6.6 9.6-6.6S21.6 12 21.6 12 17.8 18.6 12 18.6 2.4 12 2.4 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </Svg>
+  );
+}
+
 /** Live try-on: a camera with a record dot. */
 export function IconLiveCamera(p: IconProps) {
   return (
@@ -222,6 +232,18 @@ export function IconClock(p: IconProps) {
     <Svg {...p}>
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 7.5V12l3 2" />
+    </Svg>
+  );
+}
+
+/** Neutral caveat/note marker — distinct from IconShield's trust-claim
+ *  meaning: this flags a limitation or scope note, not a guarantee. */
+export function IconInfo(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5.5" />
+      <circle cx="12" cy="8" r="0.25" fill="currentColor" stroke="currentColor" strokeWidth="2.5" />
     </Svg>
   );
 }
