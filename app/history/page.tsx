@@ -11,6 +11,7 @@ export default function V2HistoryPage() {
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);
+  const [thumbs, setThumbs] = useState<Record<string, string>>({});
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -18,8 +19,39 @@ export default function V2HistoryPage() {
       const { data } = await supabase.from("analysis_sessions_v2")
         .select("id, overall_score, skin_age, status, created_at")
         .eq("user_id", user.id).order("created_at", { ascending: false });
-      setRows((data as Row[]) ?? []);
+      const sessions = (data as Row[]) ?? [];
+      setRows(sessions);
       setLoading(false);
+
+      // Best-effort thumbnail pass, kept separate from the row fetch above so
+      // a signing failure only leaves cards without a photo rather than
+      // blocking the whole list from rendering.
+      if (sessions.length) {
+        const { data: photoRows } = await supabase.from("analysis_photos_v2")
+          .select("session_id, photo_type, storage_path")
+          .in("session_id", sessions.map((s) => s.id))
+          .in("photo_type", ["face_front", "face_detail"]);
+        if (photoRows?.length) {
+          // One photo per session — face_front over face_detail when a
+          // session has both, same preference order as lib/v2/sessionPhoto.ts.
+          const bestPerSession = new Map<string, { photo_type: string; storage_path: string }>();
+          for (const p of photoRows) {
+            const existing = bestPerSession.get(p.session_id);
+            if (!existing || (existing.photo_type !== "face_front" && p.photo_type === "face_front")) {
+              bestPerSession.set(p.session_id, p);
+            }
+          }
+          const entries = await Promise.all(
+            Array.from(bestPerSession.entries()).map(async ([sessionId, p]) => {
+              const { data: signed } = await supabase.storage.from("photos_v2").createSignedUrl(p.storage_path, 60 * 60 * 24 * 7);
+              return signed?.signedUrl ? [sessionId, signed.signedUrl] as const : null;
+            }),
+          );
+          const map: Record<string, string> = {};
+          for (const e of entries) { if (e) map[e[0]] = e[1]; }
+          setThumbs(map);
+        }
+      }
     });
   }, []);
 
@@ -78,13 +110,25 @@ export default function V2HistoryPage() {
                 const scanNumber = rows.length - index;
                 return (
                   <button key={r.id} className="history-card" onClick={() => r.status === "complete" && router.push(`/report/${r.id}`)} disabled={r.status !== "complete"}>
-                    <span className="history-rail" aria-hidden><i>{scanNumber}</i></span>
+                    <div className="history-photo">
+                      {thumbs[r.id] ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs expire; next/image's remote-pattern allowlist and cache don't suit a URL that rotates every fetch.
+                        <img className="history-thumb" src={thumbs[r.id]} alt="" />
+                      ) : (
+                        <span className="history-thumb history-thumb-empty" aria-hidden />
+                      )}
+                      <span className="history-photo-badge" aria-hidden>{scanNumber}</span>
+                      {index === 0 && <span className="history-latest">Latest</span>}
+                    </div>
                     <div className="history-card-content">
                       <div className="history-card-top">
-                        <div>
-                          <span className="history-number">Scan {scanNumber}</span>
-                          {index === 0 && <span className="history-latest">Latest</span>}
-                          <strong className="history-date">{new Date(r.created_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}</strong>
+                        <div className="history-card-title">
+                          <strong className="history-number">Scan {scanNumber}</strong>
+                          <span className="history-date">
+                            {new Date(r.created_at).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                            {" · "}
+                            {new Date(r.created_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                          </span>
                         </div>
                         <span className={`history-status ${r.status}`}>{r.status === "complete" ? "Ready" : "Processing"}</span>
                       </div>
@@ -96,13 +140,15 @@ export default function V2HistoryPage() {
                             <strong>{r.overall_score ?? "—"}<span>{r.overall_score !== null ? "/100" : ""}</span></strong>
                             <div className="history-score-track" aria-hidden><i style={{ width: `${r.overall_score ?? 0}%` }} /></div>
                           </div>
-                          <div>
-                            <small>Change from prior scan</small>
+                          <span className="history-stat-divider" aria-hidden />
+                          <div className="history-stat">
+                            <small>Change</small>
                             <strong className={scoreChange !== null && scoreChange < 0 ? "negative" : "positive"}>
-                              {scoreChange === null ? "First result" : `${scoreChange >= 0 ? "+" : ""}${scoreChange} points`}
+                              {scoreChange === null ? "First scan" : `${scoreChange >= 0 ? "+" : ""}${scoreChange} pts`}
                             </strong>
                           </div>
-                          <div><small>Estimated skin age</small><strong>{r.skin_age ?? "—"}</strong></div>
+                          <span className="history-stat-divider" aria-hidden />
+                          <div className="history-stat"><small>Skin age</small><strong>{r.skin_age ?? "—"}</strong></div>
                         </div>
                       ) : (
                         <div className="history-processing-copy"><i /><span>Your photos are being analysed. Results will appear here when ready.</span></div>
@@ -132,43 +178,53 @@ export default function V2HistoryPage() {
         .history-sequence-heading span, .history-sequence-heading small { display: block; }
         .history-sequence-heading span { color: var(--primary); font-size: 1.45rem; font-weight: 700; }
         .history-sequence-heading small { margin-top: 0.3rem; color: var(--secondary); font-size: 1.1rem; font-weight: 550; }
-        .history-list { display: flex; flex-direction: column; gap: 1rem; }
-        .history-card { position: relative; display: grid; grid-template-columns: 5.2rem minmax(0, 1fr); width: 100%; padding: 0; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 1.4rem; background: var(--surface); color: var(--primary); text-align: left; cursor: pointer; transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease; }
-        .history-card:not(:disabled):hover { border-color: var(--primary); box-shadow: 0 0.8rem 2.4rem rgba(13, 61, 51, 0.08); transform: translateY(-1px); }
+        .history-list { display: flex; flex-direction: column; gap: 1.4rem; }
+        .history-card { position: relative; display: grid; grid-template-columns: 14rem minmax(0, 1fr); width: 100%; min-height: 15.5rem; padding: 0; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 1.8rem; background: var(--surface); color: var(--primary); text-align: left; cursor: pointer; transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease; }
+        .history-card:not(:disabled):hover { border-color: var(--primary); box-shadow: 0 1rem 2.8rem rgba(13, 61, 51, 0.1); transform: translateY(-2px); }
         .history-card:focus-visible { outline: 3px solid rgba(20, 155, 132, 0.3); outline-offset: 3px; }
         .history-card:disabled { cursor: default; }
-        .history-rail { display: flex; align-items: flex-start; justify-content: center; padding-top: 2rem; background: var(--wash); border-right: 1px solid var(--line); }
-        .history-rail i { display: flex; align-items: center; justify-content: center; width: 2.8rem; height: 2.8rem; border-radius: 50%; background: var(--primary); color: var(--surface); font-size: 1.15rem; font-style: normal; font-weight: 750; }
-        .history-card-content { min-width: 0; padding: 2rem 2.2rem 1.6rem; }
-        .history-card-top, .history-card-action { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-        .history-card-top > div { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7rem; }
-        .history-number { color: var(--primary); font-size: 1.15rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-        .history-latest { padding: 0.25rem 0.65rem; border-radius: 999px; background: var(--wash); color: #087F70; font-size: 0.95rem; font-weight: 750; text-transform: uppercase; letter-spacing: 0.05em; }
-        .history-date { flex-basis: 100%; color: var(--secondary); font-size: 1.18rem; font-weight: 600; }
-        .history-status { padding: 0.5rem 1rem; border-radius: 999px; background: rgba(47,112,71,0.13); color: #235C38; font-size: 1.05rem; font-weight: 750; }
+        /* Full-height photo panel — sized generously and cropped only at the
+           very top/bottom so a normal front-facing capture shows the whole
+           face, not a thin cropped strip. */
+        .history-photo { position: relative; background: var(--wash); border-right: 1px solid var(--line); }
+        .history-thumb { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 25%; }
+        .history-thumb-empty { display: block; }
+        .history-photo-badge { position: absolute; top: 1rem; left: 1rem; display: flex; align-items: center; justify-content: center; min-width: 2.6rem; height: 2.6rem; padding: 0 0.4rem; border-radius: 999px; background: rgba(13, 48, 40, 0.62); backdrop-filter: blur(3px); color: #fff; font-size: 1.2rem; font-weight: 750; }
+        .history-photo .history-latest { position: absolute; top: 1rem; right: 1rem; padding: 0.3rem 0.75rem; border-radius: 999px; background: rgba(255,255,255,0.92); color: #087F70; font-size: 0.95rem; font-weight: 750; text-transform: uppercase; letter-spacing: 0.05em; }
+        .history-card-content { display: flex; flex-direction: column; min-width: 0; padding: 2rem 2.4rem 1.6rem; }
+        .history-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.4rem; }
+        .history-card-title { display: flex; flex-direction: column; gap: 0.35rem; }
+        .history-number { color: var(--primary); font-size: 1.7rem; font-weight: 750; letter-spacing: -0.01em; }
+        .history-date { color: var(--secondary); font-size: 1.2rem; font-weight: 550; }
+        .history-status { flex-shrink: 0; padding: 0.5rem 1rem; border-radius: 999px; background: rgba(47,112,71,0.13); color: #235C38; font-size: 1.05rem; font-weight: 750; }
         .history-status.processing { background: rgba(172,115,9,0.14); color: #785006; }
-        .history-card-body { display: grid; grid-template-columns: 1.3fr 1fr 0.8fr; align-items: end; gap: 2rem; padding: 1.8rem 0; }
-        .history-card-body div { min-width: 0; }
-        .history-card-body small, .history-card-body strong { display: block; }
-        .history-card-body small { margin-bottom: 0.55rem; color: var(--secondary); font-size: 1.08rem; font-weight: 600; }
-        .history-card-body strong { color: var(--primary); font-size: 1.5rem; font-weight: 650; }
-        .history-card-body strong span { color: var(--secondary); font-size: 1rem; font-weight: 550; }
-        .history-score-track { width: 100%; max-width: 18rem; height: 0.45rem; margin-top: 0.7rem; overflow: hidden; border-radius: 999px; background: var(--wash); }
+        .history-card-body { display: flex; align-items: stretch; gap: 1.8rem; flex: 1; padding: 1.6rem 0; }
+        .history-score-block, .history-stat { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .history-score-block { flex: 1.4; }
+        .history-stat { flex: 1; }
+        .history-stat-divider { flex-shrink: 0; width: 1px; background: var(--line); }
+        .history-score-block small, .history-stat small, .history-score-block strong, .history-stat strong { display: block; }
+        .history-score-block small, .history-stat small { margin-bottom: 0.55rem; color: var(--secondary); font-size: 1.05rem; font-weight: 600; }
+        .history-score-block strong, .history-stat strong { color: var(--primary); font-size: 1.6rem; font-weight: 700; }
+        .history-score-block strong span { color: var(--secondary); font-size: 1rem; font-weight: 550; }
+        .history-score-track { width: 100%; max-width: 18rem; height: 0.5rem; margin-top: 0.8rem; overflow: hidden; border-radius: 999px; background: var(--wash); }
         .history-score-track i { display: block; height: 100%; border-radius: inherit; background: #168271; }
-        .history-processing-copy { display: flex; align-items: center; gap: 0.9rem; min-height: 6.5rem; color: var(--secondary); font-size: 1.25rem; font-weight: 550; }
+        .history-processing-copy { display: flex; align-items: center; gap: 0.9rem; flex: 1; min-height: 6.5rem; color: var(--secondary); font-size: 1.25rem; font-weight: 550; }
         .history-processing-copy i { width: 0.9rem; height: 0.9rem; border-radius: 50%; background: #AC7309; box-shadow: 0 0 0 0.45rem rgba(172,115,9,0.12); }
-        .history-card-action { padding-top: 1.4rem; border-top: 1px solid var(--line-strong); color: #087F70; font-size: 1.22rem; font-weight: 750; }
+        .history-card-action { padding-top: 1.4rem; border-top: 1px solid var(--line-strong); color: #087F70; font-size: 1.22rem; font-weight: 750; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
         @media (max-width: 700px) {
           .history-page { padding: 3.2rem 2rem 6rem !important; }
           .history-summary { grid-template-columns: repeat(2, 1fr); gap: 1.8rem 0; padding: 1.8rem; }
           .history-summary > div { padding: 0 1.4rem; }
           .history-summary > div:nth-child(2) { border-right: 0; }
           .history-summary > div:nth-child(3) { padding-left: 0; }
-          .history-card { grid-template-columns: 4.2rem minmax(0, 1fr); }
+          .history-card { grid-template-columns: 1fr; min-height: 0; }
+          .history-photo { height: 16rem; border-right: 0; border-bottom: 1px solid var(--line); }
           .history-card-content { padding: 1.7rem 1.6rem 1.4rem; }
-          .history-card-body { grid-template-columns: 1fr 1fr; gap: 1.4rem; padding: 1.6rem 0; }
-          .history-score-block { grid-column: 1 / -1; }
-          .history-card-body strong { font-size: 1.35rem; }
+          .history-card-body { flex-wrap: wrap; gap: 1.4rem 1.8rem; }
+          .history-score-block { flex-basis: 100%; }
+          .history-stat-divider { display: none; }
+          .history-score-block strong, .history-stat strong { font-size: 1.4rem; }
         }
       `}</style>
     </div>
