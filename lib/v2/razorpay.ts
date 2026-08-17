@@ -125,6 +125,24 @@ export async function fetchOrder(orderId: string): Promise<RazorpayOrder> {
 }
 
 /**
+ * Auto-capture is asynchronous. Checkout can invoke its success handler a
+ * fraction before the captured payment has changed the order to `paid`, so a
+ * single immediate GET creates a false failure after a genuine payment.
+ */
+export async function waitForPaidOrder(
+  orderId: string,
+  attempts = 6,
+  intervalMs = 500,
+): Promise<RazorpayOrder> {
+  let order = await fetchOrder(orderId);
+  for (let attempt = 1; order.status !== "paid" && attempt < attempts; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    order = await fetchOrder(orderId);
+  }
+  return order;
+}
+
+/**
  * Verifies the handler payload Razorpay's checkout hands the browser:
  * HMAC-SHA256("<order_id>|<payment_id>") keyed with the account secret must
  * equal `razorpay_signature`. Only the secret holder can produce that, so a
@@ -143,6 +161,29 @@ export function verifyCheckoutSignature(orderId: string, paymentId: string, sign
   const expectedBuf = Buffer.from(expected, "utf8");
   const receivedBuf = Buffer.from(signature, "utf8");
   // timingSafeEqual throws on a length mismatch, which is itself a rejection.
+  if (expectedBuf.length !== receivedBuf.length) return false;
+  return crypto.timingSafeEqual(expectedBuf, receivedBuf);
+}
+
+/**
+ * Verifies a Razorpay webhook delivery: HMAC-SHA256 of the *raw* request body
+ * keyed with the webhook secret must equal the `x-razorpay-signature` header.
+ *
+ * Note this is a different secret from the API key secret above — Razorpay
+ * issues the webhook secret separately when the webhook is registered, and
+ * signs deliveries with it. Fails closed when unset, so an unconfigured
+ * deployment rejects webhook traffic rather than trusting it blindly.
+ *
+ * `rawBody` must be the exact bytes Razorpay sent: re-serialising the parsed
+ * JSON changes key order/whitespace and the HMAC no longer matches.
+ */
+export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!secret) return false;
+
+  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+  const expectedBuf = Buffer.from(expected, "utf8");
+  const receivedBuf = Buffer.from(signature, "utf8");
   if (expectedBuf.length !== receivedBuf.length) return false;
   return crypto.timingSafeEqual(expectedBuf, receivedBuf);
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
-import { verifyCheckoutSignature, fetchOrder } from "@/lib/v2/razorpay";
+import { verifyCheckoutSignature, waitForPaidOrder } from "@/lib/v2/razorpay";
 import { fulfilReportPurchase } from "@/lib/v2/fulfilPurchase";
 import { type ModuleId } from "@/lib/v2/reportModules";
 import { logV2 } from "@/lib/v2/log";
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     // Gate two: the signature proves this payment belongs to this order, not
     // that the order was paid in full. Only Razorpay can say that, and it is
     // also the trustworthy source of the notes written at order-creation time.
-    const order = await fetchOrder(razorpay_order_id);
+    const order = await waitForPaidOrder(razorpay_order_id);
     if (order.status !== "paid") {
       logV2.warn("v2_razorpay_report_purchase_not_paid", { user_id: auth.userId, order_id: razorpay_order_id, status: order.status });
       return NextResponse.json({ error: "Payment could not be verified" }, { status: 402 });

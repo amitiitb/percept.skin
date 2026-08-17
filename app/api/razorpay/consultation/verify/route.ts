@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifySupabaseUser } from "@/lib/supabase/verifyRequest";
-import { verifyCheckoutSignature, fetchOrder } from "@/lib/v2/razorpay";
+import { verifyCheckoutSignature, waitForPaidOrder } from "@/lib/v2/razorpay";
 import { fulfilConsultation } from "@/lib/v2/fulfilPurchase";
 import { logV2 } from "@/lib/v2/log";
 import { checkRateLimit } from "@/lib/v2/rateLimit";
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Payment could not be verified" }, { status: 400 });
     }
 
-    const order = await fetchOrder(razorpay_order_id);
+    const order = await waitForPaidOrder(razorpay_order_id);
     if (order.status !== "paid") {
       logV2.warn("v2_razorpay_consultation_not_paid", { user_id: auth.userId, order_id: razorpay_order_id, status: order.status });
       return NextResponse.json({ error: "Payment could not be verified" }, { status: 402 });
