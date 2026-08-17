@@ -3,6 +3,14 @@ import { createClient } from "@supabase/supabase-js";
 import { logV2 } from "@/lib/v2/log";
 import { sendReportReadyEmail } from "@/lib/v2/reportReadyEmail";
 
+// Scheduled once daily by vercel.json (0 3 * * *). That cadence is a plan
+// limit, not a design choice: Vercel Hobby rejects any cron running more
+// than once per day and fails the whole deployment rather than downgrading
+// the schedule. On Pro this should go back to */15 * * * * so a stranded
+// report waits minutes rather than up to a day. This endpoint is idempotent
+// and CRON_SECRET-gated, so pointing an external scheduler at it more often
+// is an equally valid alternative to upgrading.
+//
 // Safety net for the one case a closed browser can actually break: the
 // "report ready" email, which today only fires from the last step of the
 // live prepare flow (app/prepare/[id]/page.tsx -> POST
