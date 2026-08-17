@@ -46,7 +46,7 @@ export const viewport: Viewport = {
   // for the case where the stored choice disagrees with the OS preference.
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#E8E7E5" },
-    { media: "(prefers-color-scheme: dark)", color: "#08201D" },
+    { media: "(prefers-color-scheme: dark)", color: "#181B19" },
   ],
 };
 
@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             beige address bar until they touched the toggle. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('percept-theme');var t=(s==='dark'||s==='light')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++)m[i].remove();var n=document.createElement('meta');n.name='theme-color';n.content=t==='dark'?'#08201D':'#E8E7E5';document.head.appendChild(n);}catch(e){document.documentElement.dataset.theme='light';}})();`,
+            __html: `(function(){try{var s=localStorage.getItem('percept-theme');var t=(s==='dark'||s==='light')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;var m=document.querySelectorAll('meta[name="theme-color"]');for(var i=0;i<m.length;i++)m[i].remove();var n=document.createElement('meta');n.name='theme-color';n.content=t==='dark'?'#181B19':'#E8E7E5';document.head.appendChild(n);}catch(e){document.documentElement.dataset.theme='light';}})();`,
           }}
         />
       </head>

@@ -82,35 +82,35 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --canvas:        #08201D;
-  --surface:       #0E2C28;
-  --wash:          #163A34;
+  --canvas:        #181B19;
+  --surface:       #212522;
+  --wash:          #2A302C;
 
-  --primary:       #E6F1EE;
-  --body:          #D5E6E2;
-  --secondary:     #9CB6B1;
-  --muted:         #708A85;
+  --primary:       #F0F1ED;
+  --body:          #D9DCD6;
+  --secondary:     #A8B0A9;
+  --muted:         #777F79;
 
-  --line:          #1E403A;
-  --line-strong:   #305A53;
+  --line:          #343A35;
+  --line-strong:   #4B534D;
 
-  --accent-muted:  #4E8B82;
-  --sage:          #21453F;
-  --on-dark:       #CFE3DE;
-  --rose:          #2FC7B3;
+  --accent-muted:  #719B8B;
+  --sage:          #344A41;
+  --on-dark:       #DCE5DF;
+  --rose:          #74D8B7;
 
   /* Panels stay darker than the surfaces around them so an inverted card is
      still legible as a card, and the white type printed on it still passes. */
-  --panel:         #041614;
+  --panel:         #111412;
   --panel-line:    rgba(255,255,255,0.12);
 
-  --btn-fill:      #E6F1EE;
-  --btn-fill-ink:  #04211E;
+  --btn-fill:      #EEF1EC;
+  --btn-fill-ink:  #171B18;
   --btn-fill-hover:#FFFFFF;
 
-  --header-bg:     rgba(8,32,29,0.82);
-  --scrim-top:     rgba(14,44,40,0.2);
-  --scrim-bottom:  rgba(14,44,40,0.9);
+  --header-bg:     rgba(24,27,25,0.84);
+  --scrim-top:     rgba(33,37,34,0.2);
+  --scrim-bottom:  rgba(33,37,34,0.92);
   --shadow-strong: rgba(0,0,0,0.6);
 }
 

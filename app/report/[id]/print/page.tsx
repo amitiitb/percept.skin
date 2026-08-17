@@ -33,6 +33,13 @@ const FRAME_LABELS = ["Office", "Evening / party", "Formal & wedding", "Everyday
 
 const CAPTION: React.CSSProperties = { fontSize: "1.05rem", color: "#666", margin: "0.5rem 0 0" };
 
+function concise(text: string | null | undefined, max = 170) {
+  if (!text) return "";
+  const firstTwo = text.match(/[^.!?]+[.!?]+/g)?.slice(0, 2).join(" ").trim() ?? text.trim();
+  if (firstTwo.length <= max) return firstTwo;
+  return `${firstTwo.slice(0, max).replace(/\s+\S*$/, "")}…`;
+}
+
 function printBand(score: number | null) {
   if (score === null) return { label: "Not assessed", colour: "#65716D", tint: "#ECEFEE" };
   if (score >= 60) return { label: "Strong", colour: "#17633F", tint: "#E2F1E8" };
@@ -164,14 +171,22 @@ export default function V2ReportPrintPage() {
     if (!reportRef.current) return;
     setGenerating(true);
     try {
-      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL("image/jpeg", 1.0);
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: [canvas.width / 2, canvas.height / 2]
-      });
-      pdf.addImage(imgData, "JPEG", 0, 0, canvas.width / 2, canvas.height / 2);
+      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true, backgroundColor: "#F5F7F5" });
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const renderedHeight = canvas.height * pageWidth / canvas.width;
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      let remaining = renderedHeight;
+      let y = 0;
+      pdf.addImage(imgData, "JPEG", 0, y, pageWidth, renderedHeight, undefined, "FAST");
+      remaining -= pageHeight;
+      while (remaining > 0) {
+        y = remaining - renderedHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, y, pageWidth, renderedHeight, undefined, "FAST");
+        remaining -= pageHeight;
+      }
       pdf.save(`${fileBase}.pdf`);
     } catch (e) {
       console.error("PDF generation failed", e);
@@ -187,9 +202,14 @@ export default function V2ReportPrintPage() {
   const hasColour = purchased.has("colour");
   const hasFrame = purchased.has("frame");
   const recs = session.recommendations;
+  const visibleMetrics = metrics.filter((metric) => categoryAllowed(metric.category));
+  const priorities = visibleMetrics.filter((metric) => metric.score !== null)
+    .sort((a, b) => (a.score ?? 100) - (b.score ?? 100)).slice(0, 3);
+  const strengths = visibleMetrics.filter((metric) => (metric.score ?? 0) >= 70)
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 5);
 
-  const H2: React.CSSProperties = { fontSize: "1.9rem", margin: "0 0 1rem", paddingBottom: "0.5rem", borderBottom: "2px solid #003934", color: "#003934" };
-  const BLOCK: React.CSSProperties = { marginBottom: "2.6rem", pageBreakInside: "avoid" };
+  const H2: React.CSSProperties = { fontSize: "2rem", margin: "0 0 1.2rem", color: "#0D3028", letterSpacing: "-0.025em" };
+  const BLOCK: React.CSSProperties = { marginBottom: "2rem", breakInside: "avoid" };
 
   return (
     <>
@@ -213,40 +233,41 @@ export default function V2ReportPrintPage() {
         </button>
       </div>
 
-      <div ref={reportRef} style={{ maxWidth: "74rem", margin: "0 auto", padding: "4rem 2rem", fontFamily: "system-ui, sans-serif", color: "#1a2320", background: "#fff" }}>
+      <div ref={reportRef} style={{ width: "79.4rem", margin: "0 auto", padding: "3.6rem", fontFamily: "Arial, system-ui, sans-serif", color: "#1A2E29", background: "#F5F7F5", boxSizing: "border-box" }}>
 
-      <header style={{ marginBottom: "2.4rem" }}>
-        <h1 style={{ fontSize: "2.4rem", margin: "0 0 0.3rem", color: "#003934" }}>Percept Report</h1>
-        <p style={{ color: "#666", margin: 0 }}>{name || "Percept user"} · {new Date(session.created_at).toLocaleDateString()}</p>
+      <header style={{ background: "#0D3028", color: "#fff", borderRadius: "1.8rem", padding: "3rem", marginBottom: "2rem", breakInside: "avoid" }}>
+        <p style={{ color: "#70E1CD", fontSize: "1.1rem", fontWeight: 800, letterSpacing: ".16em", margin: "0 0 1.5rem" }}>PERCEPT · PERSONALISED REPORT</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "end", gap: "2rem" }}>
+          <div><h1 style={{ fontSize: "3.2rem", lineHeight: 1.06, margin: "0 0 .8rem", letterSpacing: "-.04em" }}>{name ? `${name}'s report` : "Your report"}</h1>
+          <p style={{ color: "#D7E7E2", fontSize: "1.15rem", margin: 0 }}>{new Date(session.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · A practical guide to what to keep, improve and try</p></div>
+          <div style={{ textAlign: "right" }}><strong style={{ display: "block", fontSize: "5.2rem", lineHeight: .85, color: "#70E1CD" }}>{session.overall_score ?? "—"}</strong><span style={{ color: "#D7E7E2", fontSize: "1rem" }}>PERCEPT SCORE / 100</span></div>
+        </div>
       </header>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: "1.4rem", marginBottom: "2.6rem" }}>
-        <strong style={{ fontSize: "4rem", color: "#003934", lineHeight: 1 }}>{session.overall_score}</strong>
-        <span style={{ fontSize: "1.3rem", color: "#666" }}>/ 100 Percept Score</span>
-        {session.skin_age !== null && <span style={{ fontSize: "1.3rem", color: "#666" }}>· Estimated skin age {session.skin_age}</span>}
-      </div>
-
-      {photos.length > 0 && (
-        <div style={BLOCK}>
-          <h2 style={H2}>Your photos</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "0.5rem" }}>
-            {photos.map((p) => (
-              <div key={p.type}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.url} alt={PHOTO_LABELS[p.type] ?? p.type} style={{ width: "100%", aspectRatio: "4/5", objectFit: "cover", borderRadius: "0.4rem", display: "block" }} />
-                <p style={{ ...CAPTION, textAlign: "center" }}>{PHOTO_LABELS[p.type] ?? p.type}</p>
-              </div>
-            ))}
-          </div>
+      <section style={{ display: "grid", gridTemplateColumns: "1.25fr .75fr", gap: "1.4rem", marginBottom: "2.2rem", breakInside: "avoid" }}>
+        <div style={{ background: "#fff", borderRadius: "1.4rem", padding: "2rem", border: "1px solid #DCE5E1" }}>
+          <p style={{ color: "#168D78", fontSize: "1rem", fontWeight: 800, letterSpacing: ".1em", margin: "0 0 .7rem" }}>START HERE</p>
+          <h2 style={{ ...H2, marginBottom: ".8rem" }}>Your top priorities</h2>
+          {priorities.map((metric, index) => <div key={metric.metricName} style={{ display: "grid", gridTemplateColumns: "2.2rem 1fr auto", gap: ".8rem", alignItems: "start", padding: ".9rem 0", borderTop: index ? "1px solid #E5EBE8" : "none" }}>
+            <span style={{ width: "2.1rem", height: "2.1rem", borderRadius: "50%", background: printBand(metric.score).tint, color: printBand(metric.score).colour, display: "grid", placeItems: "center", fontWeight: 800 }}>{index + 1}</span>
+            <div><strong style={{ fontSize: "1.15rem", color: "#102F28" }}>{metric.metricName}</strong><p style={{ fontSize: "1rem", lineHeight: 1.45, color: "#536A64", margin: ".25rem 0 0" }}>{concise(metric.recommendation, 145) || "Keep monitoring this area over time."}</p></div>
+            <strong style={{ color: printBand(metric.score).colour }}>{metric.score}</strong>
+          </div>)}
         </div>
-      )}
+        <div style={{ background: "#E6F3EF", borderRadius: "1.4rem", padding: "2rem" }}>
+          <p style={{ color: "#168D78", fontSize: "1rem", fontWeight: 800, letterSpacing: ".1em", margin: "0 0 .7rem" }}>QUICK READ</p>
+          <h2 style={{ ...H2, marginBottom: ".8rem" }}>Strongest areas</h2>
+          {strengths.map((metric) => <div key={metric.metricName} style={{ display: "flex", justifyContent: "space-between", gap: ".8rem", padding: ".6rem 0", borderBottom: "1px solid #CDE2DB", fontSize: "1rem" }}><span>{metric.metricName}</span><strong>{metric.score}</strong></div>)}
+          {session.skin_age !== null && <p style={{ margin: "1.2rem 0 0", fontSize: ".95rem", color: "#536A64" }}>Estimated skin age <strong style={{ color: "#0D3028" }}>{session.skin_age}</strong></p>}
+        </div>
+      </section>
 
       {(session.positive_observations ?? []).length > 0 && (hasSkin || hasHair) && (
-        <div style={BLOCK}>
-          <h2 style={H2}>What is working well</h2>
-          <ul style={{ margin: 0, paddingLeft: "1.6rem" }}>
-            {(session.positive_observations ?? []).map((p, i) => <li key={i} style={{ marginBottom: "0.4rem", lineHeight: 1.55 }}>{p}</li>)}
-          </ul>
+        <div style={{ ...BLOCK, background: "#fff", border: "1px solid #DCE5E1", borderRadius: "1.4rem", padding: "2rem" }}>
+          <h2 style={H2}>What’s already working</h2>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: ".7rem 1.5rem" }}>
+            {(session.positive_observations ?? []).slice(0, 6).map((p, i) => <div key={i} style={{ display: "flex", gap: ".6rem", alignItems: "start", fontSize: "1rem", lineHeight: 1.4 }}><span style={{ color: "#168D78", fontWeight: 900 }}>✓</span><span>{concise(p, 110)}</span></div>)}
+          </div>
         </div>
       )}
 
@@ -255,38 +276,43 @@ export default function V2ReportPrintPage() {
         const rows = metrics.filter((m) => m.category === cat);
         if (rows.length === 0) return null;
         return (
-          <div key={cat} style={{ marginBottom: "2.6rem" }}>
-            <h2 style={{ ...H2, textTransform: "capitalize" }}>{cat === "hair" ? "Hair & scalp" : cat}</h2>
+          <div key={cat} style={{ marginBottom: "2.2rem" }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "1rem" }}><h2 style={{ ...H2, textTransform: "capitalize", margin: 0 }}>{cat === "hair" ? "Hair & scalp" : `${cat} analysis`}</h2><span style={{ color: "#71827D", fontSize: ".95rem" }}>{rows.length} measurements</span></div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             {rows.map((m) => (
-              <div key={m.metricName} style={{ padding: "0.9rem 0", borderBottom: "1px solid #ddd", pageBreakInside: "avoid" }}>
+              <div key={m.metricName} style={{ padding: "1.3rem", background: "#fff", border: "1px solid #DCE5E1", borderRadius: "1.1rem", breakInside: "avoid" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
-                  <strong style={{ fontSize: "1.3rem", color: "#102F28" }}>{m.metricName}</strong>
-                  <span style={{ fontSize: "1.05rem", fontWeight: 700, whiteSpace: "nowrap", padding: ".25rem .55rem", borderRadius: "9999px", color: printBand(m.score).colour, background: printBand(m.score).tint }}>{m.score ?? "-"} · {printBand(m.score).label}</span>
+                  <strong style={{ fontSize: "1.12rem", color: "#102F28" }}>{m.metricName}</strong>
+                  <span style={{ fontSize: ".9rem", fontWeight: 700, whiteSpace: "nowrap", padding: ".25rem .55rem", borderRadius: "9999px", color: printBand(m.score).colour, background: printBand(m.score).tint }}>{m.score ?? "-"} · {printBand(m.score).label}</span>
                 </div>
-                {m.score !== null && <div style={{ height: ".35rem", margin: ".55rem 0", overflow: "hidden", borderRadius: "9999px", background: "#E8E6E0" }}><span style={{ display: "block", width: `${m.score}%`, height: "100%", background: printBand(m.score).colour }} /></div>}
-                {m.explanation && <p style={{ fontSize: "1.16rem", color: "#263D37", margin: "0.35rem 0 0", lineHeight: 1.55 }}>{m.explanation}</p>}
-                {m.recommendation && <p style={{ fontSize: "1.16rem", color: "#123F34", margin: "0.35rem 0 0", lineHeight: 1.55 }}><strong>Next step:</strong> {m.recommendation}</p>}
+                {m.score !== null && <div style={{ height: ".32rem", margin: ".65rem 0", overflow: "hidden", borderRadius: "9999px", background: "#E8E6E0" }}><span style={{ display: "block", width: `${m.score}%`, height: "100%", background: printBand(m.score).colour }} /></div>}
+                {m.explanation && <p style={{ fontSize: ".94rem", color: "#536A64", margin: ".35rem 0 0", lineHeight: 1.45 }}>{concise(m.explanation)}</p>}
+                {m.recommendation && <div style={{ marginTop: ".7rem", padding: ".7rem .8rem", borderRadius: ".7rem", background: "#F0F7F4", fontSize: ".94rem", color: "#123F34", lineHeight: 1.42 }}><strong>Do this: </strong>{concise(m.recommendation, 150)}</div>}
               </div>
             ))}
+            </div>
           </div>
         );
       })}
 
       {recs && (hasSkin || hasHair) && (
-        <div style={{ marginBottom: "2.6rem" }}>
-          <h2 style={H2}>Your routine</h2>
+        <div style={{ marginBottom: "2.2rem" }}>
+          <h2 style={H2}>Your simple routine</h2>
+          <p style={{ color: "#536A64", fontSize: "1rem", margin: "-.6rem 0 1.2rem" }}>A practical checklist—save this page and start with consistency, not complexity.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
           {ROUTINE_META.filter((r) => (r.gate === "skin" ? hasSkin : hasHair)).map(({ key, label }) => {
             const steps = recs[key];
             if (!steps?.length) return null;
             return (
-              <div key={key} style={{ marginBottom: "1.2rem", pageBreakInside: "avoid" }}>
-                <strong style={{ fontSize: "1.25rem", color: "#003934" }}>{label}</strong>
-                <ol style={{ margin: "0.4rem 0 0", paddingLeft: "1.6rem" }}>
-                  {steps.map((s, i) => <li key={i} style={{ fontSize: "1.1rem", marginBottom: "0.25rem", lineHeight: 1.5 }}>{s}</li>)}
+              <div key={key} style={{ padding: "1.4rem", background: "#fff", border: "1px solid #DCE5E1", borderRadius: "1.1rem", breakInside: "avoid" }}>
+                <strong style={{ fontSize: "1.15rem", color: "#0D3028" }}>{label}</strong>
+                <ol style={{ margin: ".7rem 0 0", paddingLeft: "1.4rem" }}>
+                  {steps.map((s, i) => <li key={i} style={{ fontSize: ".95rem", marginBottom: ".45rem", lineHeight: 1.42, color: "#445C56" }}>{concise(s, 125)}</li>)}
                 </ol>
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
@@ -342,11 +368,27 @@ export default function V2ReportPrintPage() {
       )}
 
       {(session.limitations ?? []).length > 0 && (
-        <div style={BLOCK}>
+        <div style={{ ...BLOCK, padding: "1.5rem", background: "#FFF8E8", borderRadius: "1rem" }}>
           <h2 style={H2}>Good to know</h2>
           <ul style={{ margin: 0, paddingLeft: "1.6rem" }}>
             {(session.limitations ?? []).map((l, i) => <li key={i} style={{ fontSize: "1.05rem", color: "#555", marginBottom: "0.3rem", lineHeight: 1.5 }}>{l}</li>)}
           </ul>
+        </div>
+      )}
+
+      {photos.length > 0 && (
+        <div style={{ ...BLOCK, paddingTop: "1rem" }}>
+          <h2 style={H2}>Photos analysed</h2>
+          <p style={{ color: "#71827D", fontSize: ".95rem", margin: "-.6rem 0 1rem" }}>Included for reference. Results are based on visible features in these images.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: ".55rem" }}>
+            {photos.map((p) => (
+              <div key={p.type}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.url} alt={PHOTO_LABELS[p.type] ?? p.type} style={{ width: "100%", aspectRatio: "4/5", objectFit: "cover", borderRadius: ".6rem", display: "block" }} />
+                <p style={{ ...CAPTION, textAlign: "center", fontSize: ".8rem" }}>{PHOTO_LABELS[p.type] ?? p.type}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -359,7 +401,7 @@ export default function V2ReportPrintPage() {
         @media print {
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .no-print { display: none !important; }
-          @page { margin: 14mm; }
+          @page { size: A4; margin: 10mm; }
         }
       `}</style>
     </>

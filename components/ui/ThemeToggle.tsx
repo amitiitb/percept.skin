@@ -33,7 +33,7 @@ export function applyTheme(theme: Theme) {
     meta.setAttribute("name", "theme-color");
     document.head.appendChild(meta);
   }
-  meta.setAttribute("content", theme === "dark" ? "#08201D" : "#E8E7E5");
+  meta.setAttribute("content", theme === "dark" ? "#181B19" : "#E8E7E5");
 }
 
 export function ThemeToggle({ compact = false }: { compact?: boolean }) {

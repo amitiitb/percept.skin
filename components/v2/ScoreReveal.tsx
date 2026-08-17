@@ -9,7 +9,19 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 // number, which undersold the one screen the whole flow builds toward.
 // Ring + count-up give it an actual reveal. Respects prefers-reduced-motion
 // by jumping straight to the final value instead of animating.
-export function ScoreReveal({ score, ringColor = "var(--primary)", size = 22 }: { score: number; ringColor?: string; size?: number }) {
+export function ScoreReveal({
+  score,
+  ringColor = "var(--primary)",
+  trackColor = "var(--line)",
+  textColor = "var(--primary)",
+  size = 22,
+}: {
+  score: number;
+  ringColor?: string;
+  trackColor?: string;
+  textColor?: string;
+  size?: number;
+}) {
   const [display, setDisplay] = useState(0);
   const progress = useMotionValue(0);
   const dashOffset = useTransform(progress, (v) => CIRCUMFERENCE - (v / 100) * CIRCUMFERENCE);
@@ -35,14 +47,14 @@ export function ScoreReveal({ score, ringColor = "var(--primary)", size = 22 }: 
   return (
     <div style={{ position: "relative", width: `${size}rem`, height: `${size}rem`, margin: "0 auto", flexShrink: 0 }}>
       <svg width="100%" height="100%" viewBox="0 0 200 200" style={{ transform: "rotate(-90deg)" }}>
-        <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="var(--line)" strokeWidth="8" />
+        <circle cx="100" cy="100" r={RADIUS} fill="none" stroke={trackColor} strokeWidth="8" />
         <motion.circle
           cx="100" cy="100" r={RADIUS} fill="none" stroke={ringColor} strokeWidth="8"
           strokeLinecap="round" strokeDasharray={CIRCUMFERENCE} style={{ strokeDashoffset: dashOffset }}
         />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <strong style={{ fontSize: `${size * 0.29}rem`, fontWeight: 300, color: "var(--primary)", lineHeight: 1 }}>{display}</strong>
+        <strong style={{ fontSize: `${size * 0.29}rem`, fontWeight: 500, color: textColor, lineHeight: 1 }}>{display}</strong>
       </div>
     </div>
   );

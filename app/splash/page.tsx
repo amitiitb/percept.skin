@@ -1,48 +1,98 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { Logo } from "@/components/ui/Logo";
+
+import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import styles from "./splash.module.css";
 
 export default function V2SplashPage() {
-  const router = useRouter();
+  const reduceMotion = useReducedMotion();
 
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "4rem 2.4rem", position: "relative", overflow: "hidden" }}>
-      <motion.div
-        aria-hidden
-        animate={{ opacity: [0.15, 0.3, 0.15], scale: [1, 1.06, 1] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        style={{
-          position: "absolute", top: "50%", left: "50%", width: "60rem", height: "60rem",
-          transform: "translate(-50%, -50%)", borderRadius: "50%",
-          background: "radial-gradient(circle, var(--rose) 0%, transparent 70%)",
-          filter: "blur(40px)",
-        }}
-      />
+    <main className={styles.page}>
+      <div className={styles.ambient} aria-hidden="true">
+        <motion.span
+          className={styles.orbitOuter}
+          animate={reduceMotion ? undefined : { rotate: 360 }}
+          transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.span
+          className={styles.orbitInner}
+          animate={reduceMotion ? undefined : { rotate: -360 }}
+          transition={{ duration: 19, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.span
+          className={styles.pulse}
+          animate={reduceMotion ? undefined : { scale: [0.92, 1.08, 0.92], opacity: [0.42, 0.72, 0.42] }}
+          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        style={{ position: "relative", textAlign: "center" }}
-      >
-        <Logo height="clamp(5.4rem, 11vw, 8rem)" />
-        <p style={{ fontSize: "1.8rem", color: "var(--secondary)", marginTop: "1.6rem", maxWidth: "40rem" }}>
-          Understand your skin. Elevate your beauty.
-        </p>
-      </motion.div>
-
-      <motion.div
+        className={styles.themeToggle}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        style={{ position: "relative", marginTop: "6.4rem", width: "100%", maxWidth: "36rem" }}
+        transition={{ delay: 0.8, duration: 0.5 }}
       >
-        <PrimaryButton size="lg" onClick={() => router.push("/onboard")}>
-          Get Started →
-        </PrimaryButton>
+        <ThemeToggle compact />
       </motion.div>
-    </div>
+
+      <section className={styles.content} aria-labelledby="splash-title">
+        <motion.p
+          className={styles.eyebrow}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12, duration: 0.55 }}
+        >
+          Your personal beauty intelligence
+        </motion.p>
+
+        <motion.h1
+          id="splash-title"
+          className={styles.wordmark}
+          initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: 0.8, ease: [0.24, 0.43, 0.15, 0.97] }}
+        >
+          <span>Percept</span>
+          <motion.span
+            className={styles.ai}
+            animate={reduceMotion ? undefined : { opacity: [0.72, 1, 0.72] }}
+            transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+          >
+            AI
+          </motion.span>
+        </motion.h1>
+
+        <motion.div
+          className={styles.rule}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.34, duration: 0.8, ease: [0.24, 0.43, 0.15, 0.97] }}
+        />
+
+        <motion.p
+          className={styles.tagline}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+        >
+          Understand your skin.<br className={styles.mobileBreak} /> Elevate your beauty.
+        </motion.p>
+
+        <motion.div
+          className={styles.ctaWrap}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.58, duration: 0.6 }}
+        >
+          <Link href="/onboard" className={styles.cta}>
+            <span>Start my personalised analysis</span>
+            <span className={styles.arrow} aria-hidden="true">→</span>
+          </Link>
+          <p className={styles.note}>Private by design · Takes about 3 minutes</p>
+        </motion.div>
+      </section>
+    </main>
   );
 }
