@@ -844,17 +844,32 @@ export function HomeClient() {
             inset: 1.6rem 0 auto 0 !important;
             margin: 0 !important;
           }
-          .mobile-first-hero { min-height: min(92svh, 88rem); }
+          /* Full first screen, no cap: the source portrait is a 0.8 aspect
+             photographed with a lot of blank studio backdrop above the
+             subject's hair, and the previous 88rem cap could land shorter
+             than the real viewport on a tall phone, leaving the next
+             section peeking in at the bottom before any scroll. */
+          .mobile-first-hero { min-height: 100svh; }
           .mobile-hero-image {
             display: block;
             object-fit: cover;
-            object-position: center 18%;
+            /* Was 18%, which left ~27% of the frame as flat grey backdrop
+               above her hairline (measured against a real device
+               screenshot) before any subject was visible at all. 34%
+               brings the crop down to where her hair starts right at the
+               top of the frame instead. */
+            object-position: center 34%;
           }
           .hero-desktop-image { display: none; }
           .mobile-hero-shade {
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(3,12,11,0.06) 36%, rgba(3,10,9,0.52) 66%, rgba(2,7,6,0.96) 100%);
+            /* The old gradient started darkening at 36%, which is right
+               where the face sits once the crop above was tightened —
+               it was washing out the exact area meant to read clearly.
+               Now stays fully transparent through the face (to 55%) and
+               only darkens over the lower third behind the copy. */
+            background: linear-gradient(180deg, transparent 0%, transparent 55%, rgba(3,10,9,0.55) 78%, rgba(2,7,6,0.96) 100%);
           }
           .mobile-hero-copy {
             position: absolute;
