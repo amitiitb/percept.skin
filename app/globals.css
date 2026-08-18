@@ -262,28 +262,108 @@ input, textarea { font: inherit; }
   background: var(--bg-neutral);
 }
 
+/* ─── Homepage hero + header — critical, above-the-fold ─────────────────
+   Deliberately a real stylesheet, not HomeClient.tsx's styled-jsx block.
+   styled-jsx injects its <style> tag via JS at runtime; on a slow
+   device/network there's a real window where the browser paints these
+   above-the-fold elements with zero styling before that tag lands, then
+   everything snaps to correct — reported as the hero photo briefly
+   stretched, the header briefly a bare unstyled bar with wrapped nav
+   links, and the hero headline briefly sitting unpositioned near the logo.
+   A stylesheet loaded via <link> is parsed before first paint, so there's
+   nothing to snap from. Verified with cold-cache + throttled-network +
+   6x CPU-throttle reloads (no flash at any captured frame down to 100ms). */
+.home-header { transition: none; }
+.home-header:not(.is-scrolled) .home-header-inner {
+  background: transparent !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important;
+}
+.home-header:not(.is-scrolled) .home-header-inner > a:first-child img {
+  filter: brightness(0) invert(1) drop-shadow(0 0.2rem 0.45rem rgba(0,0,0,0.42));
+}
+.home-header.is-scrolled .home-header-inner { box-shadow: 0 0.8rem 2.4rem rgba(0,0,0,0.08); }
+.home-header:not(.is-scrolled) .pg-nav-links a,
+.home-header:not(.is-scrolled) .pg-nav-signin { color: rgba(255,255,255,0.9); }
+.home-header:not(.is-scrolled) .pg-menu-btn { color: #fff; }
+.home-header.is-scrolled .pg-menu-btn { color: var(--ink); }
+.pg-nav-links { display: flex; align-items: center; gap: 3.2rem; }
+.pg-nav-links a { font-size: 1.45rem; font-weight: 500; color: var(--ink-secondary); }
+.pg-nav-links a:hover { color: var(--ink); }
+.pg-nav-signin { font-size: 1.45rem; font-weight: 500; color: var(--ink-secondary); }
+.pg-menu-btn { display: none; align-items: center; justify-content: center; }
+@media (max-width: 1099px) {
+  .pg-nav-links { display: none; }
+}
+@media (max-width: 700px) {
+  .pg-nav-signin { display: none; }
+  .pg-menu-btn { display: flex; }
+}
+
+.mobile-first-hero {
+  position: relative;
+  display: block;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #909ca4;
+}
+.hero-desktop-image { object-fit: cover; object-position: center; }
+.mobile-hero-image { display: none; }
+.mobile-hero-shade {
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(3,10,9,0.72) 0%, rgba(3,10,9,0.3) 46%, rgba(3,10,9,0.05) 72%), linear-gradient(180deg, transparent 48%, rgba(2,7,6,0.74) 100%);
+}
+.mobile-hero-copy {
+  position: absolute; z-index: 2;
+  left: clamp(5.2rem, 7.5vw, 15.4rem); top: 24%; bottom: auto;
+  width: min(55rem, calc(100vw - 6.4rem));
+  color: #fff;
+}
+.mobile-hero-kicker { margin-bottom: 1.2rem; font-size: 1.4rem; font-weight: 500; color: rgba(255,255,255,0.9); }
+.mobile-hero-copy h1 {
+  font-family: var(--font-serif), Georgia, serif;
+  max-width: 58rem; margin: 0 0 1.6rem;
+  font-size: clamp(4rem, 4.2vw, 6.4rem); font-weight: 400; line-height: 1.06; letter-spacing: -0.01em;
+}
+.mobile-hero-sub { max-width: 50rem; margin-bottom: 2.8rem; font-size: 1.6rem; line-height: 1.5; color: rgba(255,255,255,0.78); }
+.mobile-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 40rem; }
+.mobile-hero-actions a {
+  min-height: 4.4rem; display: flex; align-items: center; justify-content: center;
+  padding: 0 1.6rem; border-radius: 999px; background: #fff; color: #123f39;
+  font-size: 1.3rem; font-weight: 600; text-align: center;
+}
+.mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
+.hero-proof-points {
+  position: absolute; top: 64svh; left: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0;
+  width: min(58rem, calc(100vw - 6.4rem)); max-width: calc(100vw - 6.4rem); margin-top: 0;
+}
+.hero-proof-points > div { min-width: 0; padding: 0 1.6rem; border-left: 1px solid rgba(255,255,255,0.24); }
+.hero-proof-points > div:first-child { padding-left: 0; border-left: 0; }
+.hero-proof-points strong { display: block; font-size: 1.2rem; font-weight: 500; line-height: 1.2; color: #fff; white-space: nowrap; }
+.hero-proof-points span { display: block; margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.25; color: rgba(255,255,255,0.62); white-space: nowrap; }
+
+@media (max-width: 700px) {
+  .mobile-first-hero { min-height: 100vh; min-height: 100dvh; }
+  .mobile-hero-image {
+    display: block;
+    object-fit: cover;
+    object-position: center 34%;
+  }
+  .hero-desktop-image { display: none; }
+  .mobile-hero-shade {
+    background: linear-gradient(180deg, transparent 0%, transparent 55%, rgba(3,10,9,0.55) 78%, rgba(2,7,6,0.96) 100%);
+  }
+  .mobile-hero-copy { position: absolute; z-index: 2; left: 2rem; right: 2rem; top: auto; bottom: 2rem; color: #fff; }
+  .mobile-hero-kicker { margin-bottom: 0.8rem; font-size: 1.25rem; font-weight: 500; color: rgba(255,255,255,0.9); }
+  .mobile-hero-copy h1 { max-width: 34rem; margin: 0 0 1rem; font-size: clamp(2.9rem, 8.4vw, 3.8rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.01em; }
+  .mobile-hero-sub { max-width: 36rem; margin-bottom: 2.4rem; font-size: 1.35rem; line-height: 1.45; color: rgba(255,255,255,0.78); }
+  .mobile-hero-actions a { min-height: 4.2rem; display: flex; align-items: center; justify-content: center; padding: 0 1.2rem; border-radius: 999px; background: #fff; color: #123f39; font-size: 1.25rem; font-weight: 600; text-align: center; }
+  .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
+  .hero-proof-points { display: none; }
+}
+
 /* ─── Animations ──────────────────────────────────── */
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.94); }
-  to   { opacity: 1; transform: scale(1); }
-}
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
-}
-
-.anim-fade-up  { animation: fade-up  0.6s var(--ease-expo) both; }
-.anim-fade-in  { animation: fade-in  0.5s var(--ease-expo) both; }
-.anim-scale-in { animation: scale-in 0.5s var(--ease-expo) both; }
-
-@media (pointer: coarse) {
-  .gm-cursor { display: none !important; }
 }

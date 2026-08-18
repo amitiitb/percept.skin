@@ -106,7 +106,7 @@ export default function V2OnboardPage() {
                     margin: "0 auto", background: "linear-gradient(155deg, var(--sage) 0%, var(--surface) 100%)",
                   }}>
                     <Image
-                      src="/assets/selfie-capture-guide.png"
+                      src="/onboarding/selfie-guide.png"
                       alt="Guided photo capture with an on-screen framing guide"
                       fill
                       priority

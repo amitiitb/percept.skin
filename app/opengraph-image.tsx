@@ -14,7 +14,7 @@ export const contentType = "image/png";
 
 export default async function OpenGraphImage() {
   const background = await readFile(
-    join(process.cwd(), "public/brand/og-face-topography.png"),
+    join(process.cwd(), "public/brand/og-image.png"),
   );
   const backgroundSrc = `data:image/png;base64,${background.toString("base64")}`;
 

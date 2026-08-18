@@ -10,12 +10,13 @@ interface Props {
   /** `onDark` is the filled variant for use on the primary-coloured cards,
    *  where `primary` renders dark-on-dark and reads as an outline button. */
   variant?: "primary" | "outline" | "ghost" | "onDark";
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   type?: "button" | "submit";
   fullWidth?: boolean;
 }
 
 const SIZE: Record<string, CSSProperties> = {
+  xs: { height: "3.8rem", padding: "0 2rem",   fontSize: "1.3rem" },
   sm: { height: "4.8rem", padding: "0 2.8rem", fontSize: "1.5rem" },
   md: { height: "5.8rem", padding: "0 3.2rem", fontSize: "1.7rem" },
   lg: { height: "6.4rem", padding: "0 4rem",   fontSize: "1.9rem" },

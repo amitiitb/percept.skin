@@ -174,7 +174,7 @@ export function HomeClient() {
           <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
             <a href="/auth/login" className="pg-nav-signin">Sign in</a>
             <a href="/splash" className="pg-header-cta">
-              <PrimaryButton size="sm" fullWidth={false}>Try Free</PrimaryButton>
+              <PrimaryButton size="xs" fullWidth={false}>Try Free</PrimaryButton>
             </a>
             <button
               onClick={() => setMenuOpen(true)}
@@ -192,7 +192,7 @@ export function HomeClient() {
           separate avoids compromising the more spacious desktop hero. */}
       <section ref={heroRef} className="mobile-first-hero" aria-labelledby="mobile-hero-title">
         <Image
-          src="/assets/percept-hero-desktop-v3.png"
+          src="/marketing/hero-desktop.png"
           alt="Editorial portrait showing natural skin texture"
           fill
           priority
@@ -200,7 +200,7 @@ export function HomeClient() {
           className="hero-desktop-image"
         />
         <Image
-          src="/assets/percept-hero-portrait-v2.png"
+          src="/marketing/hero-portrait.png"
           alt="Editorial close-up portrait showing natural skin texture"
           fill
           priority
@@ -208,31 +208,20 @@ export function HomeClient() {
           className="mobile-hero-image"
         />
         <div className="mobile-hero-shade" />
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: [0.24, 0.43, 0.15, 0.97], delay: 0.15 }}
-        >
-          {/* styled-jsx doesn't inject its scope class onto motion.* components
-              in this Next 16/Turbopack setup, only literal DOM tags — so the
-              scoped class lives on this plain nested div, not the motion.div
-              above, or every rule keyed off .mobile-hero-copy silently never
-              matches (positioning collapses, h1 shrinks to inherited 1rem). */}
-          <div className="mobile-hero-copy">
-            <p className="mobile-hero-kicker">AI skin, face and hair analysis</p>
-            <h1 id="mobile-hero-title">Understand your features.<br />Improve what matters.</h1>
-            <p className="mobile-hero-sub">A private AI-guided scan for clearer skin, face, hair and colour insights, personalized to you.</p>
-            <div className="mobile-hero-actions">
-              <a href="/splash">Start my plan</a>
-              <a href="#how-it-works">How it works</a>
-            </div>
-            <div className="hero-proof-points" aria-label="Key product benefits">
-              <div><strong>20+ visual metrics</strong><span>Skin, face and hair insights</span></div>
-              <div><strong>Personal to you</strong><span>Guidance shaped by your features</span></div>
-              <div><strong>Track progress</strong><span>Compare results across scans</span></div>
-            </div>
+        <div className="mobile-hero-copy">
+          <p className="mobile-hero-kicker">AI skin, face and hair analysis</p>
+          <h1 id="mobile-hero-title">Understand your features.<br />Improve what matters.</h1>
+          <p className="mobile-hero-sub">A private AI-guided scan for clearer skin, face, hair and colour insights, personalized to you.</p>
+          <div className="mobile-hero-actions">
+            <a href="/splash">Start my plan</a>
+            <a href="#how-it-works">How it works</a>
           </div>
-        </motion.div>
+          <div className="hero-proof-points" aria-label="Key product benefits">
+            <div><strong>20+ visual metrics</strong><span>Skin, face and hair insights</span></div>
+            <div><strong>Personal to you</strong><span>Guidance shaped by your features</span></div>
+            <div><strong>Track progress</strong><span>Compare results across scans</span></div>
+          </div>
+        </div>
       </section>
 
       {/* ── Proof strip: continuous marquee, not a wrapping row — avoids the
@@ -269,7 +258,7 @@ export function HomeClient() {
             </div>
           </div>
           <div style={{ position: "relative", width: "100%", maxHeight: "52rem", aspectRatio: "1122/1402", borderRadius: "2rem", overflow: "hidden", margin: "0 auto" }}>
-            <Image src="/images/reveal-face-scan.png" alt="AI face-scan overlay analysing skin, colour and proportions" fill sizes="(max-width: 900px) 100vw, 55vw" style={{ objectFit: "cover" }} />
+            <Image src="/marketing/reveal-face-scan.png" alt="AI face-scan overlay analysing skin, colour and proportions" fill sizes="(max-width: 900px) 100vw, 55vw" style={{ objectFit: "cover" }} />
           </div>
         </Reveal>
       </section>
@@ -365,7 +354,7 @@ export function HomeClient() {
             </div>
           </div>
           <div style={{ position: "relative", width: "100%", aspectRatio: "1672/941", borderRadius: "2rem", overflow: "hidden" }}>
-            <Image src="/images/wyg-grooming-v4.png" alt="Percept grooming and hairstyle analysis dashboard" fill sizes="(max-width: 900px) 100vw, 55vw" style={{ objectFit: "cover" }} />
+            <Image src="/marketing/what-you-get/grooming.png" alt="Percept grooming and hairstyle analysis dashboard" fill sizes="(max-width: 900px) 100vw, 55vw" style={{ objectFit: "cover" }} />
           </div>
         </Reveal>
       </section>
@@ -389,7 +378,7 @@ export function HomeClient() {
       {/* ── Recommendations ── */}
       <section id="recommendations" className="pg-section pg-container">
         <Reveal className="reveal-grid reveal-grid-reverse">
-          <ProductPreview defaultTab="frame" image="/images/skincare-portraits/portrait-deep-brown.png" />
+          <ProductPreview defaultTab="frame" image="/marketing/portraits/deep-brown.png" />
           <div>
             <p className="pg-eyebrow" style={{ marginBottom: "1.6rem" }}>Recommendations</p>
             <h2 className="pg-h2" style={{ marginBottom: "1.6rem" }}>Know what suits you. And why.</h2>
@@ -436,7 +425,7 @@ export function HomeClient() {
         <div className="pg-container" style={{ maxWidth: "96rem" }}>
           <Reveal className="experts-grid">
             <div style={{ position: "relative", width: "100%", maxWidth: "22rem", aspectRatio: "4/5", borderRadius: "1.6rem", overflow: "hidden", flexShrink: 0 }}>
-              <Image src="/images/expert_dermatologist.png" alt="Dermatologist" fill sizes="(max-width: 700px) 100vw, 22rem" style={{ objectFit: "cover" }} />
+              <Image src="/marketing/expert-dermatologist.png" alt="Dermatologist" fill sizes="(max-width: 700px) 100vw, 22rem" style={{ objectFit: "cover" }} />
             </div>
             <div>
               <p className="pg-eyebrow" style={{ color: "rgba(255,255,255,0.5)", marginBottom: "1.2rem" }}>Expert review</p>
@@ -546,73 +535,11 @@ export function HomeClient() {
       </footer>
 
       <style jsx>{`
-        .home-header { transition: none; }
-        .home-header:not(.is-scrolled) .home-header-inner {
-          background: transparent !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important;
-        }
-        .home-header:not(.is-scrolled) .home-header-inner > a:first-child :global(img) {
-          filter: brightness(0) invert(1) drop-shadow(0 0.2rem 0.45rem rgba(0,0,0,0.42));
-        }
-        .home-header.is-scrolled .home-header-inner { box-shadow: 0 0.8rem 2.4rem rgba(0,0,0,0.08); }
-        .home-header:not(.is-scrolled) .pg-nav-links a,
-        .home-header:not(.is-scrolled) .pg-nav-signin { color: rgba(255,255,255,0.9); }
-        .home-header:not(.is-scrolled) .pg-menu-btn { color: #fff; }
-        .home-header.is-scrolled .pg-menu-btn { color: var(--ink); }
-        .pg-nav-links { display: flex; align-items: center; gap: 3.2rem; }
-        .pg-nav-links a { font-size: 1.45rem; font-weight: 500; color: var(--ink-secondary); }
-        .pg-nav-links a:hover { color: var(--ink); }
-        .pg-nav-signin { font-size: 1.45rem; font-weight: 500; color: var(--ink-secondary); }
-        .pg-menu-btn { display: none; align-items: center; justify-content: center; }
-
-        .mobile-first-hero {
-          position: relative;
-          display: block;
-          min-height: 100vh;
-          min-height: 100dvh;
-          overflow: hidden;
-          background: #909ca4;
-        }
-        /* :global — next/image's <Image> is a component, not a literal tag,
-           so styled-jsx doesn't inject its scope class onto it here either
-           (same root cause as the .mobile-hero-copy fix above). Without
-           :global these rules silently never match and object-fit falls
-           back to the browser default "fill", stretching the photo. */
-        :global(.hero-desktop-image) { object-fit: cover; object-position: center; }
-        :global(.mobile-hero-image) { display: none; }
-        .mobile-hero-shade {
-          position: absolute; inset: 0;
-          background: linear-gradient(90deg, rgba(3,10,9,0.72) 0%, rgba(3,10,9,0.3) 46%, rgba(3,10,9,0.05) 72%), linear-gradient(180deg, transparent 48%, rgba(2,7,6,0.74) 100%);
-        }
-        .mobile-hero-copy {
-          position: absolute; z-index: 2;
-          left: clamp(5.2rem, 7.5vw, 15.4rem); top: 24%; bottom: auto;
-          width: min(55rem, calc(100vw - 6.4rem));
-          color: #fff;
-        }
-        .mobile-hero-kicker { margin-bottom: 1.2rem; font-size: 1.4rem; font-weight: 500; color: rgba(255,255,255,0.9); }
-        .mobile-hero-copy h1 {
-          font-family: var(--font-serif), Georgia, serif;
-          max-width: 58rem; margin: 0 0 1.6rem;
-          font-size: clamp(4rem, 4.2vw, 6.4rem); font-weight: 400; line-height: 1.06; letter-spacing: -0.01em;
-        }
-        .mobile-hero-sub { max-width: 50rem; margin-bottom: 2.8rem; font-size: 1.6rem; line-height: 1.5; color: rgba(255,255,255,0.78); }
-        .mobile-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 40rem; }
-        .mobile-hero-actions a {
-          min-height: 5.2rem; display: flex; align-items: center; justify-content: center;
-          padding: 0 1.8rem; border-radius: 999px; background: #fff; color: #123f39;
-          font-size: 1.45rem; font-weight: 700; text-align: center;
-        }
-        .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
-        .hero-proof-points {
-          position: absolute; top: 64svh; left: 0;
-          display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0;
-          width: min(58rem, calc(100vw - 6.4rem)); max-width: calc(100vw - 6.4rem); margin-top: 0;
-        }
-        .hero-proof-points > div { min-width: 0; padding: 0 1.6rem; border-left: 1px solid rgba(255,255,255,0.24); }
-        .hero-proof-points > div:first-child { padding-left: 0; border-left: 0; }
-        .hero-proof-points strong { display: block; font-size: 1.2rem; font-weight: 500; line-height: 1.2; color: #fff; white-space: nowrap; }
-        .hero-proof-points span { display: block; margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.25; color: rgba(255,255,255,0.62); white-space: nowrap; }
-
+        /* .home-header, .pg-nav-links/.pg-nav-signin/.pg-menu-btn,
+           .mobile-first-hero and everything inside it (images, shade, copy,
+           kicker, h1, sub, actions, proof-points) — base rules and their
+           is-scrolled/responsive states — all live in app/globals.css
+           instead of here. See the comment there. */
         .proof-strip {
           position: relative; z-index: 1;
           overflow: hidden;
@@ -724,36 +651,9 @@ export function HomeClient() {
           scroll-margin-top: 9rem;
         }
 
-        @media (max-width: 1099px) {
-          .pg-nav-links { display: none; }
-        }
         @media (max-width: 700px) {
-          .pg-nav-signin { display: none; }
-          .pg-menu-btn { display: flex; }
-          /* Full first screen, no cap: the source portrait has a lot of blank
-             studio backdrop above the subject's hair, and a shorter cap could
-             land the next section peeking in at the bottom before any scroll. */
-          .mobile-first-hero { min-height: 100vh; min-height: 100dvh; }
-          :global(.mobile-hero-image) {
-            display: block;
-            object-fit: cover;
-            /* 34%: brings the crop down to where her hair starts right at the
-               top of the frame, instead of ~27% of flat grey backdrop first. */
-            object-position: center 34%;
-          }
-          :global(.hero-desktop-image) { display: none; }
-          .mobile-hero-shade {
-            position: absolute; inset: 0;
-            background: linear-gradient(180deg, transparent 0%, transparent 55%, rgba(3,10,9,0.55) 78%, rgba(2,7,6,0.96) 100%);
-          }
-          .mobile-hero-copy { position: absolute; z-index: 2; left: 2rem; right: 2rem; top: auto; bottom: 2rem; color: #fff; }
-          .mobile-hero-kicker { margin-bottom: 0.8rem; font-size: 1.25rem; font-weight: 500; color: rgba(255,255,255,0.9); }
-          .mobile-hero-copy h1 { max-width: 34rem; margin: 0 0 1rem; font-size: clamp(2.9rem, 8.4vw, 3.8rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.01em; }
-          .mobile-hero-sub { max-width: 36rem; margin-bottom: 2.4rem; font-size: 1.35rem; line-height: 1.45; color: rgba(255,255,255,0.78); }
-          .mobile-hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-          .mobile-hero-actions a { min-height: 4.8rem; display: flex; align-items: center; justify-content: center; padding: 0 1.4rem; border-radius: 999px; background: #fff; color: #123f39; font-size: 1.4rem; font-weight: 700; text-align: center; }
-          .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
-          .hero-proof-points { display: none; }
+          /* Hero/header-specific mobile overrides live in the matching
+             @media block in app/globals.css instead of here. */
           :global(.reveal-grid), :global(.reveal-grid-reverse), :global(.command-grid) { grid-template-columns: 1fr !important; }
           :global(.reveal-grid-reverse) > div:first-child, :global(.reveal-grid-reverse) > div:last-child { order: initial; }
           :global(.steps-grid) { grid-template-columns: 1fr 1fr; gap: 3.2rem; }

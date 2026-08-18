@@ -49,7 +49,7 @@ export function V2Layout({ children, headline, sub, progress, showBack = true, b
     <div style={{ minHeight: "100dvh", background: "var(--canvas)", display: "flex" }}>
       <div className="v2-left" style={panelL}>
         <Image
-          src="/assets/onboarding-moody-portrait.png"
+          src="/onboarding/portrait.png"
           alt=""
           fill
           sizes="42vw"

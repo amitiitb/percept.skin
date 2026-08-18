@@ -107,7 +107,7 @@ export default function V2CapturePage() {
   const index = Number(params.step);
   const step = CAPTURE_STEPS[index];
 
-  const { currentSessionId, setSessionId, setPhoto, stepIndex, setStepIndex } = useFunnelV2Store();
+  const { currentSessionId, setSessionId, setPhoto, setStepIndex } = useFunnelV2Store();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);

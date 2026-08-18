@@ -76,7 +76,7 @@ function MetricBar({ name, score, accent }: { name: string; score: number; accen
 
 export function ProductPreview({
   defaultTab = "skin",
-  image = "/images/skincare-portraits/portrait-deep-brown.png",
+  image = "/marketing/portraits/deep-brown.png",
   className,
 }: {
   defaultTab?: TabId;

@@ -84,7 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "@id": "https://percept.skin/#organization",
                   name: "Percept",
                   url: "https://percept.skin/",
-                  logo: "https://percept.skin/brand/percept-ai-logo.svg",
+                  logo: "https://percept.skin/brand/logo.svg",
                   email: "support@percept.skin",
                   description,
                 },

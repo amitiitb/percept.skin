@@ -31,10 +31,10 @@ const ALL_METRICS = Object.keys(METRIC_GUIDE);
 type PreviewId = "skin" | "colour" | "hairstyle" | "frame";
 
 const PREVIEWS: Array<{ id: PreviewId; chip: string; title: string; blurb: string; image: string }> = [
-  { id: "skin", chip: "Skin & face", title: "Read region by region", blurb: "Separate scores for skin, harmony, and angularity, each tied to where on your face it was measured.", image: "/images/wyg-skin.png" },
-  { id: "colour", chip: "Colour", title: "The shades that suit your skin", blurb: "Your season, the colours to wear, and the ones that drain you.", image: "/images/wyg-colour.png" },
-  { id: "hairstyle", chip: "Hairstyles", title: "A cut for each occasion", blurb: "Generated on your own photo, so you see it before the salon.", image: "/images/wyg-hair.png" },
-  { id: "frame", chip: "Frames", title: "Eyewear matched to your face", blurb: "Five shapes fitted to your proportions, plus a live try-on.", image: "/images/wyg-frames.png" },
+  { id: "skin", chip: "Skin & face", title: "Read region by region", blurb: "Separate scores for skin, harmony, and angularity, each tied to where on your face it was measured.", image: "/dashboard/skin.png" },
+  { id: "colour", chip: "Colour", title: "The shades that suit your skin", blurb: "Your season, the colours to wear, and the ones that drain you.", image: "/dashboard/colour.png" },
+  { id: "hairstyle", chip: "Hairstyles", title: "A cut for each occasion", blurb: "Generated on your own photo, so you see it before the salon.", image: "/dashboard/hair.png" },
+  { id: "frame", chip: "Frames", title: "Eyewear matched to your face", blurb: "Five shapes fitted to your proportions, plus a live try-on.", image: "/dashboard/frames.png" },
 ];
 
 function bandColour(score: number): string {

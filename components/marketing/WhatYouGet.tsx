@@ -53,7 +53,7 @@ const FEATURES: Feature[] = [
     access: "free",
     accessNote: "Free preview",
     accent: "var(--rose)",
-    image: "/images/wyg-skin-v6.png",
+    image: "/marketing/what-you-get/skin.png",
     aspect: "1672/941",
   },
   {
@@ -66,7 +66,7 @@ const FEATURES: Feature[] = [
     access: "paid",
     accessNote: "Full report",
     accent: GOLD,
-    image: "/images/wyg-colour-v4.png",
+    image: "/marketing/what-you-get/colour.png",
     aspect: "1672/941",
   },
   {
@@ -79,7 +79,7 @@ const FEATURES: Feature[] = [
     access: "paid",
     accessNote: "Full report",
     accent: CORAL,
-    image: "/images/wyg-hair-v4.png",
+    image: "/marketing/what-you-get/hair.png",
     aspect: "1672/941",
   },
   {
@@ -92,7 +92,7 @@ const FEATURES: Feature[] = [
     access: "paid",
     accessNote: "Full report",
     accent: VIOLET,
-    image: "/images/wyg-eyecolour-v4.png",
+    image: "/marketing/what-you-get/eyecolour.png",
     aspect: "1402/1122",
   },
   {
@@ -105,7 +105,7 @@ const FEATURES: Feature[] = [
     access: "free",
     accessNote: "Free, always",
     accent: "var(--rose)",
-    image: "/images/wyg-live.png",
+    image: "/marketing/what-you-get/live.png",
     aspect: "1/1",
   },
 ];
