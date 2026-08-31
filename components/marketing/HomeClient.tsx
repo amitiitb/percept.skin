@@ -555,18 +555,23 @@ export function HomeClient() {
           -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
           mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
         }
-        .proof-track {
+        /* :global — styled-jsx scopes the animation-name token inside a plain
+           rule, rewriting the marquee name to a hashed one that never matches
+           the global keyframes in app/globals.css, so the animation silently
+           never runs (in every browser, not just iOS). Wrapping in :global
+           keeps the name intact. Same reason the grid rules above use it. */
+        :global(.proof-track) {
           display: flex; width: max-content; min-width: max-content; gap: 4.8rem;
           animation: marquee 24s linear infinite;
           will-change: transform;
         }
-        .proof-track > span {
+        :global(.proof-track) > span {
           display: inline-flex; align-items: center; gap: 1.1rem;
           flex-shrink: 0;
           font-size: 1.5rem; font-weight: 600; color: var(--ink);
           white-space: nowrap;
         }
-        .proof-chip {
+        :global(.proof-chip) {
           display: inline-flex; align-items: center; justify-content: center;
           flex-shrink: 0;
           width: 3rem; height: 3rem; border-radius: 50%; font-size: 1.4rem;
@@ -643,8 +648,8 @@ export function HomeClient() {
           -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
           mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
         }
-        .testi-track { display: flex; width: max-content; min-width: max-content; gap: 2.4rem; padding: 0 3.2rem; animation: marquee 42s linear infinite; will-change: transform; }
-        .testi-card { width: 38rem; flex-shrink: 0; padding: 3.2rem; }
+        :global(.testi-track) { display: flex; width: max-content; min-width: max-content; gap: 2.4rem; padding: 0 3.2rem; animation: marquee 42s linear infinite; will-change: transform; }
+        :global(.testi-card) { width: 38rem; flex-shrink: 0; padding: 3.2rem; }
         /* Auto-scroll kept on under prefers-reduced-motion — see proof-track note. */
         .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 4rem; }
 
