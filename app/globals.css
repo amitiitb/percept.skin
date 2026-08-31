@@ -180,6 +180,19 @@ button { cursor: pointer; font: inherit; background: none; border: none; -webkit
 a { color: inherit; text-decoration: none; }
 input, textarea { font: inherit; }
 
+/* ─── Squared corners, app-wide ───────────────────────────────────────
+   Every card, button, chip, input and image gets sharp corners. Elements
+   that are meant to be actual circles keep their shape: the `50%` guard
+   preserves inline-styled round avatars, status dots, icon bubbles and
+   the floating action button; pseudo-element decorative blobs are left
+   untouched (not selected here). `!important` is required because almost
+   all of these radii are set as inline styles. */
+html body :is(button, a, input, textarea, select, div, section, article, header,
+    footer, nav, aside, main, span, li, ul, ol, img, video, figure, form, label,
+    table, dialog, pre, blockquote, details, summary):not([style*="50%"]):not([style*="border-radius: 50"]) {
+  border-radius: 0 !important;
+}
+
 /* ─── Utilities ───────────────────────────────────── */
 .eyebrow {
   color: var(--secondary);
@@ -251,16 +264,15 @@ input, textarea { font: inherit; }
 .pg-card {
   background: var(--surface-neutral);
   border: 1px solid var(--border-neutral);
-  border-radius: 2rem;
+  border-radius: 0;
   box-shadow: none;
 }
-/* Scoped override so the homepage's primary button reads black-on-light
-   (per the redesign brief) without touching --btn-fill globally — every
-   other page (/report, /dashboard, /splash...) keeps the teal button. */
+/* Homepage keeps the same teal fill as the rest of the app — the old
+   black-on-light button override is gone. */
 .pg-scope {
-  --btn-fill: var(--ink);
-  --btn-fill-ink: var(--bg-neutral);
-  --btn-fill-hover: color-mix(in srgb, var(--ink) 82%, var(--bg-neutral) 18%);
+  --btn-fill:      #0C5C51;
+  --btn-fill-ink:  #FFFFFF;
+  --btn-fill-hover:#12786C;
   background: var(--bg-neutral);
 }
 

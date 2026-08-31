@@ -1248,7 +1248,7 @@ export default function V2ReportPage() {
     <div className="v2-report-page" style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
       <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
 
-        <div className="v2-report-toolbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
+        <div className="v2-report-toolbar" style={{ position: "sticky", top: 0, zIndex: 60, background: "var(--canvas)", borderBottom: "1px solid var(--line)", padding: "1.2rem 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "2.4rem" }}>
           <button
             onClick={() => router.push("/dashboard")}
             style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "none", border: "none", color: "var(--secondary)", fontSize: "1.4rem", cursor: "pointer", padding: 0 }}
@@ -1569,12 +1569,17 @@ export default function V2ReportPage() {
         .v2-picker-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
         .v2-picker-heading h2 { margin: 0; color: var(--primary); font-size: clamp(2.5rem, 3vw, 3.4rem); font-weight: 850; letter-spacing: -.04em; line-height: 1.05; }
         .v2-picker-heading > p { max-width: 35rem; margin: 0; color: var(--secondary); font-size: 1.25rem; line-height: 1.5; text-align: right; }
-        .v2-category-dock { position: sticky; top: .8rem; z-index: 40; margin-bottom: 2.8rem; padding: .8rem; border: 1px solid #D4DDD9; border-radius: 0 0 1.8rem 1.8rem; background: rgba(250,249,245,.95); box-shadow: 0 1.4rem 3.5rem -2.6rem rgba(13,48,40,.5); backdrop-filter: blur(18px) saturate(1.2); }
+        /* Sits below the sticky report toolbar (Dashboard / Download / Ask). */
+        .v2-category-dock { position: sticky; top: 7.4rem; z-index: 40; margin-bottom: 2.8rem; padding: .8rem; border: 1px solid #D4DDD9; border-radius: 0 0 1.8rem 1.8rem; background: rgba(250,249,245,.95); box-shadow: 0 1.4rem 3.5rem -2.6rem rgba(13,48,40,.5); backdrop-filter: blur(18px) saturate(1.2); }
         .v2-category-dock .v2-tabbar { margin: 0 !important; }
+        /* Active-tab pill and every tab button: no rounded corners. */
+        .v2-tab-option, .v2-tab-option > span[aria-hidden] { border-radius: 0 !important; }
         .v2-tabrail-hero { padding: .45rem !important; gap: .5rem !important; border: 0 !important; background: transparent !important; }
         .v2-tabrail-hero .v2-tab-option { min-height: 5.8rem; border-color: transparent !important; border-radius: 1.15rem !important; background: transparent !important; font-size: 1.45rem !important; box-shadow: none !important; }
         .v2-tabrail-hero .v2-tab-option:not(.is-active):hover { border-color: #D8E1DD !important; background: #fff !important; }
         .v2-tabrail-hero .v2-tab-icon { display: grid !important; place-items: center; width: 3rem; height: 3rem; border-radius: .85rem; background: color-mix(in srgb, currentColor 11%, transparent); }
+        /* Active tab: plain white icon, no tinted card behind it. */
+        .v2-tabrail-hero .is-active .v2-tab-icon { background: transparent !important; width: auto !important; height: auto !important; }
         .v2-tabrail-hero .is-active { box-shadow: 0 1.2rem 2.6rem -1.8rem rgba(13,48,40,.8) !important; }
         .v2-priority-panel { padding: 2.8rem 3.2rem 3.2rem; border: 1px solid var(--line); border-radius: 1.6rem; background: #FCFBF8; margin-bottom: 3.2rem; box-shadow: 0 1.8rem 5rem -4.2rem rgba(23,62,53,0.55); }
         .v2-priority-intro { display: flex; align-items: end; gap: 1.8rem; margin-bottom: 2rem; }
@@ -1658,9 +1663,11 @@ export default function V2ReportPage() {
              container. overflow-x hidden here silently broke position sticky on
              .v2-category-dock (worked on desktop, which has no clip). */
           .v2-report-page { padding: 2rem 1.4rem 6rem !important; overflow-x: clip; }
-          .v2-report-toolbar { align-items: flex-start !important; margin-bottom: 2rem !important; }
-          .v2-report-actions { align-items: stretch; flex-direction: column-reverse; }
-          .v2-report-actions button { min-width: 14rem; }
+          /* Stay a single compact row so the sticky header does not eat a
+             third of the screen on mobile. */
+          .v2-report-toolbar { flex-wrap: wrap; align-items: center !important; margin-bottom: 1.8rem !important; padding: 1rem 0 !important; }
+          .v2-report-actions { flex: 1 1 100%; align-items: stretch; }
+          .v2-report-actions button { flex: 1 1 0; min-width: 0 !important; padding-left: 1rem !important; padding-right: 1rem !important; font-size: 1.25rem !important; }
           .v2-report-block, .v2-analysis-block { margin: 2rem 0; padding: 1.6rem 1.4rem; border-radius: 1.3rem; }
           .v2-block-heading { align-items: center; margin-bottom: 1.4rem; padding-bottom: 1.2rem; }
           .v2-block-heading h2 { font-size: 1.8rem; }
@@ -1684,7 +1691,7 @@ export default function V2ReportPage() {
           .v2-picker-heading { display: block; margin-bottom: 1.4rem; }
           .v2-picker-heading h2 { font-size: 2.35rem; }
           .v2-picker-heading > p { margin-top: .7rem; text-align: left; }
-          .v2-category-dock { top: .6rem; margin-bottom: 2rem; padding: 0; border-radius: 0; }
+          .v2-category-dock { top: 9.4rem; margin-bottom: 2rem; padding: 0; border-radius: 0; }
           /* Flat 4-up segmented control. Inactive tabs carry no card of their
              own (border/fill/shadow come from inline styles, so they need
              overriding here) — only the active tab is filled. Nothing rounded. */

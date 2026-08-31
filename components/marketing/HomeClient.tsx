@@ -213,8 +213,8 @@ export function HomeClient() {
           <h1 id="mobile-hero-title">Understand your features.<br />Improve what matters.</h1>
           <p className="mobile-hero-sub">A private AI-guided scan for clearer skin, face, hair and colour insights, personalized to you.</p>
           <div className="mobile-hero-actions">
-            <a href="/splash">Start my plan</a>
-            <a href="#how-it-works">How it works</a>
+            <a href="/splash">Start My Plan</a>
+            <a href="#how-it-works">How It Works</a>
           </div>
           <div className="hero-proof-points" aria-label="Key product benefits">
             <div><strong>20+ visual metrics</strong><span>Skin, face and hair insights</span></div>
@@ -490,7 +490,7 @@ export function HomeClient() {
         <Reveal>
           <h2 className="pg-h2" style={{ marginBottom: "2rem" }}>See yourself more clearly.</h2>
           <p className="pg-body" style={{ margin: "0 auto 3.6rem" }}>Your first scores are free. Takes under two minutes.</p>
-          <a href="/splash"><PrimaryButton size="lg" fullWidth={false}>Start my plan</PrimaryButton></a>
+          <a href="/splash"><PrimaryButton size="lg" fullWidth={false}>Start My Plan</PrimaryButton></a>
         </Reveal>
       </section>
 
