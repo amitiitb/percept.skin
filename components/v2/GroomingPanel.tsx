@@ -7,6 +7,7 @@ import { IconRefresh, IconSparkle } from "@/components/ui/icons";
 // previews live inside the Hair tab, so they carry that tab's accent.
 const ACCENT = "#C08420";
 import { GenerationLoader } from "@/components/v2/GenerationLoader";
+import { ImageLightbox } from "@/components/v2/ImageLightbox";
 import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
 interface GridProps {
@@ -84,8 +85,7 @@ function GroomingGrid({ sessionId, photo, isPremium, onRequirePremium, kind, end
 
       {url ? (
         <div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt={`${title} previews on your photo`} style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
+          <ImageLightbox src={url} alt={`${title} previews on your photo`} style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
           <div style={{ marginTop: "1.4rem" }}>
             <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>Generated to cover</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>

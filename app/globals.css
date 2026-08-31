@@ -164,7 +164,9 @@ body {
   color: var(--primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  /* `clip` contains sideways overflow without turning the body into a scroll
+     container, which keeps `position: sticky` descendants working. */
+  overflow-x: clip;
 }
 
 ::selection {
@@ -177,6 +179,19 @@ body {
 button { cursor: pointer; font: inherit; background: none; border: none; -webkit-tap-highlight-color: transparent; }
 a { color: inherit; text-decoration: none; }
 input, textarea { font: inherit; }
+
+/* ─── Squared corners, app-wide ───────────────────────────────────────
+   Every card, button, chip, input and image gets sharp corners. Elements
+   that are meant to be actual circles keep their shape: the `50%` guard
+   preserves inline-styled round avatars, status dots, icon bubbles and
+   the floating action button; pseudo-element decorative blobs are left
+   untouched (not selected here). `!important` is required because almost
+   all of these radii are set as inline styles. */
+html body :is(button, a, input, textarea, select, div, section, article, header,
+    footer, nav, aside, main, span, li, ul, ol, img, video, figure, form, label,
+    table, dialog, pre, blockquote, details, summary):not([style*="50%"]):not([style*="border-radius: 50"]) {
+  border-radius: 0 !important;
+}
 
 /* ─── Utilities ───────────────────────────────────── */
 .eyebrow {
@@ -249,16 +264,15 @@ input, textarea { font: inherit; }
 .pg-card {
   background: var(--surface-neutral);
   border: 1px solid var(--border-neutral);
-  border-radius: 2rem;
+  border-radius: 0;
   box-shadow: none;
 }
-/* Scoped override so the homepage's primary button reads black-on-light
-   (per the redesign brief) without touching --btn-fill globally — every
-   other page (/report, /dashboard, /splash...) keeps the teal button. */
+/* Homepage keeps the same teal fill as the rest of the app — the old
+   black-on-light button override is gone. */
 .pg-scope {
-  --btn-fill: var(--ink);
-  --btn-fill-ink: var(--bg-neutral);
-  --btn-fill-hover: color-mix(in srgb, var(--ink) 82%, var(--bg-neutral) 18%);
+  --btn-fill:      #0C5C51;
+  --btn-fill-ink:  #FFFFFF;
+  --btn-fill-hover:#12786C;
   background: var(--bg-neutral);
 }
 
@@ -330,8 +344,15 @@ input, textarea { font: inherit; }
   min-height: 4.4rem; display: flex; align-items: center; justify-content: center;
   padding: 0 1.6rem; border-radius: 999px; background: #fff; color: #123f39;
   font-size: 1.3rem; font-weight: 600; text-align: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12), 0 12px 30px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.6);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-.mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
+.mobile-hero-actions a:active { transform: translateY(1px); }
+.mobile-hero-actions a:last-child {
+  background: rgba(255,255,255,0.14); color: #fff; backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.28);
+  box-shadow: 0 8px 24px -14px rgba(0,0,0,0.6);
+}
 .hero-proof-points {
   position: absolute; top: 64svh; left: 0;
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0;
@@ -357,8 +378,8 @@ input, textarea { font: inherit; }
   .mobile-hero-kicker { margin-bottom: 0.8rem; font-size: 1.25rem; font-weight: 500; color: rgba(255,255,255,0.9); }
   .mobile-hero-copy h1 { max-width: 34rem; margin: 0 0 1rem; font-size: clamp(2.9rem, 8.4vw, 3.8rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.01em; }
   .mobile-hero-sub { max-width: 36rem; margin-bottom: 2.4rem; font-size: 1.35rem; line-height: 1.45; color: rgba(255,255,255,0.78); }
-  .mobile-hero-actions a { min-height: 4.2rem; display: flex; align-items: center; justify-content: center; padding: 0 1.2rem; border-radius: 999px; background: #fff; color: #123f39; font-size: 1.25rem; font-weight: 600; text-align: center; }
-  .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.18); color: #fff; backdrop-filter: blur(10px); }
+  .mobile-hero-actions a { min-height: 4.2rem; display: flex; align-items: center; justify-content: center; padding: 0 1.2rem; border-radius: 999px; background: #fff; color: #123f39; font-size: 1.25rem; font-weight: 600; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.12), 0 12px 30px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.6); }
+  .mobile-hero-actions a:last-child { background: rgba(255,255,255,0.14); color: #fff; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.28); box-shadow: 0 8px 24px -14px rgba(0,0,0,0.6); }
   .hero-proof-points { display: none; }
 }
 

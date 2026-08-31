@@ -9,6 +9,7 @@ import { IconRefresh, IconSparkle } from "@/components/ui/icons";
 // the two must stay in sync or this panel's card reads as a different module.
 const ACCENT = "#C08420";
 import { GenerationLoader } from "@/components/v2/GenerationLoader";
+import { ImageLightbox } from "@/components/v2/ImageLightbox";
 import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
 interface Props {
@@ -104,8 +105,7 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
 
       {url ? (
         <div style={{ marginBottom: "3.2rem" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="Hairstyle previews on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
+          <ImageLightbox src={url} alt="Hairstyle previews on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
           <div style={{ marginTop: "1.4rem" }}>
           <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>Generated to cover</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>

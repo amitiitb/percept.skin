@@ -22,22 +22,33 @@ const SIZE: Record<string, CSSProperties> = {
   lg: { height: "6.4rem", padding: "0 4rem",   fontSize: "1.9rem" },
 };
 
+// Flat by design: no resting or hover shadow, no lift. The button reads as a
+// solid block of colour that only shifts shade on hover/press. Kept as maps so
+// the render code below stays unchanged.
+const REST_SHADOW: Record<string, string> = {
+  primary: "none", onDark: "none", outline: "none", ghost: "none",
+};
+
+const HOVER_SHADOW: Record<string, string> = {
+  primary: "none", onDark: "none", outline: "none", ghost: "none",
+};
+
 // Both filled variants pin their own text colour instead of reading a theme
 // token. `primary` is white on the dark panel and `onDark` is dark on white,
 // and those pairings must hold in either theme — using var(--primary) for the
 // type would flip it to near-white in dark mode and print white on white.
 const VARIANT: Record<string, CSSProperties> = {
-  primary: { background: "var(--btn-fill)", color: "var(--btn-fill-ink)", borderColor: "var(--btn-fill)" },
+  primary: { background: "#0C5C51", color: "#FFFFFF", borderColor: "#1A9E8F" },
   outline: { background: "transparent",   color: "var(--primary)", borderColor: "var(--line-strong)" },
   ghost:   { background: "transparent",   color: "var(--secondary)", borderColor: "transparent"   },
   onDark:  { background: "#fff",          color: "#0C5C51",        borderColor: "#fff"            },
 };
 
 const HOVER: Record<string, CSSProperties> = {
-  primary: { background: "var(--btn-fill-hover)" },
+  primary: { background: "#12786C", borderColor: "#1A9E8F" },
   outline: { background: "var(--wash)", borderColor: "var(--primary)" },
   ghost:   { background: "var(--wash)", color: "var(--primary)" },
-  onDark:  { background: "#DDE9E6", borderColor: "#DDE9E6" },
+  onDark:  { background: "#EAF2EF", borderColor: "#EAF2EF" },
 };
 
 export function PrimaryButton({
@@ -45,38 +56,49 @@ export function PrimaryButton({
   variant = "primary", size = "md", type = "button", fullWidth = true,
 }: Props) {
   const off = disabled || loading;
+  const restShadow = REST_SHADOW[variant] ?? "none";
+  const hoverShadow = HOVER_SHADOW[variant] ?? "none";
+
   const style: CSSProperties = {
     ...SIZE[size],
     ...VARIANT[variant],
-    borderRadius: "9999px",
+    borderRadius: 0,
     border: "1px solid",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
     gap: "0.8rem",
-    fontWeight: 500,
-    letterSpacing: 0,
+    fontWeight: 600,
+    letterSpacing: "0.005em",
     lineHeight: 1,
     whiteSpace: "nowrap",
     width: fullWidth ? "100%" : "auto",
     cursor: off ? "not-allowed" : "pointer",
     opacity: disabled ? 0.38 : 1,
-    transition: "background 0.18s, border-color 0.18s, color 0.18s, opacity 0.18s, box-shadow 0.18s",
+    boxShadow: off ? "none" : restShadow,
+    transition: "background 0.16s, border-color 0.16s, color 0.16s, opacity 0.16s",
     userSelect: "none",
     WebkitTapHighlightColor: "transparent",
   };
 
-  const hover = HOVER[variant];
+  const enter = (el: HTMLButtonElement) => {
+    Object.assign(el.style, HOVER[variant]);
+    el.style.boxShadow = hoverShadow;
+  };
+  const leave = (el: HTMLButtonElement) => {
+    Object.assign(el.style, VARIANT[variant]);
+    el.style.boxShadow = restShadow;
+  };
 
   return (
     <motion.button
       type={type}
       onClick={!off ? onClick : undefined}
-      whileTap={!off ? { scale: 0.985 } : {}}
-      onMouseEnter={(e) => { if (!off) Object.assign(e.currentTarget.style, hover); }}
-      onMouseLeave={(e) => { Object.assign(e.currentTarget.style, VARIANT[variant]); }}
-      onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 3px rgba(43,53,48,0.18)"; }}
-      onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
+      whileTap={!off ? { scale: 0.97 } : {}}
+      onMouseEnter={(e) => { if (!off) enter(e.currentTarget); }}
+      onMouseLeave={(e) => { if (!off) leave(e.currentTarget); }}
+      onFocus={(e) => { e.currentTarget.style.boxShadow = `${restShadow === "none" ? "" : restShadow + ", "}0 0 0 3px rgba(26,158,143,0.35)`; }}
+      onBlur={(e) => { e.currentTarget.style.boxShadow = off ? "none" : restShadow; }}
       style={style}
     >
       {loading ? (

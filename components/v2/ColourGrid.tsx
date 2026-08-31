@@ -6,6 +6,7 @@ import { IconRefresh } from "@/components/ui/icons";
 import type { ColourAnalysis } from "@/lib/v2/types";
 import { MAX_GENERATIONS } from "@/lib/v2/generationBudget";
 import { GenerationLoader } from "@/components/v2/GenerationLoader";
+import { ImageLightbox } from "@/components/v2/ImageLightbox";
 import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
 // Replaces the old CSS-tinted "draping" cards, which layered a flat colour
@@ -67,8 +68,7 @@ export function ColourGrid({
   if (url) {
     return (
       <div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="You wearing your recommended colours" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
+        <ImageLightbox src={url} alt="You wearing your recommended colours" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
         {occasions.length > 0 && (
           <div style={{ marginTop: "1.4rem" }}>
           <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>Generated to cover</p>
