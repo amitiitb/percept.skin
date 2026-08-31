@@ -556,22 +556,25 @@ export function HomeClient() {
           mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
         }
         .proof-track {
-          display: flex; width: max-content; gap: 4.8rem;
+          display: flex; width: max-content; min-width: max-content; gap: 4.8rem;
           animation: marquee 24s linear infinite;
+          will-change: transform;
         }
-        .proof-track span {
+        .proof-track > span {
           display: inline-flex; align-items: center; gap: 1.1rem;
+          flex-shrink: 0;
           font-size: 1.5rem; font-weight: 600; color: var(--ink);
           white-space: nowrap;
         }
         .proof-chip {
           display: inline-flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
           width: 3rem; height: 3rem; border-radius: 50%; font-size: 1.4rem;
           box-shadow: 0 0 0 4px rgba(255,255,255,0.06);
         }
-        @media (prefers-reduced-motion: reduce) {
-          .proof-track { animation: none; }
-        }
+        /* Marquee intentionally keeps moving even under prefers-reduced-motion:
+           it is decorative continuous motion, and several iOS devices ship with
+           Reduce Motion on by default, which left the strip frozen and clipped. */
 
         .reveal-tags { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
         .reveal-tags span {
@@ -640,11 +643,9 @@ export function HomeClient() {
           -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
           mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
         }
-        .testi-track { display: flex; width: max-content; gap: 2.4rem; padding: 0 3.2rem; animation: marquee 42s linear infinite; }
+        .testi-track { display: flex; width: max-content; min-width: max-content; gap: 2.4rem; padding: 0 3.2rem; animation: marquee 42s linear infinite; will-change: transform; }
         .testi-card { width: 38rem; flex-shrink: 0; padding: 3.2rem; }
-        @media (prefers-reduced-motion: reduce) {
-          .testi-track { animation: none; }
-        }
+        /* Auto-scroll kept on under prefers-reduced-motion — see proof-track note. */
         .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 4rem; }
 
         #what-you-get, #how-it-works, #experts, #pricing, #faq, #command-centre, #recommendations, #progress, #testimonials {
