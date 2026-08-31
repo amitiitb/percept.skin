@@ -1569,7 +1569,7 @@ export default function V2ReportPage() {
         .v2-picker-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
         .v2-picker-heading h2 { margin: 0; color: var(--primary); font-size: clamp(2.5rem, 3vw, 3.4rem); font-weight: 850; letter-spacing: -.04em; line-height: 1.05; }
         .v2-picker-heading > p { max-width: 35rem; margin: 0; color: var(--secondary); font-size: 1.25rem; line-height: 1.5; text-align: right; }
-        .v2-category-dock { position: sticky; top: .8rem; z-index: 40; margin-bottom: 2.8rem; padding: .8rem; border: 1px solid #D4DDD9; border-radius: 0 0 1.8rem 1.8rem; background: rgba(250,249,245,.88); box-shadow: 0 1.4rem 3.5rem -2.6rem rgba(13,48,40,.5); backdrop-filter: blur(18px) saturate(1.2); }
+        .v2-category-dock { position: sticky; top: .8rem; z-index: 40; margin-bottom: 2.8rem; padding: .8rem; border: 1px solid #D4DDD9; border-radius: 0 0 1.8rem 1.8rem; background: rgba(250,249,245,.95); box-shadow: 0 1.4rem 3.5rem -2.6rem rgba(13,48,40,.5); backdrop-filter: blur(18px) saturate(1.2); }
         .v2-category-dock .v2-tabbar { margin: 0 !important; }
         .v2-tabrail-hero { padding: .45rem !important; gap: .5rem !important; border: 0 !important; background: transparent !important; }
         .v2-tabrail-hero .v2-tab-option { min-height: 5.8rem; border-color: transparent !important; border-radius: 1.15rem !important; background: transparent !important; font-size: 1.45rem !important; box-shadow: none !important; }
@@ -1654,7 +1654,10 @@ export default function V2ReportPage() {
            wrapping to two rows, so the sticky header stays one line tall. */
         .v2-tabbar [role="tablist"]::-webkit-scrollbar { display: none; }
         @media (max-width: 600px) {
-          .v2-report-page { padding: 2rem 1.4rem 6rem !important; overflow-x: hidden; }
+          /* overflow-x clip stops sideways drift WITHOUT making this a scroll
+             container. overflow-x hidden here silently broke position sticky on
+             .v2-category-dock (worked on desktop, which has no clip). */
+          .v2-report-page { padding: 2rem 1.4rem 6rem !important; overflow-x: clip; }
           .v2-report-toolbar { align-items: flex-start !important; margin-bottom: 2rem !important; }
           .v2-report-actions { align-items: stretch; flex-direction: column-reverse; }
           .v2-report-actions button { min-width: 14rem; }
@@ -1681,11 +1684,23 @@ export default function V2ReportPage() {
           .v2-picker-heading { display: block; margin-bottom: 1.4rem; }
           .v2-picker-heading h2 { font-size: 2.35rem; }
           .v2-picker-heading > p { margin-top: .7rem; text-align: left; }
-          .v2-category-dock { top: .6rem; margin-bottom: 2rem; padding: .45rem; border-radius: 0 0 1.4rem 1.4rem; }
-          .v2-tabrail-hero { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; padding: 0 !important; gap: .25rem !important; }
-          .v2-tabrail-hero .v2-tab-option { min-height: 5.2rem; padding: .7rem .3rem !important; font-size: 1.1rem !important; }
-          .v2-tabrail-hero .v2-tab-icon { display: flex !important; }
-          .v2-tabrail-hero .v2-tab-option > span { flex-direction: column; gap: .3rem !important; }
+          .v2-category-dock { top: .6rem; margin-bottom: 2rem; padding: 0; border-radius: 0; }
+          /* Flat 4-up segmented control. Inactive tabs carry no card of their
+             own (border/fill/shadow come from inline styles, so they need
+             overriding here) — only the active tab is filled. Nothing rounded. */
+          .v2-tabrail-hero { grid-template-columns: repeat(4, 1fr) !important; padding: 0 !important; gap: 0 !important; background: transparent !important; border: 0 !important; }
+          .v2-tabrail-hero .v2-tab-option {
+            min-height: 5.4rem; padding: .8rem .3rem !important; font-size: 1.1rem !important;
+            border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important;
+          }
+          .v2-tabrail-hero .v2-tab-option + .v2-tab-option { border-left: 1px solid var(--line) !important; }
+          .v2-tabrail-hero .v2-tab-option:not(.is-active) { color: var(--muted) !important; }
+          /* Plain icon — no tinted box behind it. */
+          .v2-tabrail-hero .v2-tab-icon { display: flex !important; width: auto !important; height: auto !important; border-radius: 0 !important; background: transparent !important; }
+          .v2-tabrail-hero .v2-tab-icon svg { width: 2rem !important; height: 2rem !important; }
+          /* Active fill: square, flat, edge to edge — no rounded pill. */
+          .v2-tabrail-hero .is-active > span[aria-hidden] { border-radius: 0 !important; background: var(--panel) !important; box-shadow: none !important; }
+          .v2-tabrail-hero .v2-tab-option > span { flex-direction: column; gap: .35rem !important; }
           .v2-tabrail-hero .v2-tab-full { display: none !important; }
           .v2-tabrail-hero .v2-tab-short { display: inline !important; }
           .v2-priority-panel { padding: 2rem 1.6rem; border-radius: 1.3rem; }

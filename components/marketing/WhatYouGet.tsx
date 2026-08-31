@@ -11,6 +11,7 @@ import {
   IconGlasses,
   IconLiveCamera,
 } from "@/components/ui/icons";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 /**
  * "Five analysis systems" — an alternating editorial layout (visual|copy,
@@ -238,9 +239,9 @@ export function WhatYouGet() {
 
         <div style={{ display: "flex", justifyContent: "center" }}>
           <a href="/splash">
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.8rem", height: "5.4rem", padding: "0 3.2rem", borderRadius: "9999px", background: "var(--ink)", color: "var(--bg-neutral)", fontSize: "1.6rem", fontWeight: 600 }}>
+            <PrimaryButton size="md" fullWidth={false}>
               Start your free scan <IconArrowRight size={1.6} strokeWidth={2} />
-            </span>
+            </PrimaryButton>
           </a>
         </div>
       </div>

@@ -421,21 +421,26 @@ export function HomeClient() {
       </section>
 
       {/* ── Expert / Science ── */}
-      <section id="experts" className="pg-section" style={{ background: "var(--ink)", color: "var(--bg-neutral)", paddingBlock: "clamp(6rem, 8vw, 9rem)" }}>
-        <div className="pg-container" style={{ maxWidth: "96rem" }}>
+      <section id="experts" className="expert-section pg-section" style={{ paddingBlock: "clamp(6rem, 8vw, 9rem)" }}>
+        <div className="pg-container" style={{ maxWidth: "92rem" }}>
           <Reveal className="experts-grid">
-            <div style={{ position: "relative", width: "100%", maxWidth: "22rem", aspectRatio: "4/5", borderRadius: "1.6rem", overflow: "hidden", flexShrink: 0 }}>
-              <Image src="/marketing/expert-dermatologist.png" alt="Dermatologist" fill sizes="(max-width: 700px) 100vw, 22rem" style={{ objectFit: "cover" }} />
+            <div className="expert-photo">
+              <Image src="/marketing/expert-dermatologist.png" alt="Dermatologist" fill sizes="(max-width: 700px) 100vw, 24rem" style={{ objectFit: "cover" }} />
             </div>
             <div>
-              <p className="pg-eyebrow" style={{ color: "rgba(255,255,255,0.5)", marginBottom: "1.2rem" }}>Expert review</p>
-              <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(2.6rem, 2.6vw, 3.4rem)", fontWeight: 400, letterSpacing: "-0.01em", lineHeight: 1.15, color: "var(--bg-neutral)", marginBottom: "1.4rem" }}>
+              <p className="pg-eyebrow" style={{ color: "var(--accent-muted)", marginBottom: "1.2rem" }}>Expert review</p>
+              <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(2.6rem, 2.6vw, 3.4rem)", fontWeight: 400, letterSpacing: "-0.01em", lineHeight: 1.15, color: "#F5F5F3", marginBottom: "1.4rem" }}>
                 Every report is reviewed by a licensed dermatologist.
               </h2>
-              <p style={{ fontSize: "1.5rem", color: "rgba(255,255,255,0.72)", lineHeight: 1.6, marginBottom: "1.4rem", maxWidth: "44rem" }}>
+              <p style={{ fontSize: "1.5rem", color: "rgba(245,245,243,0.72)", lineHeight: 1.6, marginBottom: "1.8rem", maxWidth: "44rem" }}>
                 A real dermatologist reviews your case and follows up directly, usually within 24 hours. Not a chatbot reply, a licensed professional.
               </p>
-              <p style={{ fontSize: "1.2rem", color: "rgba(255,255,255,0.4)", marginBottom: "2rem" }}>
+              <div className="expert-creds">
+                <span>Board-certified</span>
+                <span>Replies within 24h</span>
+                <span>Human, not a bot</span>
+              </div>
+              <p className="expert-cite">
                 First impressions form in under 100ms, Willis &amp; Todorov, <em>Psychological Science</em>, 2006.
               </p>
               <a href="/splash"><PrimaryButton size="md" variant="onDark" fullWidth={false}>Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
@@ -627,7 +632,7 @@ export function HomeClient() {
           display: flex; align-items: center; gap: 0.9rem;
           padding: 0.9rem 1.6rem; border-radius: 999px; border: 1px solid var(--border-neutral); background: var(--bg-neutral);
         }
-        .progress-chip span { font-size: 1.2rem; color: var(--ink-secondary); }
+        .progress-chip span { font-size: 1.2rem; color: var(--ink-secondary); white-space: nowrap; }
         .progress-chip strong { font-size: 1.8rem; font-weight: 600; color: var(--ink); }
         .progress-chip-latest { border-color: var(--ink); }
         .progress-arrow { color: var(--ink-secondary); flex-shrink: 0; }
@@ -642,7 +647,32 @@ export function HomeClient() {
           box-shadow: 0 3.2rem 8rem -2rem rgba(0,0,0,0.5);
           transform: scale(1.03);
         }
-        :global(.experts-grid) { display: flex; gap: 3.2rem; align-items: flex-start; }
+        .expert-section {
+          color: var(--bg-neutral);
+          background:
+            radial-gradient(120% 80% at 85% 0%, rgba(26,158,143,0.14) 0%, transparent 60%),
+            linear-gradient(180deg, #0B211E 0%, #091917 100%);
+          border-top: 1px solid rgba(255,255,255,0.08);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        :global(.experts-grid) { display: flex; gap: 4rem; align-items: center; }
+        .expert-photo {
+          position: relative; width: 100%; max-width: 24rem; aspect-ratio: 4 / 5;
+          border-radius: 1.6rem; overflow: hidden; flex-shrink: 0;
+          border: 1px solid rgba(207,227,222,0.18);
+          box-shadow: 0 2.4rem 6rem -2rem rgba(0,0,0,0.6);
+        }
+        .expert-creds { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 2rem; }
+        .expert-creds span {
+          font-size: 1.25rem; font-weight: 500; color: rgba(245,245,243,0.82);
+          padding: 0.6rem 1.2rem; border-radius: 999px;
+          border: 1px solid rgba(207,227,222,0.2); background: rgba(255,255,255,0.03);
+        }
+        .expert-cite {
+          font-size: 1.2rem; color: rgba(245,245,243,0.42); line-height: 1.5;
+          border-left: 2px solid rgba(217,166,46,0.6); padding-left: 1.2rem;
+          margin-bottom: 2.4rem; max-width: 40rem;
+        }
         .testi-track-wrap {
           overflow: hidden;
           -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
@@ -663,11 +693,15 @@ export function HomeClient() {
           :global(.reveal-grid), :global(.reveal-grid-reverse), :global(.command-grid) { grid-template-columns: 1fr !important; }
           :global(.reveal-grid-reverse) > div:first-child, :global(.reveal-grid-reverse) > div:last-child { order: initial; }
           :global(.steps-grid) { grid-template-columns: 1fr 1fr; gap: 3.2rem; }
-          :global(.experts-grid) { flex-direction: column; }
+          :global(.experts-grid) { flex-direction: column; align-items: center; text-align: left; }
+          :global(.experts-grid) > div:last-child { width: 100%; }
           .pricing-grid { grid-template-columns: 1fr; }
           .pricing-tile-featured { transform: none; order: -1; }
           .footer-grid { grid-template-columns: 1fr 1fr; gap: 3.2rem; }
           :global(.progress-band) { flex-direction: column; align-items: flex-start; }
+          .progress-compare { width: 100%; justify-content: space-between; gap: 1rem; }
+          .progress-chip { flex: 1; justify-content: center; padding: 1rem 1.2rem; }
+          .progress-chip strong { font-size: 1.6rem; }
         }
       `}</style>
     </div>

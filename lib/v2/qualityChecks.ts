@@ -1,3 +1,5 @@
+import "./mediapipeConsole";
+
 export type QualityIssue = "no_face" | "multiple_faces" | "too_dark" | "too_blurry" | "model_unavailable";
 
 export interface QualityResult {

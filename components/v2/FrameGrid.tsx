@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { IconRefresh } from "@/components/ui/icons";
 import { GenerationLoader } from "@/components/v2/GenerationLoader";
+import { ImageLightbox } from "@/components/v2/ImageLightbox";
 import { enqueueImageGeneration } from "@/lib/v2/clientGenerationQueue";
 
 interface Props {
@@ -70,8 +71,7 @@ export function FrameGrid({ sessionId, photo, initialPath, initialRemaining = 0 
   if (url) {
     return (
       <div style={{ marginBottom: "3.2rem" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="Five frame styles previewed on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
+        <ImageLightbox src={url} alt="Five frame styles previewed on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
         <div style={{ marginTop: "1.4rem" }}>
           <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>Generated to cover</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>

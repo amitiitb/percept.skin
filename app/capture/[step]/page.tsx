@@ -10,6 +10,7 @@ import {
   STABLE_TICKS, COUNTDOWN_TICKS, type AutoCaptureBlocker,
 } from "@/lib/v2/autoCapture";
 import { runQualityChecks, ISSUE_MESSAGES, type QualityIssue } from "@/lib/v2/qualityChecks";
+import "@/lib/v2/mediapipeConsole";
 import { compressImage } from "@/lib/v2/imageCompress";
 import { logV2 } from "@/lib/v2/log";
 import { trackEvent } from "@/lib/analytics";
