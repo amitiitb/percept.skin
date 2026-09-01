@@ -7,7 +7,7 @@ import { SiteMenu } from "@/components/marketing/SiteMenu";
 import { WhatYouGet } from "@/components/marketing/WhatYouGet";
 import { ProductPreview } from "@/components/marketing/ProductPreview";
 import { Logo } from "@/components/ui/Logo";
-import { IconCheck, IconArrowRight } from "@/components/ui/icons";
+import { IconCheck, IconArrowRight, IconFaceScan, IconClock, IconShield, IconSparkle } from "@/components/ui/icons";
 import { BUNDLE_PRICE, DOCTOR_CONSULTATION_PRICE } from "@/lib/v2/reportModules";
 import { FAQS } from "@/lib/v2/homeFaqs";
 import { OPEN_COOKIE_PREFS_EVENT } from "@/components/ConsentBanner";
@@ -20,17 +20,20 @@ const NAV_LINKS = [
 ];
 
 const PROOF_POINTS = [
-  { icon: "📊", label: "20+ appearance metrics", color: "#1A9E8F" },
-  { icon: "⏱️", label: "Under 2 minute analysis", color: "#D9A62E" },
-  { icon: "🔒", label: "Private by design", color: "#C8503A" },
-  { icon: "✨", label: "Personalised recommendations", color: "#7C6CC4" },
+  { Icon: IconFaceScan, label: "20+ appearance metrics", color: "#2BB6A4" },
+  { Icon: IconClock, label: "Under 2 minute analysis", color: "#E0B44A" },
+  { Icon: IconShield, label: "Private by design", color: "#E0785F" },
+  { Icon: IconSparkle, label: "Personalised recommendations", color: "#9C8FE0" },
 ];
 
+// Portrait photo per step — add the four files at these paths (head-and-shoulders
+// editorial headshots, plain background, one natural expression each):
+//   public/marketing/steps/{capture,analyse,understand,improve}.png
 const STEPS = [
-  { n: "01", title: "Capture", body: "A short, guided photo sequence. No special equipment." },
-  { n: "02", title: "Analyse", body: "20+ metrics scored across skin, face, colour and hair." },
-  { n: "03", title: "Understand", body: "Plain-language findings, not a raw data dump." },
-  { n: "04", title: "Improve", body: "A routine and recommendations built around your results." },
+  { n: "01", title: "Capture", body: "A short, guided photo sequence. No special equipment.", accent: "#1A9E8F", photo: "/marketing/steps/capture.png", alt: "Woman taking a guided selfie at home" },
+  { n: "02", title: "Analyse", body: "20+ metrics scored across skin, face, colour and hair.", accent: "#D9A62E", photo: "/marketing/steps/analyse.png", alt: "Subtle facial landmark analysis on a natural portrait" },
+  { n: "03", title: "Understand", body: "Plain-language findings, not a raw data dump.", accent: "#C8503A", photo: "/marketing/steps/understand.png", alt: "Woman reviewing her personalised appearance report" },
+  { n: "04", title: "Improve", body: "A routine and recommendations built around your results.", accent: "#7C6CC4", photo: "/marketing/steps/improve.png", alt: "Man following his personalised skincare routine" },
 ];
 
 const COMMAND_METRICS = [
@@ -174,7 +177,7 @@ export function HomeClient() {
           <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
             <a href="/auth/login" className="pg-nav-signin">Sign in</a>
             <a href="/splash" className="pg-header-cta">
-              <PrimaryButton size="xs" fullWidth={false}>Try Free</PrimaryButton>
+              <PrimaryButton size="xs" fullWidth={false} emphasis>Try Free <IconArrowRight size={1.2} /></PrimaryButton>
             </a>
             <button
               onClick={() => setMenuOpen(true)}
@@ -213,7 +216,7 @@ export function HomeClient() {
           <h1 id="mobile-hero-title">Understand your features.<br />Improve what matters.</h1>
           <p className="mobile-hero-sub">A private AI-guided scan for clearer skin, face, hair and colour insights, personalized to you.</p>
           <div className="mobile-hero-actions">
-            <a href="/splash">Start My Plan</a>
+            <a href="/splash">Start My Plan <IconArrowRight size={1.4} /></a>
             <a href="#how-it-works">How It Works</a>
           </div>
           <div className="hero-proof-points" aria-label="Key product benefits">
@@ -229,10 +232,14 @@ export function HomeClient() {
           once items drop to a second line. ── */}
       <section className="proof-strip" aria-label="Key product benefits">
         <div className="proof-track">
-          {[...PROOF_POINTS, ...PROOF_POINTS].map((p, i) => (
-            <span key={i}>
-              <span className="proof-chip" aria-hidden style={{ background: p.color }}>{p.icon}</span>
-              {p.label}
+          {/* Four copies, not two: the marquee keyframe shifts by -50% (i.e. two
+              copies), so each half must be wide enough to always cover the
+              viewport — with only four slim items, two copies weren't, and a
+              blank gap showed at the loop point. */}
+          {[...PROOF_POINTS, ...PROOF_POINTS, ...PROOF_POINTS, ...PROOF_POINTS].map((p, i) => (
+            <span key={i} className="proof-item" style={{ ["--proof-accent" as string]: p.color }}>
+              <span className="proof-chip" aria-hidden><p.Icon size={1.4} strokeWidth={1.9} /></span>
+              <span className="proof-label">{p.label}</span>
             </span>
           ))}
         </div>
@@ -286,10 +293,12 @@ export function HomeClient() {
             {/* Report */}
             <div className="pricing-tile">
               <p className="pg-eyebrow" style={{ margin: "0 0 1.2rem", color: "rgba(255,255,255,0.5)" }}>AI report</p>
-              <div style={{ display: "flex", alignItems: "flex-start", marginBottom: "1.6rem" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", marginBottom: "0.8rem" }}>
                 <span style={{ fontSize: "2.2rem", fontWeight: 600, marginTop: "0.5rem", color: "#F2C85B" }}>$</span>
                 <span style={{ fontSize: "5.6rem", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1, color: "#F2C85B" }}>{BUNDLE_PRICE}</span>
               </div>
+              <span className="price-note">One-time</span>
+              <div className="pricing-rule" />
               <ul style={{ margin: "0 0 2.4rem", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1rem", flex: 1 }}>
                 {PRICING_FEATURES.map((f) => (
                   <li key={f} style={{ display: "flex", gap: "0.9rem", fontSize: "1.4rem", color: "rgba(255,255,255,0.85)" }}>
@@ -298,20 +307,22 @@ export function HomeClient() {
                   </li>
                 ))}
               </ul>
-              <a href="/splash"><PrimaryButton variant="onDark" fullWidth>Get my report · ${BUNDLE_PRICE}</PrimaryButton></a>
+              <a href="/splash"><PrimaryButton variant="onDark" fullWidth emphasis>Get my report · ${BUNDLE_PRICE} <IconArrowRight size={1.35} /></PrimaryButton></a>
             </div>
 
             {/* Bundle — featured */}
             <div className="pricing-tile pricing-tile-featured">
               <div aria-hidden style={{ position: "absolute", top: "-30%", right: "-20%", width: "30rem", height: "30rem", borderRadius: "50%", background: "radial-gradient(circle, rgba(217,166,46,0.3) 0%, transparent 70%)", pointerEvents: "none" }} />
-              <span style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#082f2b", background: "#F2C85B", padding: "0.4rem 1rem", borderRadius: "999px", marginBottom: "1.2rem" }}>
+              <span style={{ position: "relative", alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "1.1rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#082f2b", background: "#F2C85B", padding: "0.5rem 1.1rem", marginBottom: "1.2rem" }}>
                 Best value
               </span>
               <p className="pg-eyebrow" style={{ position: "relative", margin: "0 0 1.2rem", color: "rgba(255,255,255,0.55)" }}>Report + Consultation</p>
-              <div style={{ position: "relative", display: "flex", alignItems: "flex-start", marginBottom: "1.6rem" }}>
-                <span style={{ fontSize: "2.6rem", fontWeight: 600, marginTop: "0.6rem", color: "#F2C85B" }}>$</span>
-                <span style={{ fontSize: "7.2rem", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1, color: "#F2C85B", textShadow: "0 0.4rem 3.2rem rgba(242,200,91,0.4)" }}><AnimatedPrice value={BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE} /></span>
+              <div style={{ position: "relative", display: "flex", alignItems: "flex-start", marginBottom: "0.8rem" }}>
+                <span style={{ fontSize: "2.2rem", fontWeight: 600, marginTop: "0.5rem", color: "#F2C85B" }}>$</span>
+                <span style={{ fontSize: "5.6rem", fontWeight: 600, letterSpacing: "-0.03em", lineHeight: 1, color: "#F2C85B" }}><AnimatedPrice value={BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE} /></span>
               </div>
+              <span className="price-note" style={{ position: "relative" }}>One-time · everything included</span>
+              <div className="pricing-rule" style={{ position: "relative" }} />
               <ul style={{ position: "relative", margin: "0 0 2.4rem", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1rem", flex: 1 }}>
                 <li style={{ display: "flex", gap: "0.9rem", fontSize: "1.4rem", color: "rgba(255,255,255,0.92)", fontWeight: 600 }}>
                   <span style={{ flexShrink: 0, marginTop: "0.2rem", display: "flex", color: "#F2C85B" }}><IconCheck size={1.3} strokeWidth={2.4} /></span>
@@ -326,7 +337,7 @@ export function HomeClient() {
                   One checkout, no extra steps
                 </li>
               </ul>
-              <a href="/splash" style={{ position: "relative", display: "block" }}><PrimaryButton variant="onDark" fullWidth>Get the bundle · ${BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
+              <a href="/splash" style={{ position: "relative", display: "block" }}><PrimaryButton variant="onDark" fullWidth emphasis>Get the bundle · ${BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE} <IconArrowRight size={1.35} /></PrimaryButton></a>
             </div>
           </div>
         </Reveal>
@@ -360,15 +371,19 @@ export function HomeClient() {
       </section>
 
       {/* ── How it works ── */}
-      <section id="how-it-works" className="pg-section pg-container" style={{ background: "var(--surface-neutral)" }}>
+      <section id="how-it-works" className="pg-section pg-container pg-section-inset" style={{ background: "var(--surface-neutral)" }}>
         <Reveal>
           <h2 className="pg-h2" style={{ marginBottom: "6rem", maxWidth: "60rem" }}>From selfie to insight in minutes.</h2>
           <div className="steps-grid">
             {STEPS.map((s) => (
-              <div key={s.n}>
-                <span className="step-number">{s.n}</span>
-                <h3 className="pg-card-h" style={{ margin: "1.6rem 0 0.8rem", fontSize: "2rem" }}>{s.title}</h3>
-                <p style={{ fontSize: "1.4rem", color: "var(--ink-secondary)", lineHeight: 1.5, margin: 0 }}>{s.body}</p>
+              <div key={s.n} className="step-card" style={{ ["--step-accent" as string]: s.accent }}>
+                <div className="step-photo">
+                  <Image src={s.photo} alt={s.alt} fill sizes="(max-width: 700px) 50vw, 24rem" style={{ objectFit: "cover" }} />
+                  <span className="step-photo-tint" aria-hidden />
+                  <span className="step-number">{s.n}</span>
+                </div>
+                <h3 className="pg-card-h step-title">{s.title}</h3>
+                <p className="step-body">{s.body}</p>
               </div>
             ))}
           </div>
@@ -398,52 +413,85 @@ export function HomeClient() {
       </section>
 
       {/* ── Progress ── */}
-      <section id="progress" className="pg-section pg-container" style={{ background: "var(--surface-neutral)", paddingBlock: "clamp(5.6rem, 7vw, 7.2rem)" }}>
+      <section id="progress" className="pg-section pg-container progress-section pg-section-inset" style={{ paddingBlock: "clamp(6rem, 8vw, 8.4rem)" }}>
         <Reveal className="progress-band">
-          <div>
-            <p className="pg-eyebrow" style={{ marginBottom: "0.8rem" }}>Progress</p>
-            <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(2.4rem, 2.4vw, 3rem)", fontWeight: 400, letterSpacing: "-0.01em", color: "var(--ink)", margin: 0 }}>
+          <div className="progress-copy">
+            <p className="pg-eyebrow" style={{ marginBottom: "0.8rem", color: "rgba(255,255,255,0.5)" }}>Progress</p>
+            <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(2.4rem, 2.4vw, 3rem)", fontWeight: 400, letterSpacing: "-0.01em", color: "#F5F5F3", margin: 0 }}>
               See what changes over time.
             </h2>
-          </div>
-          <div className="progress-compare">
-            <div className="progress-chip">
-              <span>First scan</span>
-              <strong>68</strong>
-            </div>
-            <IconArrowRight size={2} strokeWidth={1.8} className="progress-arrow" />
-            <div className="progress-chip progress-chip-latest">
-              <span>Latest scan</span>
-              <strong>84</strong>
+            <p className="progress-sub">
+              Re-scan every few weeks in the same light and angle. Guided capture holds both steady, so the trend line reflects real change — not the room.
+            </p>
+            <div className="progress-legend">
+              <span><i className="progress-legend-dot progress-legend-first" />First scan · 68</span>
+              <span><i className="progress-legend-dot progress-legend-last" />Latest scan · 84</span>
             </div>
           </div>
+
+          {/* Self-contained sparkline — no chart library, matching the other
+              hand-rolled marks on this page. `non-scaling-stroke` keeps the
+              line crisp as the SVG scales to the card width. */}
+          <figure className="progress-card">
+            <figcaption className="progress-card-head">
+              <span className="progress-card-title">Percept score</span>
+              <span className="progress-delta">+16 pts</span>
+            </figcaption>
+            <svg className="progress-spark" viewBox="0 0 320 150" role="img" aria-label="Percept score rising from 68 to 84 across six scans">
+              <defs>
+                <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#1A9E8F" stopOpacity="0.28" />
+                  <stop offset="100%" stopColor="#1A9E8F" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              {/* horizontal gridlines */}
+              <line x1="12" y1="24" x2="308" y2="24" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+              <line x1="12" y1="70" x2="308" y2="70" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+              <line x1="12" y1="116" x2="308" y2="116" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+              {/* dashed baseline at the first score, so the climb above it is legible */}
+              <line x1="12" y1="118.8" x2="308" y2="118.8" stroke="rgba(255,255,255,0.22)" strokeWidth="1" strokeDasharray="3 4" />
+              <path d="M12,118.8 L71.2,101.4 L130.4,113 L189.6,74 L248.8,50.2 L308,27.6 L308,138 L12,138 Z" fill="url(#sparkFill)" />
+              <path d="M12,118.8 L71.2,101.4 L130.4,113 L189.6,74 L248.8,50.2 L308,27.6" fill="none" stroke="#1A9E8F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+              <circle cx="12" cy="118.8" r="3.5" fill="#0B2420" stroke="#1A9E8F" strokeWidth="2" />
+              <circle cx="308" cy="27.6" r="4.5" fill="#1A9E8F" />
+            </svg>
+            <div className="progress-card-foot">
+              <span>6 scans · 9 weeks</span>
+              <span className="progress-up">24% higher than first scan</span>
+            </div>
+          </figure>
         </Reveal>
       </section>
 
       {/* ── Expert / Science ── */}
       <section id="experts" className="expert-section pg-section" style={{ paddingBlock: "clamp(6rem, 8vw, 9rem)" }}>
-        <div className="pg-container" style={{ maxWidth: "92rem" }}>
+        <div className="pg-container expert-container">
           <Reveal className="experts-grid">
             <div className="expert-photo">
-              <Image src="/marketing/expert-dermatologist.png" alt="Dermatologist" fill sizes="(max-width: 700px) 100vw, 24rem" style={{ objectFit: "cover" }} />
+              <Image src="/marketing/expert-dermatologist.png" alt="Licensed dermatologist available for a personal report review" fill sizes="(max-width: 700px) 100vw, 38rem" style={{ objectFit: "cover" }} />
+              <div className="expert-photo-caption">
+                <span className="expert-live-dot" aria-hidden />
+                <span><strong>Personal case review</strong>Secure and confidential</span>
+              </div>
             </div>
-            <div>
-              <p className="pg-eyebrow" style={{ color: "var(--accent-muted)", marginBottom: "1.2rem" }}>Expert review</p>
-              <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(2.6rem, 2.6vw, 3.4rem)", fontWeight: 400, letterSpacing: "-0.01em", lineHeight: 1.15, color: "#F5F5F3", marginBottom: "1.4rem" }}>
-                Every report is reviewed by a licensed dermatologist.
-              </h2>
-              <p style={{ fontSize: "1.5rem", color: "rgba(245,245,243,0.72)", lineHeight: 1.6, marginBottom: "1.8rem", maxWidth: "44rem" }}>
-                A real dermatologist reviews your case and follows up directly, usually within 24 hours. Not a chatbot reply, a licensed professional.
+            <div className="expert-copy">
+              <p className="pg-eyebrow expert-eyebrow">Expert review</p>
+              <h2>Real expertise behind every recommendation.</h2>
+              <p className="expert-lede">
+                A licensed dermatologist reviews your report and follows up directly, usually within 24 hours. Clear, personal guidance from a real professional.
               </p>
-              <div className="expert-creds">
-                <span>Board-certified</span>
-                <span>Replies within 24h</span>
-                <span>Human, not a bot</span>
+              <div className="expert-creds" aria-label="Consultation benefits">
+                <span><IconCheck size={1.35} strokeWidth={2.4} /><b>Board-certified</b><small>Professional review</small></span>
+                <span><IconCheck size={1.35} strokeWidth={2.4} /><b>Within 24 hours</b><small>Direct follow-up</small></span>
+                <span><IconCheck size={1.35} strokeWidth={2.4} /><b>Human guidance</b><small>Never a bot reply</small></span>
+              </div>
+              <div className="expert-action">
+                <a href="/splash"><PrimaryButton size="md" variant="onDark" fullWidth emphasis>Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE} <IconArrowRight size={1.35} /></PrimaryButton></a>
+                <span>One-time consultation · no subscription</span>
               </div>
               <p className="expert-cite">
-                First impressions form in under 100ms, Willis &amp; Todorov, <em>Psychological Science</em>, 2006.
+                Evidence-led appearance analysis informed by peer-reviewed perception research.
               </p>
-              <a href="/splash"><PrimaryButton size="md" variant="onDark" fullWidth={false}>Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
             </div>
           </Reveal>
         </div>
@@ -490,7 +538,7 @@ export function HomeClient() {
         <Reveal>
           <h2 className="pg-h2" style={{ marginBottom: "2rem" }}>See yourself more clearly.</h2>
           <p className="pg-body" style={{ margin: "0 auto 3.6rem" }}>Your first scores are free. Takes under two minutes.</p>
-          <a href="/splash"><PrimaryButton size="lg" fullWidth={false}>Start My Plan</PrimaryButton></a>
+          <a href="/splash"><PrimaryButton size="lg" fullWidth={false} emphasis>Start My Plan <IconArrowRight size={1.6} /></PrimaryButton></a>
         </Reveal>
       </section>
 
@@ -548,17 +596,12 @@ export function HomeClient() {
         .proof-strip {
           position: relative; z-index: 1;
           overflow: hidden;
-          background: var(--surface-neutral);
-          padding-block: 2rem;
-          /* Hard shadow, not just a border — the hero above ends in a
-             near-black gradient, so a same-tone dark strip would blend
-             straight into it with no visible seam (looked like the marquee
-             text was floating, residual, over the photo). A light strip
-             with real elevation makes the boundary unmistakable regardless
-             of how dark the image above happens to be. */
-          box-shadow: 0 -1px 0 var(--border-neutral), 0 4px 16px rgba(0,0,0,0.06);
-          -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
-          mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+          background: var(--bg-neutral);
+          padding-block: 0.7rem;
+          border-top: 1px solid var(--border-neutral);
+          border-bottom: 1px solid var(--border-neutral);
+          -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
         }
         /* :global — styled-jsx scopes the animation-name token inside a plain
            rule, rewriting the marquee name to a hashed one that never matches
@@ -566,21 +609,30 @@ export function HomeClient() {
            never runs (in every browser, not just iOS). Wrapping in :global
            keeps the name intact. Same reason the grid rules above use it. */
         :global(.proof-track) {
-          display: flex; width: max-content; min-width: max-content; gap: 4.8rem;
-          animation: marquee 24s linear infinite;
+          display: flex; width: max-content; min-width: max-content; gap: 0;
+          animation: marquee 34s linear infinite;
           will-change: transform;
         }
-        :global(.proof-track) > span {
-          display: inline-flex; align-items: center; gap: 1.1rem;
+        /* Slim, borderless items separated by a hairline rule. Icon sits in a
+           faint tint of its accent and is stroked in that accent — colourful
+           but low-contrast enough to sit quietly on the dark strip. */
+        :global(.proof-item) {
+          display: inline-flex; align-items: center; gap: 0.7rem;
           flex-shrink: 0;
-          font-size: 1.5rem; font-weight: 600; color: var(--ink);
+          padding: 0.2rem 1.8rem;
+          border-left: 1px solid var(--border-neutral);
           white-space: nowrap;
+        }
+        :global(.proof-label) {
+          font-size: 1.12rem; font-weight: 650; letter-spacing: 0.05em;
+          text-transform: uppercase; color: var(--ink);
         }
         :global(.proof-chip) {
           display: inline-flex; align-items: center; justify-content: center;
           flex-shrink: 0;
-          width: 3rem; height: 3rem; border-radius: 50%; font-size: 1.4rem;
-          box-shadow: 0 0 0 4px rgba(255,255,255,0.06);
+          width: 2rem; height: 2rem;
+          color: var(--proof-accent);
+          background: color-mix(in srgb, var(--proof-accent) 15%, transparent);
         }
         /* Marquee intentionally keeps moving even under prefers-reduced-motion:
            it is decorative continuous motion, and several iOS devices ship with
@@ -623,55 +675,190 @@ export function HomeClient() {
           transform: translate(-50%, -50%);
         }
 
-        :global(.steps-grid) { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; }
-        .step-number { font-size: clamp(3.6rem, 4vw, 5.2rem); font-weight: 600; letter-spacing: -0.03em; color: var(--border-neutral); }
-
-        :global(.progress-band) { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 2.4rem; }
-        .progress-compare { display: flex; align-items: center; gap: 1.2rem; }
-        .progress-chip {
-          display: flex; align-items: center; gap: 0.9rem;
-          padding: 0.9rem 1.6rem; border-radius: 999px; border: 1px solid var(--border-neutral); background: var(--bg-neutral);
+        :global(.steps-grid) { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6rem; }
+        /* Neutral process cards with a subtle lift on hover. */
+        .step-card {
+          display: flex; flex-direction: column;
+          padding: 0 2.2rem 2.4rem;
+          background: var(--bg-neutral);
+          border: 1px solid var(--border-neutral);
+          transition: transform 0.22s ease, background 0.22s ease;
         }
-        .progress-chip span { font-size: 1.2rem; color: var(--ink-secondary); white-space: nowrap; }
-        .progress-chip strong { font-size: 1.8rem; font-weight: 600; color: var(--ink); }
-        .progress-chip-latest { border-color: var(--ink); }
-        .progress-arrow { color: var(--ink-secondary); flex-shrink: 0; }
-
-        .pricing-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 2.4rem; align-items: stretch; max-width: 84rem; margin: 0 auto; }
-        .pricing-tile {
-          position: relative; display: flex; flex-direction: column;
-          padding: 3.2rem; border-radius: 2rem; background: #0B2420; border: 1px solid rgba(217,166,46,0.18);
+        .step-card:hover {
+          transform: translateY(-4px);
+          background: color-mix(in srgb, var(--step-accent) 7%, var(--bg-neutral));
         }
-        .pricing-tile-featured {
-          overflow: hidden; padding: 3.6rem 3.2rem; border-color: rgba(217,166,46,0.5);
-          box-shadow: 0 3.2rem 8rem -2rem rgba(0,0,0,0.5);
-          transform: scale(1.03);
+        /* Full-bleed portrait at the top of the card. A bottom gradient in the
+           step's accent ties the photo to the card and keeps the number
+           legible over any image. */
+        .step-photo {
+          position: relative;
+          margin: 0 -2.2rem 1.8rem;
+          aspect-ratio: 16 / 12;
+          overflow: hidden;
+          background: color-mix(in srgb, var(--step-accent) 12%, var(--bg-neutral));
+          border-bottom: 1px solid var(--border-neutral);
         }
-        .expert-section {
-          color: var(--bg-neutral);
+        .step-photo img { filter: grayscale(0.12) contrast(1.02); }
+        .step-photo-tint {
+          position: absolute; inset: 0; pointer-events: none;
           background:
-            radial-gradient(120% 80% at 85% 0%, rgba(26,158,143,0.14) 0%, transparent 60%),
+            linear-gradient(180deg, transparent 45%, color-mix(in srgb, var(--step-accent) 70%, transparent) 100%),
+            linear-gradient(0deg, rgba(0,0,0,0.28), transparent 55%);
+          mix-blend-mode: multiply;
+        }
+        .step-number {
+          position: absolute; left: 1.4rem; bottom: 1rem; z-index: 1;
+          font-size: clamp(2.6rem, 3vw, 3.4rem); font-weight: 700;
+          letter-spacing: -0.02em; line-height: 1;
+          color: #fff; font-variant-numeric: tabular-nums;
+          text-shadow: 0 0.2rem 1.2rem rgba(0,0,0,0.45);
+        }
+        :global(.step-title) { margin: 1.4rem 0 0.6rem; font-size: 1.9rem; }
+        :global(.step-body) { font-size: 1.35rem; color: var(--ink-secondary); line-height: 1.55; margin: 0; }
+
+        :global(.progress-band) { display: grid; grid-template-columns: 1fr 1fr; gap: 4.8rem; align-items: center; }
+        /* Dark green band, same family as the pricing tiles and expert section
+           — the previous white-on-white version read as an empty gap. Copy
+           left, a score-trend card right, both on the dark ground. */
+        /* Equal light gutter above and below a banded section so it reads as a
+           distinct block rather than merging with its neighbours. Shared by
+           the steps ("From selfie to insight") and progress sections. */
+        :global(.pg-section-inset) { margin-block: clamp(2.4rem, 4vw, 4rem); }
+
+        .progress-section {
+          color: #F5F5F3;
+          background:
+            radial-gradient(120% 80% at 88% 0%, rgba(26,158,143,0.16) 0%, transparent 55%),
             linear-gradient(180deg, #0B211E 0%, #091917 100%);
           border-top: 1px solid rgba(255,255,255,0.08);
           border-bottom: 1px solid rgba(255,255,255,0.08);
         }
-        :global(.experts-grid) { display: flex; gap: 4rem; align-items: center; }
-        .expert-photo {
-          position: relative; width: 100%; max-width: 24rem; aspect-ratio: 4 / 5;
-          border-radius: 1.6rem; overflow: hidden; flex-shrink: 0;
-          border: 1px solid rgba(207,227,222,0.18);
-          box-shadow: 0 2.4rem 6rem -2rem rgba(0,0,0,0.6);
+        .progress-copy { max-width: 40rem; }
+        .progress-sub { margin: 1.4rem 0 0; font-size: 1.4rem; line-height: 1.6; color: rgba(255,255,255,0.62); }
+        .progress-legend { display: flex; flex-wrap: wrap; gap: 1.6rem 2.4rem; margin-top: 2rem; }
+        .progress-legend span { display: inline-flex; align-items: center; gap: 0.7rem; font-size: 1.2rem; color: rgba(255,255,255,0.75); }
+        .progress-legend-dot { width: 0.9rem; height: 0.9rem; flex-shrink: 0; }
+        .progress-legend-first { background: transparent; box-shadow: inset 0 0 0 2px #1A9E8F; }
+        .progress-legend-last { background: #1A9E8F; }
+        .progress-card {
+          margin: 0;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-top: 3px solid #1A9E8F;
+          background: #0B2420;
+          padding: 2rem 2.2rem 1.7rem;
         }
-        .expert-creds { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 2rem; }
+        .progress-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
+        .progress-card-title { font-size: 1.05rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+        .progress-delta { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.03em; color: #04120F; background: #1A9E8F; padding: 0.35rem 0.8rem; }
+        .progress-spark { display: block; width: 100%; height: auto; }
+        .progress-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 1.15rem; color: rgba(255,255,255,0.5); }
+        .progress-up { color: #2BB6A4; font-weight: 650; text-align: right; }
+
+        .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: stretch; max-width: 82rem; margin: 0 auto; }
+        /* Flat, squared tiles that match the rest of the page. Emphasis on the
+           featured plan comes from a gold edge + elevation, not a scale bump
+           (which was overflowing its column and blurring on sub-pixel edges). */
+        .pricing-tile {
+          position: relative; display: flex; flex-direction: column;
+          padding: 3.2rem; background: #0B2420;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-top: 3px solid rgba(255,255,255,0.16);
+        }
+        .pricing-tile-featured {
+          overflow: hidden;
+          border-color: rgba(224,180,74,0.55);
+          border-top: 3px solid #E0B44A;
+          box-shadow: 0 2.4rem 6rem -2rem rgba(0,0,0,0.55);
+          transform: none;
+        }
+        .pricing-rule { height: 1px; background: rgba(255,255,255,0.1); margin: 0 0 2rem; }
+        .price-note {
+          align-self: flex-start; margin: -0.6rem 0 1.8rem;
+          font-size: 1.1rem; letter-spacing: 0.06em; text-transform: uppercase;
+          color: rgba(255,255,255,0.45);
+        }
+        .expert-section {
+          color: #F5F5F3;
+          /* Near-black, with a faint teal wash top-right so it is not a dead
+             flat black. */
+          background:
+            radial-gradient(130% 90% at 85% -5%, rgba(26,158,143,0.11) 0%, transparent 55%),
+            #0B0B0B;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        :global(.expert-container) { max-width: 112rem; }
+        :global(.experts-grid) {
+          display: grid; grid-template-columns: minmax(30rem, 0.86fr) minmax(0, 1.14fr);
+          gap: clamp(5rem, 7vw, 9rem); align-items: center;
+        }
+        .expert-photo {
+          position: relative; width: 100%; aspect-ratio: 4 / 5;
+          overflow: hidden; min-height: 46rem;
+          border: 1px solid rgba(207,227,222,0.18);
+          box-shadow: 0 3.2rem 7rem -3rem rgba(0,0,0,0.82);
+        }
+        .expert-photo::after {
+          content: ""; position: absolute; inset: 45% 0 0; pointer-events: none;
+          background: linear-gradient(180deg, transparent, rgba(3,12,10,0.9));
+        }
+        .expert-photo-caption {
+          position: absolute; z-index: 1; left: 2.2rem; right: 2.2rem; bottom: 2rem;
+          display: flex; align-items: center; gap: 1rem; color: rgba(245,245,243,0.62);
+          font-size: 1.15rem; line-height: 1.35;
+        }
+        .expert-photo-caption strong {
+          display: block; margin-bottom: 0.15rem; color: #fff;
+          font-size: 1.35rem; font-weight: 600;
+        }
+        .expert-live-dot {
+          width: 1rem; height: 1rem; flex-shrink: 0; border-radius: 50%;
+          background: #2BB6A4; box-shadow: 0 0 0 0.5rem rgba(43,182,164,0.13);
+        }
+        .expert-copy { max-width: 56rem; }
+        :global(.expert-eyebrow) { margin-bottom: 1.5rem; color: #58B8AB; }
+        .expert-copy h2 {
+          margin: 0 0 1.8rem; max-width: 55rem;
+          font-family: var(--font-serif), Georgia, serif;
+          font-size: clamp(3.4rem, 4vw, 5.2rem); font-weight: 400;
+          letter-spacing: 0; line-height: 1.04; color: #F5F5F3;
+        }
+        .expert-lede {
+          max-width: 50rem; margin: 0 0 3.2rem;
+          font-size: 1.55rem; line-height: 1.65; color: rgba(245,245,243,0.68);
+        }
+        .expert-creds {
+          display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+          margin-bottom: 3rem; padding: 1.8rem 0;
+          border-top: 1px solid rgba(255,255,255,0.12);
+          border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
         .expert-creds span {
-          font-size: 1.25rem; font-weight: 500; color: rgba(245,245,243,0.82);
-          padding: 0.6rem 1.2rem; border-radius: 999px;
-          border: 1px solid rgba(207,227,222,0.2); background: rgba(255,255,255,0.03);
+          display: grid; grid-template-columns: auto minmax(0, 1fr);
+          column-gap: 0.8rem; row-gap: 0.25rem; min-width: 0; padding: 0 1.5rem;
+          color: #51B5A8; border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .expert-creds span:first-child { padding-left: 0; }
+        .expert-creds span:last-child { padding-right: 0; border-right: 0; }
+        .expert-creds b {
+          color: rgba(245,245,243,0.92); font-size: 1.2rem;
+          line-height: 1.25; font-weight: 600;
+        }
+        .expert-creds small {
+          grid-column: 2; color: rgba(245,245,243,0.42);
+          font-size: 1.05rem; line-height: 1.3;
+        }
+        .expert-action { display: flex; align-items: center; gap: 1.6rem; margin-bottom: 2rem; }
+        .expert-action a { width: min(100%, 36rem); }
+        .expert-action > span {
+          max-width: 14rem; color: rgba(245,245,243,0.4);
+          font-size: 1.05rem; line-height: 1.4;
         }
         .expert-cite {
-          font-size: 1.2rem; color: rgba(245,245,243,0.42); line-height: 1.5;
-          border-left: 2px solid rgba(217,166,46,0.6); padding-left: 1.2rem;
-          margin-bottom: 2.4rem; max-width: 40rem;
+          margin: 0; max-width: 46rem; padding-left: 1.2rem;
+          border-left: 2px solid rgba(43,182,164,0.48);
+          font-size: 1.05rem; color: rgba(245,245,243,0.34); line-height: 1.5;
         }
         .testi-track-wrap {
           overflow: hidden;
@@ -692,16 +879,30 @@ export function HomeClient() {
              @media block in app/globals.css instead of here. */
           :global(.reveal-grid), :global(.reveal-grid-reverse), :global(.command-grid) { grid-template-columns: 1fr !important; }
           :global(.reveal-grid-reverse) > div:first-child, :global(.reveal-grid-reverse) > div:last-child { order: initial; }
-          :global(.steps-grid) { grid-template-columns: 1fr 1fr; gap: 3.2rem; }
-          :global(.experts-grid) { flex-direction: column; align-items: center; text-align: left; }
-          :global(.experts-grid) > div:last-child { width: 100%; }
+          :global(.steps-grid) { grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+          .step-card { padding: 0 1.6rem 1.8rem; }
+          .step-photo { margin: 0 -1.6rem 1.4rem; }
+          :global(.step-title) { font-size: 1.7rem; }
+          :global(.experts-grid) { grid-template-columns: 1fr; gap: 3.2rem; }
+          .expert-photo { min-height: 0; width: 100%; max-height: 48rem; }
+          .expert-copy { max-width: none; }
+          .expert-copy h2 { font-size: clamp(3.1rem, 9vw, 4.2rem); }
+          .expert-lede { margin-bottom: 2.4rem; font-size: 1.4rem; }
+          .expert-creds { grid-template-columns: 1fr; padding: 0; }
+          .expert-creds span {
+            padding: 1.4rem 0; border-right: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+          }
+          .expert-creds span:last-child { border-bottom: 0; }
+          .expert-action { flex-direction: column; align-items: stretch; gap: 1rem; }
+          .expert-action a { width: 100%; }
+          .expert-action > span { max-width: none; text-align: center; }
           .pricing-grid { grid-template-columns: 1fr; }
           .pricing-tile-featured { transform: none; order: -1; }
           .footer-grid { grid-template-columns: 1fr 1fr; gap: 3.2rem; }
-          :global(.progress-band) { flex-direction: column; align-items: flex-start; }
-          .progress-compare { width: 100%; justify-content: space-between; gap: 1rem; }
-          .progress-chip { flex: 1; justify-content: center; padding: 1rem 1.2rem; }
-          .progress-chip strong { font-size: 1.6rem; }
+          :global(.progress-band) { grid-template-columns: 1fr; gap: 2.4rem; }
+          .progress-card-foot { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+          .progress-up { text-align: left; }
         }
       `}</style>
     </div>
