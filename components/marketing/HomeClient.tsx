@@ -26,11 +26,14 @@ const PROOF_POINTS = [
   { Icon: IconSparkle, label: "Personalised recommendations", color: "#9C8FE0" },
 ];
 
+// Portrait photo per step — add the four files at these paths (head-and-shoulders
+// editorial headshots, plain background, one natural expression each):
+//   public/marketing/steps/{capture,analyse,understand,improve}.png
 const STEPS = [
-  { n: "01", title: "Capture", body: "A short, guided photo sequence. No special equipment.", accent: "#1A9E8F" },
-  { n: "02", title: "Analyse", body: "20+ metrics scored across skin, face, colour and hair.", accent: "#D9A62E" },
-  { n: "03", title: "Understand", body: "Plain-language findings, not a raw data dump.", accent: "#C8503A" },
-  { n: "04", title: "Improve", body: "A routine and recommendations built around your results.", accent: "#7C6CC4" },
+  { n: "01", title: "Capture", body: "A short, guided photo sequence. No special equipment.", accent: "#1A9E8F", photo: "/marketing/steps/capture.png", alt: "Woman taking a guided selfie at home" },
+  { n: "02", title: "Analyse", body: "20+ metrics scored across skin, face, colour and hair.", accent: "#D9A62E", photo: "/marketing/steps/analyse.png", alt: "Subtle facial landmark analysis on a natural portrait" },
+  { n: "03", title: "Understand", body: "Plain-language findings, not a raw data dump.", accent: "#C8503A", photo: "/marketing/steps/understand.png", alt: "Woman reviewing her personalised appearance report" },
+  { n: "04", title: "Improve", body: "A routine and recommendations built around your results.", accent: "#7C6CC4", photo: "/marketing/steps/improve.png", alt: "Man following his personalised skincare routine" },
 ];
 
 const COMMAND_METRICS = [
@@ -174,7 +177,7 @@ export function HomeClient() {
           <div style={{ display: "flex", alignItems: "center", gap: "1.6rem" }}>
             <a href="/auth/login" className="pg-nav-signin">Sign in</a>
             <a href="/splash" className="pg-header-cta">
-              <PrimaryButton size="xs" fullWidth={false}>Try Free</PrimaryButton>
+              <PrimaryButton size="xs" fullWidth={false} emphasis>Try Free <IconArrowRight size={1.2} /></PrimaryButton>
             </a>
             <button
               onClick={() => setMenuOpen(true)}
@@ -213,7 +216,7 @@ export function HomeClient() {
           <h1 id="mobile-hero-title">Understand your features.<br />Improve what matters.</h1>
           <p className="mobile-hero-sub">A private AI-guided scan for clearer skin, face, hair and colour insights, personalized to you.</p>
           <div className="mobile-hero-actions">
-            <a href="/splash">Start My Plan</a>
+            <a href="/splash">Start My Plan <IconArrowRight size={1.4} /></a>
             <a href="#how-it-works">How It Works</a>
           </div>
           <div className="hero-proof-points" aria-label="Key product benefits">
@@ -304,7 +307,7 @@ export function HomeClient() {
                   </li>
                 ))}
               </ul>
-              <a href="/splash"><PrimaryButton variant="onDark" fullWidth>Get my report · ${BUNDLE_PRICE}</PrimaryButton></a>
+              <a href="/splash"><PrimaryButton variant="onDark" fullWidth emphasis>Get my report · ${BUNDLE_PRICE} <IconArrowRight size={1.35} /></PrimaryButton></a>
             </div>
 
             {/* Bundle — featured */}
@@ -334,7 +337,7 @@ export function HomeClient() {
                   One checkout, no extra steps
                 </li>
               </ul>
-              <a href="/splash" style={{ position: "relative", display: "block" }}><PrimaryButton variant="onDark" fullWidth>Get the bundle · ${BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
+              <a href="/splash" style={{ position: "relative", display: "block" }}><PrimaryButton variant="onDark" fullWidth emphasis>Get the bundle · ${BUNDLE_PRICE + DOCTOR_CONSULTATION_PRICE} <IconArrowRight size={1.35} /></PrimaryButton></a>
             </div>
           </div>
         </Reveal>
@@ -374,7 +377,11 @@ export function HomeClient() {
           <div className="steps-grid">
             {STEPS.map((s) => (
               <div key={s.n} className="step-card" style={{ ["--step-accent" as string]: s.accent }}>
-                <span className="step-number">{s.n}</span>
+                <div className="step-photo">
+                  <Image src={s.photo} alt={s.alt} fill sizes="(max-width: 700px) 50vw, 24rem" style={{ objectFit: "cover" }} />
+                  <span className="step-photo-tint" aria-hidden />
+                  <span className="step-number">{s.n}</span>
+                </div>
                 <h3 className="pg-card-h step-title">{s.title}</h3>
                 <p className="step-body">{s.body}</p>
               </div>
@@ -458,28 +465,33 @@ export function HomeClient() {
 
       {/* ── Expert / Science ── */}
       <section id="experts" className="expert-section pg-section" style={{ paddingBlock: "clamp(6rem, 8vw, 9rem)" }}>
-        <div className="pg-container" style={{ maxWidth: "92rem" }}>
+        <div className="pg-container expert-container">
           <Reveal className="experts-grid">
             <div className="expert-photo">
-              <Image src="/marketing/expert-dermatologist.png" alt="Dermatologist" fill sizes="(max-width: 700px) 100vw, 24rem" style={{ objectFit: "cover" }} />
+              <Image src="/marketing/expert-dermatologist.png" alt="Licensed dermatologist available for a personal report review" fill sizes="(max-width: 700px) 100vw, 38rem" style={{ objectFit: "cover" }} />
+              <div className="expert-photo-caption">
+                <span className="expert-live-dot" aria-hidden />
+                <span><strong>Personal case review</strong>Secure and confidential</span>
+              </div>
             </div>
-            <div>
-              <p className="pg-eyebrow" style={{ color: "var(--accent-muted)", marginBottom: "1.2rem" }}>Expert review</p>
-              <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(2.6rem, 2.6vw, 3.4rem)", fontWeight: 400, letterSpacing: "-0.01em", lineHeight: 1.15, color: "#F5F5F3", marginBottom: "1.4rem" }}>
-                Every report is reviewed by a licensed dermatologist.
-              </h2>
-              <p style={{ fontSize: "1.5rem", color: "rgba(245,245,243,0.72)", lineHeight: 1.6, marginBottom: "1.8rem", maxWidth: "44rem" }}>
-                A real dermatologist reviews your case and follows up directly, usually within 24 hours. Not a chatbot reply, a licensed professional.
+            <div className="expert-copy">
+              <p className="pg-eyebrow expert-eyebrow">Expert review</p>
+              <h2>Real expertise behind every recommendation.</h2>
+              <p className="expert-lede">
+                A licensed dermatologist reviews your report and follows up directly, usually within 24 hours. Clear, personal guidance from a real professional.
               </p>
-              <div className="expert-creds">
-                <span>Board-certified</span>
-                <span>Replies within 24h</span>
-                <span>Human, not a bot</span>
+              <div className="expert-creds" aria-label="Consultation benefits">
+                <span><IconCheck size={1.35} strokeWidth={2.4} /><b>Board-certified</b><small>Professional review</small></span>
+                <span><IconCheck size={1.35} strokeWidth={2.4} /><b>Within 24 hours</b><small>Direct follow-up</small></span>
+                <span><IconCheck size={1.35} strokeWidth={2.4} /><b>Human guidance</b><small>Never a bot reply</small></span>
+              </div>
+              <div className="expert-action">
+                <a href="/splash"><PrimaryButton size="md" variant="onDark" fullWidth emphasis>Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE} <IconArrowRight size={1.35} /></PrimaryButton></a>
+                <span>One-time consultation · no subscription</span>
               </div>
               <p className="expert-cite">
-                First impressions form in under 100ms, Willis &amp; Todorov, <em>Psychological Science</em>, 2006.
+                Evidence-led appearance analysis informed by peer-reviewed perception research.
               </p>
-              <a href="/splash"><PrimaryButton size="md" variant="onDark" fullWidth={false}>Talk to a dermatologist · ${DOCTOR_CONSULTATION_PRICE}</PrimaryButton></a>
             </div>
           </Reveal>
         </div>
@@ -526,7 +538,7 @@ export function HomeClient() {
         <Reveal>
           <h2 className="pg-h2" style={{ marginBottom: "2rem" }}>See yourself more clearly.</h2>
           <p className="pg-body" style={{ margin: "0 auto 3.6rem" }}>Your first scores are free. Takes under two minutes.</p>
-          <a href="/splash"><PrimaryButton size="lg" fullWidth={false}>Start My Plan</PrimaryButton></a>
+          <a href="/splash"><PrimaryButton size="lg" fullWidth={false} emphasis>Start My Plan <IconArrowRight size={1.6} /></PrimaryButton></a>
         </Reveal>
       </section>
 
@@ -664,26 +676,43 @@ export function HomeClient() {
         }
 
         :global(.steps-grid) { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6rem; }
-        /* Flat card per step: hairline border, a solid accent rule on top, and
-           the step number rendered in that same accent. Lifts and outlines in
-           the accent colour on hover. */
+        /* Neutral process cards with a subtle lift on hover. */
         .step-card {
           display: flex; flex-direction: column;
-          padding: 2.6rem 2.2rem 2.4rem;
+          padding: 0 2.2rem 2.4rem;
           background: var(--bg-neutral);
           border: 1px solid var(--border-neutral);
-          border-top: 3px solid var(--step-accent);
-          transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+          transition: transform 0.22s ease, background 0.22s ease;
         }
         .step-card:hover {
           transform: translateY(-4px);
-          border-color: var(--step-accent);
           background: color-mix(in srgb, var(--step-accent) 7%, var(--bg-neutral));
         }
+        /* Full-bleed portrait at the top of the card. A bottom gradient in the
+           step's accent ties the photo to the card and keeps the number
+           legible over any image. */
+        .step-photo {
+          position: relative;
+          margin: 0 -2.2rem 1.8rem;
+          aspect-ratio: 16 / 12;
+          overflow: hidden;
+          background: color-mix(in srgb, var(--step-accent) 12%, var(--bg-neutral));
+          border-bottom: 1px solid var(--border-neutral);
+        }
+        .step-photo img { filter: grayscale(0.12) contrast(1.02); }
+        .step-photo-tint {
+          position: absolute; inset: 0; pointer-events: none;
+          background:
+            linear-gradient(180deg, transparent 45%, color-mix(in srgb, var(--step-accent) 70%, transparent) 100%),
+            linear-gradient(0deg, rgba(0,0,0,0.28), transparent 55%);
+          mix-blend-mode: multiply;
+        }
         .step-number {
-          font-size: clamp(2.8rem, 3vw, 3.6rem); font-weight: 700;
+          position: absolute; left: 1.4rem; bottom: 1rem; z-index: 1;
+          font-size: clamp(2.6rem, 3vw, 3.4rem); font-weight: 700;
           letter-spacing: -0.02em; line-height: 1;
-          color: var(--step-accent); font-variant-numeric: tabular-nums;
+          color: #fff; font-variant-numeric: tabular-nums;
+          text-shadow: 0 0.2rem 1.2rem rgba(0,0,0,0.45);
         }
         :global(.step-title) { margin: 1.4rem 0 0.6rem; font-size: 1.9rem; }
         :global(.step-body) { font-size: 1.35rem; color: var(--ink-secondary); line-height: 1.55; margin: 0; }
@@ -759,23 +788,77 @@ export function HomeClient() {
           border-top: 1px solid rgba(255,255,255,0.08);
           border-bottom: 1px solid rgba(255,255,255,0.08);
         }
-        :global(.experts-grid) { display: flex; gap: 4rem; align-items: center; }
-        .expert-photo {
-          position: relative; width: 100%; max-width: 24rem; aspect-ratio: 4 / 5;
-          border-radius: 1.6rem; overflow: hidden; flex-shrink: 0;
-          border: 1px solid rgba(207,227,222,0.18);
-          box-shadow: 0 2.4rem 6rem -2rem rgba(0,0,0,0.6);
+        :global(.expert-container) { max-width: 112rem; }
+        :global(.experts-grid) {
+          display: grid; grid-template-columns: minmax(30rem, 0.86fr) minmax(0, 1.14fr);
+          gap: clamp(5rem, 7vw, 9rem); align-items: center;
         }
-        .expert-creds { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 2rem; }
+        .expert-photo {
+          position: relative; width: 100%; aspect-ratio: 4 / 5;
+          overflow: hidden; min-height: 46rem;
+          border: 1px solid rgba(207,227,222,0.18);
+          box-shadow: 0 3.2rem 7rem -3rem rgba(0,0,0,0.82);
+        }
+        .expert-photo::after {
+          content: ""; position: absolute; inset: 45% 0 0; pointer-events: none;
+          background: linear-gradient(180deg, transparent, rgba(3,12,10,0.9));
+        }
+        .expert-photo-caption {
+          position: absolute; z-index: 1; left: 2.2rem; right: 2.2rem; bottom: 2rem;
+          display: flex; align-items: center; gap: 1rem; color: rgba(245,245,243,0.62);
+          font-size: 1.15rem; line-height: 1.35;
+        }
+        .expert-photo-caption strong {
+          display: block; margin-bottom: 0.15rem; color: #fff;
+          font-size: 1.35rem; font-weight: 600;
+        }
+        .expert-live-dot {
+          width: 1rem; height: 1rem; flex-shrink: 0; border-radius: 50%;
+          background: #2BB6A4; box-shadow: 0 0 0 0.5rem rgba(43,182,164,0.13);
+        }
+        .expert-copy { max-width: 56rem; }
+        :global(.expert-eyebrow) { margin-bottom: 1.5rem; color: #58B8AB; }
+        .expert-copy h2 {
+          margin: 0 0 1.8rem; max-width: 55rem;
+          font-family: var(--font-serif), Georgia, serif;
+          font-size: clamp(3.4rem, 4vw, 5.2rem); font-weight: 400;
+          letter-spacing: 0; line-height: 1.04; color: #F5F5F3;
+        }
+        .expert-lede {
+          max-width: 50rem; margin: 0 0 3.2rem;
+          font-size: 1.55rem; line-height: 1.65; color: rgba(245,245,243,0.68);
+        }
+        .expert-creds {
+          display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+          margin-bottom: 3rem; padding: 1.8rem 0;
+          border-top: 1px solid rgba(255,255,255,0.12);
+          border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
         .expert-creds span {
-          font-size: 1.25rem; font-weight: 500; color: rgba(245,245,243,0.82);
-          padding: 0.6rem 1.2rem; border-radius: 999px;
-          border: 1px solid rgba(207,227,222,0.2); background: rgba(255,255,255,0.03);
+          display: grid; grid-template-columns: auto minmax(0, 1fr);
+          column-gap: 0.8rem; row-gap: 0.25rem; min-width: 0; padding: 0 1.5rem;
+          color: #51B5A8; border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .expert-creds span:first-child { padding-left: 0; }
+        .expert-creds span:last-child { padding-right: 0; border-right: 0; }
+        .expert-creds b {
+          color: rgba(245,245,243,0.92); font-size: 1.2rem;
+          line-height: 1.25; font-weight: 600;
+        }
+        .expert-creds small {
+          grid-column: 2; color: rgba(245,245,243,0.42);
+          font-size: 1.05rem; line-height: 1.3;
+        }
+        .expert-action { display: flex; align-items: center; gap: 1.6rem; margin-bottom: 2rem; }
+        .expert-action a { width: min(100%, 36rem); }
+        .expert-action > span {
+          max-width: 14rem; color: rgba(245,245,243,0.4);
+          font-size: 1.05rem; line-height: 1.4;
         }
         .expert-cite {
-          font-size: 1.2rem; color: rgba(245,245,243,0.42); line-height: 1.5;
-          border-left: 2px solid rgba(217,166,46,0.6); padding-left: 1.2rem;
-          margin-bottom: 2.4rem; max-width: 40rem;
+          margin: 0; max-width: 46rem; padding-left: 1.2rem;
+          border-left: 2px solid rgba(43,182,164,0.48);
+          font-size: 1.05rem; color: rgba(245,245,243,0.34); line-height: 1.5;
         }
         .testi-track-wrap {
           overflow: hidden;
@@ -797,10 +880,23 @@ export function HomeClient() {
           :global(.reveal-grid), :global(.reveal-grid-reverse), :global(.command-grid) { grid-template-columns: 1fr !important; }
           :global(.reveal-grid-reverse) > div:first-child, :global(.reveal-grid-reverse) > div:last-child { order: initial; }
           :global(.steps-grid) { grid-template-columns: 1fr 1fr; gap: 1.2rem; }
-          .step-card { padding: 2rem 1.6rem 1.8rem; }
+          .step-card { padding: 0 1.6rem 1.8rem; }
+          .step-photo { margin: 0 -1.6rem 1.4rem; }
           :global(.step-title) { font-size: 1.7rem; }
-          :global(.experts-grid) { flex-direction: column; align-items: center; text-align: left; }
-          :global(.experts-grid) > div:last-child { width: 100%; }
+          :global(.experts-grid) { grid-template-columns: 1fr; gap: 3.2rem; }
+          .expert-photo { min-height: 0; width: 100%; max-height: 48rem; }
+          .expert-copy { max-width: none; }
+          .expert-copy h2 { font-size: clamp(3.1rem, 9vw, 4.2rem); }
+          .expert-lede { margin-bottom: 2.4rem; font-size: 1.4rem; }
+          .expert-creds { grid-template-columns: 1fr; padding: 0; }
+          .expert-creds span {
+            padding: 1.4rem 0; border-right: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+          }
+          .expert-creds span:last-child { border-bottom: 0; }
+          .expert-action { flex-direction: column; align-items: stretch; gap: 1rem; }
+          .expert-action a { width: 100%; }
+          .expert-action > span { max-width: none; text-align: center; }
           .pricing-grid { grid-template-columns: 1fr; }
           .pricing-tile-featured { transform: none; order: -1; }
           .footer-grid { grid-template-columns: 1fr 1fr; gap: 3.2rem; }

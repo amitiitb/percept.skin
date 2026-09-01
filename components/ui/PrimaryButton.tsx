@@ -13,6 +13,7 @@ interface Props {
   size?: "xs" | "sm" | "md" | "lg";
   type?: "button" | "submit";
   fullWidth?: boolean;
+  emphasis?: boolean;
 }
 
 const SIZE: Record<string, CSSProperties> = {
@@ -53,7 +54,7 @@ const HOVER: Record<string, CSSProperties> = {
 
 export function PrimaryButton({
   children, onClick, disabled, loading,
-  variant = "primary", size = "md", type = "button", fullWidth = true,
+  variant = "primary", size = "md", type = "button", fullWidth = true, emphasis = false,
 }: Props) {
   const off = disabled || loading;
   const restShadow = REST_SHADOW[variant] ?? "none";
@@ -75,26 +76,27 @@ export function PrimaryButton({
     width: fullWidth ? "100%" : "auto",
     cursor: off ? "not-allowed" : "pointer",
     opacity: disabled ? 0.38 : 1,
-    boxShadow: off ? "none" : restShadow,
-    transition: "background 0.16s, border-color 0.16s, color 0.16s, opacity 0.16s",
+    boxShadow: off ? "none" : emphasis ? "0 1.2rem 2.8rem -1.2rem rgba(12,92,81,0.5), 0 0.3rem 0.8rem rgba(10,40,35,0.18)" : restShadow,
+    transition: "background 0.18s, border-color 0.18s, color 0.18s, opacity 0.18s, box-shadow 0.18s",
     userSelect: "none",
     WebkitTapHighlightColor: "transparent",
   };
 
   const enter = (el: HTMLButtonElement) => {
     Object.assign(el.style, HOVER[variant]);
-    el.style.boxShadow = hoverShadow;
+    el.style.boxShadow = emphasis ? "0 1.6rem 3.2rem -1.2rem rgba(12,92,81,0.58), 0 0.4rem 1rem rgba(10,40,35,0.2)" : hoverShadow;
   };
   const leave = (el: HTMLButtonElement) => {
     Object.assign(el.style, VARIANT[variant]);
-    el.style.boxShadow = restShadow;
+    el.style.boxShadow = emphasis ? "0 1.2rem 2.8rem -1.2rem rgba(12,92,81,0.5), 0 0.3rem 0.8rem rgba(10,40,35,0.18)" : restShadow;
   };
 
   return (
     <motion.button
       type={type}
       onClick={!off ? onClick : undefined}
-      whileTap={!off ? { scale: 0.97 } : {}}
+      whileHover={!off && emphasis ? { y: -3 } : {}}
+      whileTap={!off ? { scale: 0.97, y: 0 } : {}}
       onMouseEnter={(e) => { if (!off) enter(e.currentTarget); }}
       onMouseLeave={(e) => { if (!off) leave(e.currentTarget); }}
       onFocus={(e) => { e.currentTarget.style.boxShadow = `${restShadow === "none" ? "" : restShadow + ", "}0 0 0 3px rgba(26,158,143,0.35)`; }}
