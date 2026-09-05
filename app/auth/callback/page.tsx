@@ -13,6 +13,25 @@ export default function CallbackPage() {
     const hash = window.location.hash;
     const search = window.location.search;
 
+    // A first-time OAuth (Google) user has no user_profiles_v2 row yet — same
+    // check the mobile app's index.tsx splash screen does — so send them to
+    // profile-setup instead of dropping them straight on an empty dashboard.
+    // Existing users always have a profile with consent_given already true,
+    // so this is a no-op for the password/magic-link paths that already
+    // worked before Google sign-in existed.
+    async function routeAfterAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("user_profiles_v2")
+          .select("consent_given")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!profile?.consent_given) { router.replace("/profile-setup"); return; }
+      }
+      router.replace("/dashboard");
+    }
+
     async function verify() {
       if (hash && hash.includes("access_token")) {
         // Implicit flow — token in URL hash
@@ -23,7 +42,7 @@ export default function CallbackPage() {
         if (access_token && refresh_token) {
           const { error } = await supabase.auth.setSession({ access_token, refresh_token });
           if (error) { router.replace("/auth/signup?error=invalid"); return; }
-          router.replace("/dashboard");
+          await routeAfterAuth();
           return;
         }
       }
@@ -37,7 +56,7 @@ export default function CallbackPage() {
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) { router.replace("/auth/signup?error=invalid"); return; }
-          router.replace("/dashboard");
+          await routeAfterAuth();
           return;
         }
 
@@ -47,7 +66,7 @@ export default function CallbackPage() {
             type: type as "signup" | "recovery" | "email",
           });
           if (error) { router.replace("/auth/signup?error=invalid"); return; }
-          router.replace("/dashboard");
+          await routeAfterAuth();
           return;
         }
       }
