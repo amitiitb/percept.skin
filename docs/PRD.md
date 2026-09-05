@@ -1,6 +1,6 @@
 # Percept — Product Requirements Document
 
-Status: reflects the live product as of 2026-07-28 (percept.superapp.digital). Written from the shipped codebase, not a forward-looking spec — see "Not yet built" for gaps.
+Status: reflects the live product as of 2026-07-28 (percept.skin). Written from the shipped codebase, not a forward-looking spec — see "Not yet built" for gaps.
 
 ## 1. What it is
 

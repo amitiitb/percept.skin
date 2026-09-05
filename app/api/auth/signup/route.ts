@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
 
   // Welcome email — fire and forget, never blocks signup
   resend.emails.send({
-    from: "Percept <noreply@superapp.digital>",
+    from: "Percept <noreply@percept.skin>",
     to: cleanEmail,
     subject: "Welcome to Percept",
     html: buildWelcomeEmail(name),
