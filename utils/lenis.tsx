@@ -12,8 +12,8 @@ export function ReactLenis({ children, root }: { children: ReactNode; root?: boo
       // scroll gesture travels less and settles slower, without touching
       // scroll-snap/section-locking (would fight badly with long-scroll
       // pages like /report or /history, which aren't slide decks).
-      duration: 1.8,
-      wheelMultiplier: 0.75,
+      duration: 2.2,
+      wheelMultiplier: 0.6,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: "vertical",
       smoothWheel: true,
