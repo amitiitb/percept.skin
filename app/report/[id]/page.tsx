@@ -17,7 +17,7 @@ import { trackEvent } from "@/lib/analytics";
 import { logV2 } from "@/lib/v2/log";
 import { HARMONY_METRIC_NAMES, ANGULARITY_METRIC_NAMES } from "@/lib/v2/faceMetricGroups";
 import { IconFaceScan, IconLock, IconCheck, IconSparkle, IconSun, IconMoon, IconStrands, IconArrowRight, IconInfo } from "@/components/ui/icons";
-import { ScanFace, Scissors, Palette, Glasses, type LucideIcon } from "lucide-react";
+import { ScanFace, Scissors, Palette, Glasses, Smile, Sparkles as LucideSparkles, Droplets, ShieldCheck, Heart, type LucideIcon } from "lucide-react";
 import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
 import type { ModuleId } from "@/lib/v2/reportModules";
 
@@ -699,6 +699,8 @@ const ROUTINE_META: Array<{ key: keyof RecommendationSet; label: string; note: s
   { key: "hairScalp", label: "Hair & Scalp", note: "A repeatable routine based on your visible hair and scalp findings", Icon: IconStrands, gate: "hair" },
 ];
 
+const HAIR_ROUTINE_ICONS: LucideIcon[] = [LucideSparkles, Droplets, ShieldCheck, Heart, Smile];
+
 // Tabbed instead of one card per block side by side — with only 2-3 blocks a
 // grid left one lonely half-width card (skin's 3 blocks on a 2-col grid) or
 // wasted width (hair's single block). A tab per block plus one centered
@@ -710,12 +712,13 @@ function RoutinePanel({ gate, recommendations }: { gate: "skin" | "hair"; recomm
   const current = blocks[Math.min(active, blocks.length - 1)];
 
   return (
-    <div style={{ marginBottom: "3.2rem" }}>
+    <div className={gate === "hair" ? "v2-hair-routine" : undefined} style={{ marginBottom: "3.2rem" }}>
+      {gate === "hair" && <div className="v2-hair-routine-mark" aria-hidden><Smile size={25} strokeWidth={1.8} /></div>}
       <h2 style={{ fontSize: "2.2rem", fontWeight: 500, color: "var(--primary)", marginBottom: "0.6rem", textAlign: "center" }}>
         {gate === "skin" ? "Your Personalized Routine" : "Your Hair & Scalp Routine"}
       </h2>
       <p style={{ fontSize: "1.5rem", color: "var(--secondary)", marginBottom: "2.4rem", maxWidth: "60rem", textAlign: "center", marginLeft: "auto", marginRight: "auto" }}>
-        Based on what we saw in your photos and the concerns you shared.
+        {gate === "skin" ? "Based on what we saw in your photos and the concerns you shared." : "Simple steps for healthier-looking hair and scalp."}
       </p>
 
       {blocks.length > 1 && (
@@ -751,21 +754,26 @@ function RoutinePanel({ gate, recommendations }: { gate: "skin" | "hair"; recomm
         </div>
       )}
 
-      <div className="v2-routine-content" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem 3.2rem", maxWidth: "60rem", margin: "0 auto" }}>
+      <div className="v2-routine-content" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem 3.2rem", maxWidth: gate === "hair" ? "82rem" : "60rem", margin: "0 auto" }}>
         <div className="v2-routine-context">
           <span><current.Icon size={1.8} /></span>
           <div><strong>{current.label} plan</strong><p>{current.note}</p></div>
         </div>
-        <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-          {(recommendations?.[current.key] ?? []).map((s, i) => (
+        <ol className={gate === "hair" ? "v2-hair-routine-list" : undefined} style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+          {(recommendations?.[current.key] ?? []).map((s, i) => {
+            const HairIcon = HAIR_ROUTINE_ICONS[i % HAIR_ROUTINE_ICONS.length];
+            return (
             <li key={i} style={{ display: "flex", gap: "1rem", padding: "1rem 0", fontSize: "1.4rem", color: "var(--secondary)", lineHeight: 1.55, textAlign: "left", borderBottom: "1px solid var(--line)" }}>
-              <span style={{ display: "grid", placeItems: "center", width: "2.6rem", height: "2.6rem", borderRadius: "50%", background: "rgba(26,158,143,0.1)", color: "var(--rose)", fontWeight: 700, flexShrink: 0 }}>{i + 1}</span>
+              <span style={{ display: "grid", placeItems: "center", width: gate === "hair" ? "3.6rem" : "2.6rem", height: gate === "hair" ? "3.6rem" : "2.6rem", borderRadius: "50%", background: "rgba(26,158,143,0.1)", color: "var(--rose)", fontWeight: 700, flexShrink: 0 }}>
+                {gate === "hair" ? <HairIcon size={18} strokeWidth={1.8} /> : i + 1}
+              </span>
               <span style={{ paddingTop: "0.2rem" }}>{s}</span>
             </li>
-          ))}
+          )})}
         </ol>
-        <p style={{ margin: "1.6rem 0 0", color: "var(--muted)", fontSize: "1.15rem", lineHeight: 1.5 }}>
-          Introduce one change at a time. Stop if irritation occurs and seek professional advice for persistent concerns.
+        <p className="v2-routine-note" style={{ margin: "1.6rem 0 0", color: "var(--muted)", fontSize: "1.15rem", lineHeight: 1.5 }}>
+          {gate === "hair" && <ShieldCheck size={16} strokeWidth={1.8} />}
+          <span>Introduce one change at a time. Stop if irritation occurs.</span>
         </p>
       </div>
     </div>
@@ -1646,6 +1654,18 @@ export default function V2ReportPage() {
         .v2-routine-context > span { display: grid; width: 3.6rem; height: 3.6rem; flex: 0 0 auto; place-items: center; border-radius: 1rem; background: rgba(26,158,143,0.1); color: var(--rose); }
         .v2-routine-context strong { display: block; margin-bottom: 0.35rem; color: var(--primary); font-size: 1.35rem; font-weight: 600; }
         .v2-routine-context p { margin: 0; color: var(--muted); font-size: 1.15rem; line-height: 1.45; }
+        .v2-hair-routine { position: relative; padding: 3.2rem clamp(1.4rem, 3vw, 3.2rem); overflow: hidden; border: 1px solid #E7D3A9; background: radial-gradient(circle at 8% 12%, rgba(255,255,255,.85) 0 6rem, transparent 6.1rem), radial-gradient(circle at 94% 85%, rgba(238,167,143,.2) 0 8rem, transparent 8.1rem), linear-gradient(135deg, #FFF5D9, #F5E8F0 52%, #DFF2EB); }
+        .v2-hair-routine-mark { display: grid; place-items: center; width: 5rem; height: 5rem; margin: 0 auto 1.2rem; border-radius: 50%; color: #8D5C12; background: #FFE29A; box-shadow: 0 1rem 2.4rem -1.5rem rgba(141,92,18,.5); }
+        .v2-hair-routine > h2 { font-size: clamp(2.4rem, 3vw, 3.2rem) !important; font-weight: 750 !important; letter-spacing: -.025em; }
+        .v2-hair-routine > .v2-routine-content { background: rgba(255,255,255,.76) !important; border-color: rgba(141,92,18,.18) !important; box-shadow: 0 2rem 5rem -4rem rgba(71,48,20,.55); backdrop-filter: blur(12px); }
+        .v2-hair-routine .v2-routine-context > span { color: #8D5C12; background: #FFE8AE; }
+        .v2-hair-routine-list { display: grid !important; grid-template-columns: 1fr 1fr; gap: 1rem !important; }
+        .v2-hair-routine-list li { min-height: 7rem; align-items: center; padding: 1.2rem !important; border: 1px solid rgba(141,92,18,.12) !important; background: rgba(255,255,255,.62); }
+        .v2-hair-routine-list li:nth-child(4n+1) > span:first-child { color: #9B6818 !important; background: #FFE6A8 !important; }
+        .v2-hair-routine-list li:nth-child(4n+2) > span:first-child { color: #287A68 !important; background: #D7F1E8 !important; }
+        .v2-hair-routine-list li:nth-child(4n+3) > span:first-child { color: #A6524C !important; background: #F9DDD7 !important; }
+        .v2-hair-routine-list li:nth-child(4n+4) > span:first-child { color: #775A9C !important; background: #EADFF5 !important; }
+        .v2-routine-note { display: flex; align-items: center; gap: .6rem; }
         @media (max-width: 900px) {
           .v2-metric-cols { grid-template-columns: 1fr !important; }
           .v2-hero-grid { grid-template-columns: 1fr !important; }
@@ -1776,6 +1796,8 @@ export default function V2ReportPage() {
           .v2-routine-tabs button span { display: none !important; }
           .v2-routine-content { padding: 2rem 1.6rem !important; border-radius: 1.25rem !important; }
           .v2-routine-content li { gap: 0.8rem !important; font-size: 1.3rem !important; }
+          .v2-hair-routine { padding: 2.4rem 1rem; }
+          .v2-hair-routine-list { grid-template-columns: 1fr; }
         }
         @media (prefers-reduced-motion: reduce) {
           .v2-category-count span { animation: none !important; }
