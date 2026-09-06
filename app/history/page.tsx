@@ -12,6 +12,24 @@ export default function V2HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<Row[]>([]);
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function deleteScan(id: string) {
+    if (!window.confirm("Delete this scan? This can't be undone.")) return;
+    setDeletingId(id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const res = await fetch("/api/scan-session/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ sessionId: id }),
+      });
+      if (res.ok) setRows((prev) => prev.filter((r) => r.id !== id));
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -108,8 +126,19 @@ export default function V2HistoryPage() {
                   ? r.overall_score - previous.overall_score
                   : null;
                 const scanNumber = rows.length - index;
+                const isComplete = r.status === "complete";
+                const isFailed = r.status === "failed";
+                const openReport = () => { if (isComplete) router.push(`/report/${r.id}`); };
                 return (
-                  <button key={r.id} className="history-card" onClick={() => r.status === "complete" && router.push(`/report/${r.id}`)} disabled={r.status !== "complete"}>
+                  <div
+                    key={r.id}
+                    className="history-card"
+                    role={isComplete ? "button" : undefined}
+                    tabIndex={isComplete ? 0 : undefined}
+                    data-disabled={isComplete ? undefined : true}
+                    onClick={openReport}
+                    onKeyDown={(e) => { if (isComplete && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openReport(); } }}
+                  >
                     <div className="history-photo">
                       {thumbs[r.id] ? (
                         // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URLs expire; next/image's remote-pattern allowlist and cache don't suit a URL that rotates every fetch.
@@ -130,10 +159,10 @@ export default function V2HistoryPage() {
                             {new Date(r.created_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                           </span>
                         </div>
-                        <span className={`history-status ${r.status}`}>{r.status === "complete" ? "Ready" : "Processing"}</span>
+                        <span className={`history-status ${r.status}`}>{isComplete ? "Ready" : isFailed ? "Failed" : "Processing"}</span>
                       </div>
 
-                      {r.status === "complete" ? (
+                      {isComplete ? (
                         <div className="history-card-body">
                           <div className="history-score-block">
                             <small>Percept Score</small>
@@ -150,13 +179,27 @@ export default function V2HistoryPage() {
                           <span className="history-stat-divider" aria-hidden />
                           <div className="history-stat"><small>Skin age</small><strong>{r.skin_age ?? "—"}</strong></div>
                         </div>
+                      ) : isFailed ? (
+                        <div className="history-processing-copy history-failed-copy"><span>Something went wrong analysing this scan. Delete it and try again.</span></div>
                       ) : (
                         <div className="history-processing-copy"><i /><span>Your photos are being analysed. Results will appear here when ready.</span></div>
                       )}
 
-                      <div className="history-card-action"><span>{r.status === "complete" ? "Open full report" : "Analysis in progress"}</span><span aria-hidden>→</span></div>
+                      <div className="history-card-action">
+                        <span>{isComplete ? "Open full report" : isFailed ? "Analysis failed" : "Analysis in progress"}</span>
+                        {isComplete ? <span aria-hidden>→</span> : (
+                          <button
+                            type="button"
+                            className="history-delete-btn"
+                            disabled={deletingId === r.id}
+                            onClick={(e) => { e.stopPropagation(); deleteScan(r.id); }}
+                          >
+                            {deletingId === r.id ? "Deleting…" : "Delete"}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -180,9 +223,9 @@ export default function V2HistoryPage() {
         .history-sequence-heading small { margin-top: 0.3rem; color: var(--secondary); font-size: 1.1rem; font-weight: 550; }
         .history-list { display: flex; flex-direction: column; gap: 1.4rem; }
         .history-card { position: relative; display: grid; grid-template-columns: 14rem minmax(0, 1fr); width: 100%; min-height: 15.5rem; padding: 0; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 1.8rem; background: var(--surface); color: var(--primary); text-align: left; cursor: pointer; transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease; }
-        .history-card:not(:disabled):hover { border-color: var(--primary); box-shadow: 0 1rem 2.8rem rgba(13, 61, 51, 0.1); transform: translateY(-2px); }
+        .history-card:not([data-disabled]):hover { border-color: var(--primary); box-shadow: 0 1rem 2.8rem rgba(13, 61, 51, 0.1); transform: translateY(-2px); }
         .history-card:focus-visible { outline: 3px solid rgba(20, 155, 132, 0.3); outline-offset: 3px; }
-        .history-card:disabled { cursor: default; }
+        .history-card[data-disabled] { cursor: default; }
         /* Full-height photo panel — sized generously and cropped only at the
            very top/bottom so a normal front-facing capture shows the whole
            face, not a thin cropped strip. */
@@ -197,7 +240,8 @@ export default function V2HistoryPage() {
         .history-number { color: var(--primary); font-size: 1.7rem; font-weight: 750; letter-spacing: -0.01em; }
         .history-date { color: var(--secondary); font-size: 1.2rem; font-weight: 550; }
         .history-status { flex-shrink: 0; padding: 0.5rem 1rem; border-radius: 999px; background: rgba(47,112,71,0.13); color: #235C38; font-size: 1.05rem; font-weight: 750; }
-        .history-status.processing { background: rgba(172,115,9,0.14); color: #785006; }
+        .history-status.processing, .history-status.pending, .history-status.capturing, .history-status.analyzing { background: rgba(172,115,9,0.14); color: #785006; }
+        .history-status.failed { background: rgba(166,63,48,0.14); color: #7A2A1D; }
         .history-card-body { display: flex; align-items: stretch; gap: 1.8rem; flex: 1; padding: 1.6rem 0; }
         .history-score-block, .history-stat { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
         .history-score-block { flex: 1.4; }
@@ -210,8 +254,12 @@ export default function V2HistoryPage() {
         .history-score-track { width: 100%; max-width: 18rem; height: 0.5rem; margin-top: 0.8rem; overflow: hidden; border-radius: 999px; background: var(--wash); }
         .history-score-track i { display: block; height: 100%; border-radius: inherit; background: #168271; }
         .history-processing-copy { display: flex; align-items: center; gap: 0.9rem; flex: 1; min-height: 6.5rem; color: var(--secondary); font-size: 1.25rem; font-weight: 550; }
-        .history-processing-copy i { width: 0.9rem; height: 0.9rem; border-radius: 50%; background: #AC7309; box-shadow: 0 0 0 0.45rem rgba(172,115,9,0.12); }
+        .history-processing-copy i { width: 0.9rem; height: 0.9rem; border-radius: 50%; background: #AC7309; box-shadow: 0 0 0 0.45rem rgba(172,115,9,0.12); flex-shrink: 0; }
+        .history-failed-copy { color: #A63F30; }
         .history-card-action { padding-top: 1.4rem; border-top: 1px solid var(--line-strong); color: #087F70; font-size: 1.22rem; font-weight: 750; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .history-delete-btn { flex-shrink: 0; padding: 0.6rem 1.4rem; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: #A63F30; font-size: 1.15rem; font-weight: 700; cursor: pointer; transition: background 150ms ease, border-color 150ms ease; }
+        .history-delete-btn:hover:not(:disabled) { background: rgba(166,63,48,0.08); border-color: #A63F30; }
+        .history-delete-btn:disabled { opacity: 0.6; cursor: default; }
         @media (max-width: 700px) {
           .history-page { padding: 3.2rem 2rem 6rem !important; }
           .history-summary { grid-template-columns: repeat(2, 1fr); gap: 1.8rem 0; padding: 1.8rem; }

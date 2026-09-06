@@ -16,8 +16,15 @@ function messageForError(err: unknown): string {
 }
 
 async function markFailed(supabase: SupabaseClient, sessionId: string, message: string) {
+  // `status` (what History reads to decide Ready/Processing) and `stage`
+  // (finer-grained internal progress) are separate columns — this used to
+  // update `stage` only, so a session whose analysis genuinely failed kept
+  // reporting `status: "analyzing"`/"capturing" forever. History has no way
+  // to tell "still working" from "died and will never finish," the card
+  // stays stuck on "Processing" indefinitely, and there's nothing to retry
+  // or delete because the UI still believes it might complete on its own.
   await supabase.from("analysis_sessions_v2").update({
-    stage: "failed", fail_reason: message, stage_updated_at: new Date().toISOString(),
+    status: "failed", stage: "failed", fail_reason: message, stage_updated_at: new Date().toISOString(),
   }).eq("id", sessionId);
 }
 
