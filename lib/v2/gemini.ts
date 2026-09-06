@@ -234,7 +234,8 @@ const GRID_CONSISTENCY_RULES =
   `Never leave a cell blank, grey or empty, and never pad the grid with a duplicate. ` +
   `Not one of the 6 panels may be the original unedited photograph: every panel must show a real, visible change. ` +
   `All 6 panels must be clearly different from every other panel — before drawing each panel, check it against the ones already drawn, and if it would repeat an earlier look, draw a different variation instead; a repeated panel is a failure. ` +
-  `Keep the exact same neutral facial expression, head angle, and eye direction in every single panel — do not let the face's expression shift from panel to panel, only the styling changes. `;
+  `Keep the exact same neutral facial expression, head angle, and eye direction in every single panel — do not let the face's expression shift from panel to panel, only the styling changes. ` +
+  `Leave visible headroom above the hair and clear space below the chin in every panel — never crop so tight that the hairline touches the top edge of its panel or the chin/jaw touches the bottom edge. Frame each panel with the same comfortable margin a normal head-and-shoulders photo would have. `;
 
 // Account profile data deliberately does not participate in image styling: an
 // account holder may scan a partner, relative, client, or child. The source
