@@ -5,7 +5,15 @@ import { useEffect, ReactNode } from "react";
 export function ReactLenis({ children, root }: { children: ReactNode; root?: boolean }) {
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.2,
+      // Was duration 1.2 with the default (1x) wheel distance — a single
+      // fast flick covered enough scroll distance to blow straight past
+      // 2-3 sections before anyone had a chance to register them. Longer
+      // duration plus a reduced wheelMultiplier means the same physical
+      // scroll gesture travels less and settles slower, without touching
+      // scroll-snap/section-locking (would fight badly with long-scroll
+      // pages like /report or /history, which aren't slide decks).
+      duration: 1.8,
+      wheelMultiplier: 0.75,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: "vertical",
       smoothWheel: true,
