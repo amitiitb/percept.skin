@@ -1040,7 +1040,10 @@ export default function V2ReportPage() {
 
     return (
       <div style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
-        <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
+        {/* A fixed 108rem left most of a real monitor as dead space on both
+            sides. This scales with the viewport instead, capped so lines on
+            an ultra-wide screen don't run absurdly long. */}
+        <div style={{ maxWidth: "min(96vw, 160rem)", margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "3.2rem" }}>
             <button
               onClick={() => router.push("/dashboard")}
@@ -1253,14 +1256,19 @@ export default function V2ReportPage() {
   function openCategory(tabId: TabId) {
     setTab(tabId);
     setMetricFilter("all");
-    window.setTimeout(() => {
-      document.getElementById("v2-analysis")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
+    // Wait for React to reveal the selected mounted panel, then take the user
+    // straight to its primary result rather than the generic analysis header.
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      const target = document.getElementById(`v2-result-${tabId}`)
+        ?? document.getElementById("v2-analysis");
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
   }
 
   return (
     <div className="v2-report-page" style={{ minHeight: "100dvh", background: "var(--canvas)", padding: "4rem 2.4rem" }}>
-      <div style={{ maxWidth: "108rem", margin: "0 auto" }}>
+      {/* Same fixed-108rem-left-as-dead-space fix as the free-preview branch above. */}
+      <div style={{ maxWidth: "min(96vw, 160rem)", margin: "0 auto" }}>
 
         <div className="v2-report-toolbar" style={{ position: "sticky", top: 0, zIndex: 60, background: "var(--canvas)", borderBottom: "1px solid var(--line)", padding: "1.2rem 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.6rem", marginBottom: "2.4rem" }}>
           <button
@@ -1399,9 +1407,11 @@ export default function V2ReportPage() {
 
           {hasSkin && (
             <div hidden={activeTab !== "skin"}>
-              {skinParts.map((p, i) => (
-                <Section key={p.id} index={i + 1} total={skinParts.length} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
-              ))}
+              <div id="v2-result-skin" className="v2-result-anchor">
+                {skinParts.map((p, i) => (
+                  <Section key={p.id} index={i + 1} total={skinParts.length} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
+                ))}
+              </div>
               <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="skin" recommendations={recommendations} /></div>
             </div>
           )}
