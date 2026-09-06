@@ -16,7 +16,8 @@ import { guideFor } from "@/lib/v2/metricGuide";
 import { trackEvent } from "@/lib/analytics";
 import { logV2 } from "@/lib/v2/log";
 import { HARMONY_METRIC_NAMES, ANGULARITY_METRIC_NAMES } from "@/lib/v2/faceMetricGroups";
-import { IconFaceScan, IconScissors, IconPalette, IconGlasses, IconLock, IconCheck, IconSparkle, IconSun, IconMoon, IconStrands, IconArrowRight, IconInfo } from "@/components/ui/icons";
+import { IconFaceScan, IconLock, IconCheck, IconSparkle, IconSun, IconMoon, IconStrands, IconArrowRight, IconInfo } from "@/components/ui/icons";
+import { ScanFace, Scissors, Palette, Glasses, type LucideIcon } from "lucide-react";
 import type { AnalysisMetric, MetricCategory, ColourAnalysis, RecommendationSet } from "@/lib/v2/types";
 import type { ModuleId } from "@/lib/v2/reportModules";
 
@@ -548,11 +549,11 @@ type TabId = "skin" | "hairstyle" | "colour" | "frame";
 
 // Each module carries its own accent, used on the tab icon and the section
 // rules, so a glance at the bar tells you where in the report you are.
-const TAB_LABELS: Record<TabId, { label: string; short: string; Icon: (p: { size?: number; strokeWidth?: number }) => React.ReactElement; accent: string }> = {
-  skin:      { label: "Skin Analysis",          short: "Skin",       Icon: IconFaceScan, accent: "#1A9E8F" },
-  hairstyle: { label: "Hairstyle Suggestions",  short: "Hair",       Icon: IconScissors, accent: "#C08420" },
-  colour:    { label: "Colour Analysis",        short: "Colour",     Icon: IconPalette,  accent: "#C8503A" },
-  frame:     { label: "Frame Try-On",           short: "Frames",     Icon: IconGlasses,  accent: "#2E7D5B" },
+const TAB_LABELS: Record<TabId, { label: string; short: string; Icon: LucideIcon; accent: string }> = {
+  skin:      { label: "Skin Analysis",          short: "Skin",       Icon: ScanFace, accent: "#168C7E" },
+  hairstyle: { label: "Hairstyle Suggestions",  short: "Hair",       Icon: Scissors, accent: "#B77B16" },
+  colour:    { label: "Colour Analysis",        short: "Colour",     Icon: Palette,  accent: "#C45745" },
+  frame:     { label: "Frame Try-On",           short: "Frames",     Icon: Glasses,  accent: "#397C61" },
 };
 
 // A hairline underline on thin text was far too quiet for the primary
@@ -597,9 +598,10 @@ function TabBar({ tabs, active, onChange, locked, variant = "sticky" }: {
           // scrolling cleanly. A wrapping grid (4-across when there's room,
           // 2x2 or 1-per-row when there isn't) never needs to scroll, so it
           // can't clip.
-          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(21rem, 1fr))", gap: "0.6rem",
-          background: "var(--wash)", borderRadius: "1.6rem", padding: "0.6rem",
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(20rem, 1fr))", gap: "0.3rem",
+          background: "var(--surface)", borderRadius: "1.6rem", padding: "0.7rem",
           border: "1px solid var(--line)", width: "100%",
+          boxShadow: "0 1.2rem 3rem -2.4rem rgba(12,92,81,.35)",
         } : {
           display: "flex", gap: "0.4rem", overflowX: "auto", scrollbarWidth: "none",
           background: "var(--wash)", borderRadius: "9999px", padding: "0.5rem",
@@ -620,8 +622,7 @@ function TabBar({ tabs, active, onChange, locked, variant = "sticky" }: {
               role="tab"
               aria-selected={on}
               onClick={() => onChange(t)}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.96 }}
+              whileTap={{ scale: 0.985 }}
               style={{
                 position: "relative",
                 // Hero tabs are grid items — sizing comes from the grid track
@@ -629,20 +630,20 @@ function TabBar({ tabs, active, onChange, locked, variant = "sticky" }: {
                 // second row instead of forcing one overflowing line.
                 ...(hero ? { width: "100%" } : { flex: "1 1 0", minWidth: 0 }),
                 display: "inline-flex", alignItems: "center", justifyContent: "center",
-                gap: "0.8rem", padding: hero ? "1.5rem 1.8rem" : "1.25rem 2rem", borderRadius: hero ? "1.4rem" : "1.2rem",
+                gap: "0.8rem", padding: hero ? "1.35rem 1.5rem" : "1.2rem 1.6rem", borderRadius: hero ? "1.2rem" : "1.2rem",
                 // An inactive tab used to be background:none against the rail's
                 // own --wash fill — no edge, no shadow, nothing marking it as a
                 // pressable button. Three of four tabs read as plain text, which
                 // is the actual reason the bar was easy to skim past. Each tab
                 // now carries its own card even at rest; only the active one
                 // additionally gets the sliding gradient pill below.
-                border: on ? "none" : "1px solid var(--line)",
-                background: on ? "none" : "var(--surface)",
+                border: "1px solid transparent",
+                background: "transparent",
                 cursor: "pointer", whiteSpace: "nowrap",
-                fontSize: hero ? "1.7rem" : "1.55rem", fontWeight: 800,
-                color: on ? "#fff" : "var(--secondary)",
-                boxShadow: on ? "none" : "0 0.3rem 0.9rem -0.6rem rgba(23,62,53,0.35)",
-                transition: "color 0.2s, background 0.2s, border-color 0.2s",
+                fontSize: hero ? "1.45rem" : "1.4rem", fontWeight: 700,
+                color: on ? "var(--primary)" : "var(--secondary)",
+                boxShadow: "none",
+                transition: "color .3s ease, opacity .3s ease",
               }}
             >
               {on && (
@@ -651,10 +652,10 @@ function TabBar({ tabs, active, onChange, locked, variant = "sticky" }: {
                   aria-hidden
                   style={{
                     position: "absolute", inset: 0, borderRadius: hero ? "1.4rem" : "1.2rem",
-                    background: `linear-gradient(135deg, var(--panel), ${meta.accent})`,
-                    boxShadow: `0 1rem 2.6rem -1rem ${meta.accent}`,
+                    background: `color-mix(in srgb, ${meta.accent} 9%, var(--surface))`,
+                    boxShadow: `inset 0 -3px 0 ${meta.accent}`,
                   }}
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 28, mass: .7 }}
                 />
               )}
               <span style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: "0.8rem" }}>
@@ -670,8 +671,13 @@ function TabBar({ tabs, active, onChange, locked, variant = "sticky" }: {
                   color: on ? "#fff" : meta.accent,
                 }}>{i + 1}</span>}
                 <span aria-hidden className="v2-tab-icon" style={{
-                  display: "flex", color: on ? "#fff" : meta.accent, transition: "color 0.2s",
-                }}><meta.Icon size={hero ? 2 : 1.85} strokeWidth={2.2} /></span>
+                  display: "grid", placeItems: "center", flexShrink: 0,
+                  width: hero ? "3.4rem" : "3rem", height: hero ? "3.4rem" : "3rem", borderRadius: "50%",
+                  color: meta.accent,
+                  background: `color-mix(in srgb, ${meta.accent} ${on ? 16 : 9}%, transparent)`,
+                  transition: "color .3s ease, background .3s ease, transform .3s ease",
+                  transform: on ? "scale(1.04)" : "scale(1)",
+                }}><meta.Icon size={hero ? 19 : 17} strokeWidth={1.8} /></span>
                 <span className="v2-tab-full">{meta.label}</span>
                 <span className="v2-tab-short" style={{ display: "none" }}>{meta.short}</span>
                 {locked?.has(t) && (
@@ -1574,13 +1580,11 @@ export default function V2ReportPage() {
         .v2-category-dock .v2-tabbar { margin: 0 !important; }
         /* Active-tab pill and every tab button: no rounded corners. */
         .v2-tab-option, .v2-tab-option > span[aria-hidden] { border-radius: 0 !important; }
-        .v2-tabrail-hero { padding: .45rem !important; gap: .5rem !important; border: 0 !important; background: transparent !important; }
-        .v2-tabrail-hero .v2-tab-option { min-height: 5.8rem; border-color: transparent !important; border-radius: 1.15rem !important; background: transparent !important; font-size: 1.45rem !important; box-shadow: none !important; }
-        .v2-tabrail-hero .v2-tab-option:not(.is-active):hover { border-color: #D8E1DD !important; background: #fff !important; }
-        .v2-tabrail-hero .v2-tab-icon { display: grid !important; place-items: center; width: 3rem; height: 3rem; border-radius: .85rem; background: color-mix(in srgb, currentColor 11%, transparent); }
-        /* Active tab: plain white icon, no tinted card behind it. */
-        .v2-tabrail-hero .is-active .v2-tab-icon { background: transparent !important; width: auto !important; height: auto !important; }
-        .v2-tabrail-hero .is-active { box-shadow: 0 1.2rem 2.6rem -1.8rem rgba(13,48,40,.8) !important; }
+        .v2-tabrail-hero { padding: .7rem !important; gap: .3rem !important; border: 1px solid var(--line) !important; background: var(--surface) !important; }
+        .v2-tabrail-hero .v2-tab-option { min-height: 6.2rem; border-color: transparent !important; border-radius: 1.15rem !important; background: transparent !important; font-size: 1.45rem !important; box-shadow: none !important; }
+        .v2-tabrail-hero .v2-tab-option:not(.is-active):hover { border-color: transparent !important; background: color-mix(in srgb, var(--rose) 5%, var(--surface)) !important; }
+        .v2-tabrail-hero .v2-tab-icon { border-radius: 50% !important; }
+        .v2-tabrail-hero .is-active { box-shadow: none !important; }
         .v2-priority-panel { padding: 2.8rem 3.2rem 3.2rem; border: 1px solid var(--line); border-radius: 1.6rem; background: #FCFBF8; margin-bottom: 3.2rem; box-shadow: 0 1.8rem 5rem -4.2rem rgba(23,62,53,0.55); }
         .v2-priority-intro { display: flex; align-items: end; gap: 1.8rem; margin-bottom: 2rem; }
         .v2-priority-intro .v2-eyebrow { flex: 0 0 auto; margin-bottom: 0.35rem; }
@@ -1692,21 +1696,15 @@ export default function V2ReportPage() {
           .v2-picker-heading h2 { font-size: 2.35rem; }
           .v2-picker-heading > p { margin-top: .7rem; text-align: left; }
           .v2-category-dock { top: 9.4rem; margin-bottom: 2rem; padding: 0; border-radius: 0; }
-          /* Flat 4-up segmented control. Inactive tabs carry no card of their
-             own (border/fill/shadow come from inline styles, so they need
-             overriding here) — only the active tab is filled. Nothing rounded. */
-          .v2-tabrail-hero { grid-template-columns: repeat(4, 1fr) !important; padding: 0 !important; gap: 0 !important; background: transparent !important; border: 0 !important; }
+          .v2-tabrail-hero { grid-template-columns: repeat(4, 1fr) !important; padding: .4rem !important; gap: .2rem !important; background: var(--surface) !important; border: 1px solid var(--line) !important; }
           .v2-tabrail-hero .v2-tab-option {
             min-height: 5.4rem; padding: .8rem .3rem !important; font-size: 1.1rem !important;
-            border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important;
+            border: 0 !important; border-radius: .8rem !important; background: transparent !important; box-shadow: none !important;
           }
-          .v2-tabrail-hero .v2-tab-option + .v2-tab-option { border-left: 1px solid var(--line) !important; }
           .v2-tabrail-hero .v2-tab-option:not(.is-active) { color: var(--muted) !important; }
-          /* Plain icon — no tinted box behind it. */
-          .v2-tabrail-hero .v2-tab-icon { display: flex !important; width: auto !important; height: auto !important; border-radius: 0 !important; background: transparent !important; }
-          .v2-tabrail-hero .v2-tab-icon svg { width: 2rem !important; height: 2rem !important; }
-          /* Active fill: square, flat, edge to edge — no rounded pill. */
-          .v2-tabrail-hero .is-active > span[aria-hidden] { border-radius: 0 !important; background: var(--panel) !important; box-shadow: none !important; }
+          .v2-tabrail-hero .v2-tab-icon { display: grid !important; width: 2.8rem !important; height: 2.8rem !important; border-radius: 50% !important; }
+          .v2-tabrail-hero .v2-tab-icon svg { width: 1.65rem !important; height: 1.65rem !important; }
+          .v2-tabrail-hero .is-active > span[aria-hidden] { border-radius: .8rem !important; }
           .v2-tabrail-hero .v2-tab-option > span { flex-direction: column; gap: .35rem !important; }
           .v2-tabrail-hero .v2-tab-full { display: none !important; }
           .v2-tabrail-hero .v2-tab-short { display: inline !important; }
