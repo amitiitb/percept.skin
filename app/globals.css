@@ -22,6 +22,9 @@
      into these instead. --rose/--primary become accent-only there. */
   --bg-neutral:     #F8F8F6;
   --surface-neutral:#FFFFFF;
+  --chapter-tint:   #F0F1EC;
+  --chapter-tint-2: #E9F1EE;
+  --header-neutral: rgba(248,248,246,0.82);
   --ink:            #111111;
   --ink-secondary:  #666666;
   --border-neutral: rgba(0,0,0,0.08);
@@ -125,6 +128,9 @@
 
   --bg-neutral:     #101110;
   --surface-neutral:#171816;
+  --chapter-tint:   #171D1A;
+  --chapter-tint-2: #14221E;
+  --header-neutral: rgba(16,17,16,0.86);
   --ink:            #F5F5F3;
   --ink-secondary:  #9A9C97;
   --border-neutral: rgba(255,255,255,0.1);
@@ -215,12 +221,13 @@ html body :is(button, a, input, textarea, select, div, section, article, header,
   .pg-container { max-width: 136rem; }
 }
 .pg-section {
-  padding-block: clamp(7.2rem, 8vw, 9.6rem);
+  padding-block: clamp(5.8rem, 6.5vw, 7.8rem);
   border-top: 1px solid var(--border-neutral);
 }
 @media (max-width: 700px) {
-  .pg-section { padding-block: clamp(5.2rem, 13vw, 6.8rem); }
+  .pg-section { padding-block: clamp(4.6rem, 11vw, 5.8rem); }
 }
+
 .pg-eyebrow {
   color: var(--ink-secondary);
   font-size: 1.3rem;
@@ -276,6 +283,23 @@ html body :is(button, a, input, textarea, select, div, section, article, header,
   background: var(--bg-neutral);
 }
 
+/* Homepage chapter bands span edge-to-edge; their direct content remains on
+   the shared reading grid. This separates the section background from the
+   content container instead of leaving boxed strips floating in the page. */
+.pg-scope > section.pg-section.pg-container {
+  width: 100%;
+  max-width: none;
+  padding-inline: clamp(1.6rem, 3vw, 4.8rem);
+}
+.pg-scope > section.pg-section.pg-container > div {
+  width: 100%;
+  max-width: 128rem;
+  margin-inline: auto;
+}
+@media (min-width: 1600px) {
+  .pg-scope > section.pg-section.pg-container > div { max-width: 136rem; }
+}
+
 /* ─── Homepage hero + header — critical, above-the-fold ─────────────────
    Deliberately a real stylesheet, not HomeClient.tsx's styled-jsx block.
    styled-jsx injects its <style> tag via JS at runtime; on a slow
@@ -299,6 +323,13 @@ html body :is(button, a, input, textarea, select, div, section, article, header,
 .home-header:not(.is-scrolled) .pg-nav-signin { color: rgba(255,255,255,0.9); }
 .home-header:not(.is-scrolled) .pg-menu-btn { color: #fff; }
 .home-header.is-scrolled .pg-menu-btn { color: var(--ink); }
+.home-dark-section {
+  color: #F5F5F3;
+  background:
+    radial-gradient(90% 120% at 92% 0%, rgba(43,182,164,0.17), transparent 56%),
+    #091917;
+  border-color: rgba(255,255,255,0.09);
+}
 .pg-nav-links { display: flex; align-items: center; gap: 3.2rem; }
 .pg-nav-links a { font-size: 1.45rem; font-weight: 500; color: var(--ink-secondary); }
 .pg-nav-links a:hover { color: var(--ink); }

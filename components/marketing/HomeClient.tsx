@@ -164,7 +164,7 @@ export function HomeClient() {
         <div className="home-header-inner" style={{
           maxWidth: "128rem", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "1.2rem 1.2rem 1.2rem 2.4rem", borderRadius: "9999px", border: "1px solid var(--border-neutral)",
-          background: "rgba(248,248,246,0.82)", backdropFilter: "blur(10px)",
+          background: "var(--header-neutral)", backdropFilter: "blur(10px)",
         }}>
           <a href="/" style={{ display: "block" }}>
             <Logo height="clamp(2.6rem, 7vw, 4.2rem)" />
@@ -246,7 +246,7 @@ export function HomeClient() {
       </section>
 
       {/* ── Reveal ── */}
-      <section className="pg-section pg-container">
+      <section className="pg-section pg-container" style={{ background: "var(--bg-neutral)" }}>
         <Reveal className="reveal-grid">
           <div>
             <p className="pg-eyebrow" style={{ marginBottom: "1.6rem" }}>How Percept reads a face</p>
@@ -283,7 +283,7 @@ export function HomeClient() {
           ($20) matches the real combo price computed in
           app/bundle/[sessionId]/page.tsx (report + consultation, no extra
           discount — same math, not a new number invented here). ── */}
-      <section id="pricing" className="pg-section pg-container" style={{ paddingBlock: "clamp(5.6rem, 7vw, 7.2rem)" }}>
+      <section id="pricing" className="pg-section pg-container" style={{ paddingBlock: "clamp(5.2rem, 6vw, 6.8rem)", background: "var(--bg-neutral)" }}>
         <Reveal>
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <p className="pg-eyebrow" style={{ marginBottom: "1.2rem" }}>Pricing</p>
@@ -344,11 +344,11 @@ export function HomeClient() {
       </section>
 
       {/* ── Command centre ── */}
-      <section id="command-centre" className="pg-section" style={{ background: "var(--ink)", color: "var(--bg-neutral)", borderTopColor: "rgba(255,255,255,0.1)" }}>
+      <section id="command-centre" className="pg-section home-dark-section">
         <Reveal className="pg-container command-grid">
           <div>
             <p className="pg-eyebrow" style={{ color: "rgba(255,255,255,0.5)", marginBottom: "1.6rem" }}>Command centre</p>
-            <h2 className="pg-h2" style={{ color: "var(--bg-neutral)", marginBottom: "1.6rem" }}>Everything about your appearance. One place.</h2>
+            <h2 className="pg-h2" style={{ color: "#F5F5F3", marginBottom: "1.6rem" }}>Everything about your appearance. One place.</h2>
             <p className="pg-body" style={{ color: "rgba(255,255,255,0.62)", marginBottom: "3.2rem" }}>
               One score per system, tracked in one report.
             </p>
@@ -371,7 +371,7 @@ export function HomeClient() {
       </section>
 
       {/* ── How it works ── */}
-      <section id="how-it-works" className="pg-section pg-container pg-section-inset" style={{ background: "var(--surface-neutral)" }}>
+      <section id="how-it-works" className="pg-section pg-container" style={{ background: "var(--surface-neutral)" }}>
         <Reveal>
           <h2 className="pg-h2" style={{ marginBottom: "6rem", maxWidth: "60rem" }}>From selfie to insight in minutes.</h2>
           <div className="steps-grid">
@@ -413,11 +413,11 @@ export function HomeClient() {
       </section>
 
       {/* ── Progress ── */}
-      <section id="progress" className="pg-section pg-container progress-section pg-section-inset" style={{ paddingBlock: "clamp(6rem, 8vw, 8.4rem)" }}>
+      <section id="progress" className="pg-section pg-container progress-section" style={{ paddingBlock: "clamp(5.4rem, 7vw, 7.4rem)" }}>
         <Reveal className="progress-band">
           <div className="progress-copy">
-            <p className="pg-eyebrow" style={{ marginBottom: "0.8rem", color: "rgba(255,255,255,0.5)" }}>Progress</p>
-            <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(2.4rem, 2.4vw, 3rem)", fontWeight: 400, letterSpacing: "-0.01em", color: "#F5F5F3", margin: 0 }}>
+            <p className="pg-eyebrow" style={{ marginBottom: "0.8rem", color: "var(--progress-accent)" }}>Progress</p>
+            <h2 style={{ fontFamily: "var(--font-serif), Georgia, serif", fontSize: "clamp(3.2rem, 3.8vw, 5.2rem)", fontWeight: 400, letterSpacing: "-0.01em", color: "var(--progress-ink)", margin: 0 }}>
               See what changes over time.
             </h2>
             <p className="progress-sub">
@@ -432,7 +432,7 @@ export function HomeClient() {
           {/* Self-contained sparkline — no chart library, matching the other
               hand-rolled marks on this page. `non-scaling-stroke` keeps the
               line crisp as the SVG scales to the card width. */}
-          <figure className="progress-card">
+          <figure className="progress-card" style={{ borderRadius: "50%" }}>
             <figcaption className="progress-card-head">
               <span className="progress-card-title">Percept score</span>
               <span className="progress-delta">+16 pts</span>
@@ -445,11 +445,11 @@ export function HomeClient() {
                 </linearGradient>
               </defs>
               {/* horizontal gridlines */}
-              <line x1="12" y1="24" x2="308" y2="24" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-              <line x1="12" y1="70" x2="308" y2="70" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-              <line x1="12" y1="116" x2="308" y2="116" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+              <line x1="12" y1="24" x2="308" y2="24" stroke="var(--progress-grid)" strokeWidth="1" />
+              <line x1="12" y1="70" x2="308" y2="70" stroke="var(--progress-grid)" strokeWidth="1" />
+              <line x1="12" y1="116" x2="308" y2="116" stroke="var(--progress-grid)" strokeWidth="1" />
               {/* dashed baseline at the first score, so the climb above it is legible */}
-              <line x1="12" y1="118.8" x2="308" y2="118.8" stroke="rgba(255,255,255,0.22)" strokeWidth="1" strokeDasharray="3 4" />
+              <line x1="12" y1="118.8" x2="308" y2="118.8" stroke="var(--progress-baseline)" strokeWidth="1" strokeDasharray="3 4" />
               <path d="M12,118.8 L71.2,101.4 L130.4,113 L189.6,74 L248.8,50.2 L308,27.6 L308,138 L12,138 Z" fill="url(#sparkFill)" />
               <path d="M12,118.8 L71.2,101.4 L130.4,113 L189.6,74 L248.8,50.2 L308,27.6" fill="none" stroke="#1A9E8F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
               <circle cx="12" cy="118.8" r="3.5" fill="#0B2420" stroke="#1A9E8F" strokeWidth="2" />
@@ -499,7 +499,7 @@ export function HomeClient() {
 
       {/* ── Testimonials: auto-scrolling carousel, same marquee technique as
           the proof strip, so cards keep moving rather than sitting static. ── */}
-      <section id="testimonials" className="pg-section" style={{ background: "var(--surface-neutral)" }}>
+      <section id="testimonials" className="pg-section" style={{ background: "var(--chapter-tint)" }}>
         <div className="pg-container">
           <Reveal>
             <p className="pg-eyebrow" style={{ marginBottom: "1.6rem" }}>Testimonials</p>
@@ -534,7 +534,7 @@ export function HomeClient() {
       </section>
 
       {/* ── Final CTA ── */}
-      <section className="pg-section pg-container" style={{ textAlign: "center" }}>
+      <section className="pg-section pg-container" style={{ textAlign: "center", background: "var(--chapter-tint-2)" }}>
         <Reveal>
           <h2 className="pg-h2" style={{ marginBottom: "2rem" }}>See yourself more clearly.</h2>
           <p className="pg-body" style={{ margin: "0 auto 3.6rem" }}>Your first scores are free. Takes under two minutes.</p>
@@ -717,43 +717,43 @@ export function HomeClient() {
         :global(.step-title) { margin: 1.4rem 0 0.6rem; font-size: 1.9rem; }
         :global(.step-body) { font-size: 1.35rem; color: var(--ink-secondary); line-height: 1.55; margin: 0; }
 
-        :global(.progress-band) { display: grid; grid-template-columns: 1fr 1fr; gap: 4.8rem; align-items: center; }
-        /* Dark green band, same family as the pricing tiles and expert section
-           — the previous white-on-white version read as an empty gap. Copy
-           left, a score-trend card right, both on the dark ground. */
-        /* Equal light gutter above and below a banded section so it reads as a
-           distinct block rather than merging with its neighbours. Shared by
-           the steps ("From selfie to insight") and progress sections. */
-        :global(.pg-section-inset) { margin-block: clamp(2.4rem, 4vw, 4rem); }
-
+        :global(.progress-band) { display: grid; grid-template-columns: .78fr 1.22fr; gap: clamp(4rem, 8vw, 10rem); align-items: center; }
         .progress-section {
-          color: #F5F5F3;
+          --progress-ink: #123D37;
+          --progress-muted: #536E69;
+          --progress-accent: #0C7669;
+          --progress-grid: rgba(12,92,81,0.1);
+          --progress-baseline: rgba(12,92,81,0.25);
+          color: var(--progress-ink);
           background:
-            radial-gradient(120% 80% at 88% 0%, rgba(26,158,143,0.16) 0%, transparent 55%),
-            linear-gradient(180deg, #0B211E 0%, #091917 100%);
-          border-top: 1px solid rgba(255,255,255,0.08);
-          border-bottom: 1px solid rgba(255,255,255,0.08);
+            radial-gradient(circle at 12% 30%, rgba(255,255,255,0.82) 0 10%, transparent 10.2%),
+            radial-gradient(circle at 93% 12%, rgba(255,255,255,0.55) 0 7%, transparent 7.2%),
+            linear-gradient(135deg, #DDEFE8 0%, #C7E1D8 100%);
+          border-color: rgba(12,92,81,0.1);
+          overflow: hidden;
         }
-        .progress-copy { max-width: 40rem; }
-        .progress-sub { margin: 1.4rem 0 0; font-size: 1.4rem; line-height: 1.6; color: rgba(255,255,255,0.62); }
+        .progress-copy { max-width: 44rem; padding-left: clamp(0rem, 3vw, 4rem); }
+        .progress-sub { margin: 1.6rem 0 0; font-size: 1.45rem; line-height: 1.65; color: var(--progress-muted); }
         .progress-legend { display: flex; flex-wrap: wrap; gap: 1.6rem 2.4rem; margin-top: 2rem; }
-        .progress-legend span { display: inline-flex; align-items: center; gap: 0.7rem; font-size: 1.2rem; color: rgba(255,255,255,0.75); }
+        .progress-legend span { display: inline-flex; align-items: center; gap: 0.7rem; font-size: 1.2rem; color: var(--progress-muted); }
         .progress-legend-dot { width: 0.9rem; height: 0.9rem; flex-shrink: 0; }
         .progress-legend-first { background: transparent; box-shadow: inset 0 0 0 2px #1A9E8F; }
         .progress-legend-last { background: #1A9E8F; }
         .progress-card {
-          margin: 0;
-          border: 1px solid rgba(255,255,255,0.1);
-          border-top: 3px solid #1A9E8F;
-          background: #0B2420;
-          padding: 2rem 2.2rem 1.7rem;
+          justify-self: center; width: min(100%, 52rem); aspect-ratio: 1;
+          display: flex; flex-direction: column; justify-content: center;
+          margin: 0; overflow: hidden;
+          border: 1px solid rgba(12,92,81,0.12);
+          background: rgba(255,255,255,0.78);
+          box-shadow: 0 3rem 7rem -4rem rgba(12,92,81,0.42);
+          padding: clamp(4rem, 5vw, 6.4rem);
         }
         .progress-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
-        .progress-card-title { font-size: 1.05rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
-        .progress-delta { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.03em; color: #04120F; background: #1A9E8F; padding: 0.35rem 0.8rem; }
+        .progress-card-title { font-size: 1.05rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--progress-muted); }
+        .progress-delta { font-size: 1.05rem; font-weight: 700; letter-spacing: 0.03em; color: #fff; background: #0C7669; padding: 0.35rem 0.8rem; }
         .progress-spark { display: block; width: 100%; height: auto; }
-        .progress-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 1.15rem; color: rgba(255,255,255,0.5); }
-        .progress-up { color: #2BB6A4; font-weight: 650; text-align: right; }
+        .progress-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid rgba(12,92,81,0.1); font-size: 1.15rem; color: var(--progress-muted); }
+        .progress-up { color: #0C7669; font-weight: 650; text-align: right; }
 
         .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: stretch; max-width: 82rem; margin: 0 auto; }
         /* Flat, squared tiles that match the rest of the page. Emphasis on the
@@ -779,29 +779,36 @@ export function HomeClient() {
           color: rgba(255,255,255,0.45);
         }
         .expert-section {
+          --expert-bg: #482E38;
+          position: relative; z-index: 2;
           color: #F5F5F3;
-          /* Near-black, with a faint teal wash top-right so it is not a dead
-             flat black. */
           background:
-            radial-gradient(130% 90% at 85% -5%, rgba(26,158,143,0.11) 0%, transparent 55%),
-            #0B0B0B;
-          border-top: 1px solid rgba(255,255,255,0.08);
+            radial-gradient(circle at 12% 80%, rgba(231,154,129,0.18), transparent 27%),
+            radial-gradient(circle at 88% 18%, rgba(255,219,174,0.1), transparent 24%),
+            var(--expert-bg);
+          margin-top: 0;
+          border-top: 0;
           border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .expert-section::before {
+          content: none;
         }
         :global(.expert-container) { max-width: 112rem; }
         :global(.experts-grid) {
-          display: grid; grid-template-columns: minmax(30rem, 0.86fr) minmax(0, 1.14fr);
-          gap: clamp(5rem, 7vw, 9rem); align-items: center;
+          display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(30rem, 0.85fr);
+          gap: clamp(5rem, 8vw, 11rem); align-items: center;
         }
         .expert-photo {
-          position: relative; width: 100%; aspect-ratio: 4 / 5;
-          overflow: hidden; min-height: 46rem;
-          border: 1px solid rgba(207,227,222,0.18);
-          box-shadow: 0 3.2rem 7rem -3rem rgba(0,0,0,0.82);
+          position: relative; order: 2; justify-self: center;
+          width: min(100%, 43rem); aspect-ratio: 1;
+          overflow: hidden; min-height: 0;
+          clip-path: circle(49% at 50% 50%);
+          border: 0;
+          box-shadow: none;
         }
         .expert-photo::after {
           content: ""; position: absolute; inset: 45% 0 0; pointer-events: none;
-          background: linear-gradient(180deg, transparent, rgba(3,12,10,0.9));
+          background: linear-gradient(180deg, transparent, rgba(35,15,24,0.88));
         }
         .expert-photo-caption {
           position: absolute; z-index: 1; left: 2.2rem; right: 2.2rem; bottom: 2rem;
@@ -814,10 +821,10 @@ export function HomeClient() {
         }
         .expert-live-dot {
           width: 1rem; height: 1rem; flex-shrink: 0; border-radius: 50%;
-          background: #2BB6A4; box-shadow: 0 0 0 0.5rem rgba(43,182,164,0.13);
+          background: #F0AA91; box-shadow: 0 0 0 0.5rem rgba(240,170,145,0.14);
         }
-        .expert-copy { max-width: 56rem; }
-        :global(.expert-eyebrow) { margin-bottom: 1.5rem; color: #58B8AB; }
+        .expert-copy { order: 1; max-width: 60rem; }
+        :global(.expert-eyebrow) { margin-bottom: 1.5rem; color: #F0AA91; }
         .expert-copy h2 {
           margin: 0 0 1.8rem; max-width: 55rem;
           font-family: var(--font-serif), Georgia, serif;
@@ -837,7 +844,7 @@ export function HomeClient() {
         .expert-creds span {
           display: grid; grid-template-columns: auto minmax(0, 1fr);
           column-gap: 0.8rem; row-gap: 0.25rem; min-width: 0; padding: 0 1.5rem;
-          color: #51B5A8; border-right: 1px solid rgba(255,255,255,0.1);
+          color: #F0AA91; border-right: 1px solid rgba(255,255,255,0.1);
         }
         .expert-creds span:first-child { padding-left: 0; }
         .expert-creds span:last-child { padding-right: 0; border-right: 0; }
@@ -857,7 +864,7 @@ export function HomeClient() {
         }
         .expert-cite {
           margin: 0; max-width: 46rem; padding-left: 1.2rem;
-          border-left: 2px solid rgba(43,182,164,0.48);
+          border-left: 2px solid rgba(240,170,145,0.6);
           font-size: 1.05rem; color: rgba(245,245,243,0.34); line-height: 1.5;
         }
         .testi-track-wrap {
@@ -884,7 +891,8 @@ export function HomeClient() {
           .step-photo { margin: 0 -1.6rem 1.4rem; }
           :global(.step-title) { font-size: 1.7rem; }
           :global(.experts-grid) { grid-template-columns: 1fr; gap: 3.2rem; }
-          .expert-photo { min-height: 0; width: 100%; max-height: 48rem; }
+          .expert-photo { order: 2; min-height: 0; width: min(100%, 38rem); max-height: none; }
+          .expert-copy { order: 1; }
           .expert-copy { max-width: none; }
           .expert-copy h2 { font-size: clamp(3.1rem, 9vw, 4.2rem); }
           .expert-lede { margin-bottom: 2.4rem; font-size: 1.4rem; }
