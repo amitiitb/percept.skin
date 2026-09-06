@@ -187,7 +187,8 @@ export default function V2HistoryPage() {
 
                       <div className="history-card-action">
                         <span>{isComplete ? "Open full report" : isFailed ? "Analysis failed" : "Analysis in progress"}</span>
-                        {isComplete ? <span aria-hidden>→</span> : (
+                        <span className="history-card-action-right">
+                          {isComplete && <span aria-hidden>→</span>}
                           <button
                             type="button"
                             className="history-delete-btn"
@@ -196,7 +197,7 @@ export default function V2HistoryPage() {
                           >
                             {deletingId === r.id ? "Deleting…" : "Delete"}
                           </button>
-                        )}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -257,6 +258,7 @@ export default function V2HistoryPage() {
         .history-processing-copy i { width: 0.9rem; height: 0.9rem; border-radius: 50%; background: #AC7309; box-shadow: 0 0 0 0.45rem rgba(172,115,9,0.12); flex-shrink: 0; }
         .history-failed-copy { color: #A63F30; }
         .history-card-action { padding-top: 1.4rem; border-top: 1px solid var(--line-strong); color: #087F70; font-size: 1.22rem; font-weight: 750; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .history-card-action-right { flex-shrink: 0; display: flex; align-items: center; gap: 1.2rem; }
         .history-delete-btn { flex-shrink: 0; padding: 0.6rem 1.4rem; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: #A63F30; font-size: 1.15rem; font-weight: 700; cursor: pointer; transition: background 150ms ease, border-color 150ms ease; }
         .history-delete-btn:hover:not(:disabled) { background: rgba(166,63,48,0.08); border-color: #A63F30; }
         .history-delete-btn:disabled { opacity: 0.6; cursor: default; }

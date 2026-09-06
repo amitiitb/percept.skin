@@ -7,12 +7,11 @@ function serviceClient() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
 
-// Lets a user clear a scan out of their history that never turned into a
-// real report — abandoned mid-capture, still analysing, or failed outright.
-// Deliberately refuses anything with status "complete": that row's FK is
-// "on delete cascade" from report_purchases_v2, so deleting a completed scan
-// would silently destroy a paid purchase record along with real
-// progress-tracking history, neither of which this action should ever touch.
+// Lets a user delete any scan from their history — capturing, pending,
+// analysing, failed, or a completed one with a paid report attached. Any
+// purchase tied to it (report_purchases_v2.session_id) survives: that FK is
+// "on delete set null" (migration 20260906000000), not cascade, specifically
+// so deleting the scan never destroys the actual payment/order record.
 export async function POST(req: NextRequest) {
   const auth = await verifySupabaseUser(req);
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -26,9 +25,6 @@ export async function POST(req: NextRequest) {
       .from("analysis_sessions_v2").select("id, user_id, status").eq("id", sessionId).single();
     if (sessErr || !session) return NextResponse.json({ error: "Scan not found" }, { status: 404 });
     if (session.user_id !== auth.userId) return NextResponse.json({ error: "Not your scan" }, { status: 403 });
-    if (session.status === "complete") {
-      return NextResponse.json({ error: "Completed scans can't be deleted from here" }, { status: 409 });
-    }
 
     // Storage objects live under {userId}/{sessionId}/... and aren't covered
     // by the DB's FK cascade (that only reaches Postgres rows, not the
