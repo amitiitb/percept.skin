@@ -70,8 +70,11 @@ export function FrameGrid({ sessionId, photo, initialPath, initialRemaining = 0 
 
   if (url) {
     return (
-      <div style={{ marginBottom: "3.2rem" }}>
-        <ImageLightbox src={url} alt="Five frame styles previewed on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
+      <div id="v2-result-frame" className="v2-result-anchor" style={{ marginBottom: "3.2rem" }}>
+        {/* height:auto + a max-height cap with object-fit:contain means a
+            generated grid that comes back an unusual shape shrinks to fit
+            instead of ever having any part of it clipped. */}
+        <ImageLightbox src={url} alt="Five frame styles previewed on your photo" style={{ width: "100%", height: "auto", maxHeight: "85vh", objectFit: "contain", borderRadius: "1.2rem", display: "block" }} />
         <div style={{ marginTop: "1.4rem" }}>
           <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>Generated to cover</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
@@ -105,7 +108,7 @@ export function FrameGrid({ sessionId, photo, initialPath, initialRemaining = 0 
   }
 
   return (
-    <div style={{ textAlign: "center", padding: "3.2rem 0", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.2rem", marginBottom: "3.2rem" }}>
+    <div id="v2-result-frame" className="v2-result-anchor" style={{ textAlign: "center", padding: "3.2rem 0", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.2rem", marginBottom: "3.2rem" }}>
       {state === "error" ? (
         <>
           <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>

@@ -101,7 +101,7 @@ export default function FrameAIPanel({ sessionId, photo, isPremium, onRequirePre
 
       {state === "done" && resultUrl && (
         <div style={{ maxWidth: "40rem" }}>
-          <ImageLightbox src={resultUrl} alt={`${active} AI preview`} style={{ width: "100%", borderRadius: "1.2rem", border: "1px solid var(--line)" }} />
+          <ImageLightbox src={resultUrl} alt={`${active} AI preview`} style={{ width: "100%", height: "auto", maxHeight: "85vh", objectFit: "contain", borderRadius: "1.2rem", border: "1px solid var(--line)" }} />
           <p style={{ fontSize: "1.3rem", color: "var(--muted)", marginTop: "1rem" }}>AI-generated preview: {active}</p>
         </div>
       )}

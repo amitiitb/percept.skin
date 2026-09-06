@@ -67,8 +67,11 @@ export function ColourGrid({
 
   if (url) {
     return (
-      <div>
-        <ImageLightbox src={url} alt="You wearing your recommended colours" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
+      <div id="v2-result-colour" className="v2-result-anchor">
+        {/* height:auto + a max-height cap with object-fit:contain means a
+            generated grid that comes back an unusual shape shrinks to fit
+            instead of ever having any part of it clipped. */}
+        <ImageLightbox src={url} alt="You wearing your recommended colours" style={{ width: "100%", height: "auto", maxHeight: "85vh", objectFit: "contain", borderRadius: "1.2rem", display: "block" }} />
         {occasions.length > 0 && (
           <div style={{ marginTop: "1.4rem" }}>
           <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>Generated to cover</p>
@@ -108,7 +111,7 @@ export function ColourGrid({
   }
 
   return (
-    <div style={{ textAlign: "center", padding: "3.2rem 0", background: "var(--canvas)", borderRadius: "1.2rem" }}>
+    <div id="v2-result-colour" className="v2-result-anchor" style={{ textAlign: "center", padding: "3.2rem 0", background: "var(--canvas)", borderRadius: "1.2rem" }}>
       {state === "error" ? (
         <>
           <p style={{ color: "#C8503A", fontSize: "1.4rem", marginBottom: "1.4rem" }}>{error}</p>

@@ -128,7 +128,7 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
     // images of the user's own face). A real card with a top accent and an
     // "AI-generated" eyebrow gives it presence at least equal to the metric
     // sections above it, instead of reading as an afterthought under them.
-    <div style={{
+    <div id="v2-result-hairstyle" className="v2-result-anchor" style={{
       marginTop: "4rem", padding: "2.8rem", background: "var(--surface)",
       border: "1px solid var(--line)", borderTop: `0.4rem solid ${ACCENT}`, borderRadius: "1.6rem",
     }}>
@@ -142,7 +142,10 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
 
       {url ? (
         <div style={{ marginBottom: "3.2rem" }}>
-          <ImageLightbox src={url} alt="Hairstyle previews on your photo" style={{ width: "100%", borderRadius: "1.2rem", display: "block" }} />
+          {/* height:auto + a max-height cap with object-fit:contain means a
+              generated grid that comes back an unusual shape shrinks to fit
+              instead of ever having any part of it clipped. */}
+          <ImageLightbox src={url} alt="Hairstyle previews on your photo" style={{ width: "100%", height: "auto", maxHeight: "85vh", objectFit: "contain", borderRadius: "1.2rem", display: "block" }} />
           <div style={{ marginTop: "1.4rem" }}>
           <p style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 0.8rem" }}>Generated to cover</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>

@@ -186,6 +186,8 @@ button { cursor: pointer; font: inherit; background: none; border: none; -webkit
 a { color: inherit; text-decoration: none; }
 input, textarea { font: inherit; }
 
+.v2-result-anchor { scroll-margin-top: 10rem; }
+
 /* ─── Squared corners, app-wide ───────────────────────────────────────
    Every card, button, chip, input and image gets sharp corners. Elements
    that are meant to be actual circles keep their shape: the `50%` guard
