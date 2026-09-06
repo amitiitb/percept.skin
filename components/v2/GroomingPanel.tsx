@@ -159,7 +159,7 @@ export default function GroomingPanel({ sessionId, photo, isPremium, onRequirePr
       <GroomingGrid
         sessionId={sessionId} photo={photo} isPremium={isPremium} onRequirePremium={onRequirePremium}
         kind="beard" endpoint="/api/beard/grid" title="Beard Style Previews"
-        blurb="Compare six facial-hair options, from clean-shaven to a full beard, on your own photo. Illustrative only, actual results vary."
+        blurb="Six facial-hair options, previewed directly on you."
         styleLabels={BEARD_LABELS} initialPath={initialBeardPath} initialRemaining={initialBeardRemaining}
       />
     </div>

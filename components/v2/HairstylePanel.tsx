@@ -32,13 +32,50 @@ const OCCASION_LABELS = ["Office", "Wedding / formal", "Everyday casual", "Eveni
 // the scored hair metrics and their reference material, so this is the
 // "what do I actually do" layer, not another wall of explanation.
 const CARE_TIPS: Array<{ heading: string; body: string }> = [
-  { heading: "Wash", body: "Two to three times a week for most hair types. Daily washing strips the natural oils that protect the lengths." },
-  { heading: "Heat", body: "The single biggest cause of visible damage. Use heat protection every time, and keep tools below 180C." },
-  { heading: "Condition", body: "Through the mid-lengths and ends, not the scalp. Conditioner on the roots flattens volume and can clog follicles." },
-  { heading: "Handle wet hair gently", body: "Hair is at its weakest when wet. Blot rather than rub, and use a wide-tooth comb instead of a brush." },
-  { heading: "If density is dropping", body: "Act early, hair responds far better to early intervention. Check iron and vitamin D, avoid tight styles that pull on the hairline, and see a dermatologist rather than guessing with topicals." },
-  { heading: "Trim", body: "Every eight to twelve weeks. Split ends travel upward and cannot be repaired once they start." },
+  { heading: "Wash", body: "2–3 times weekly for most hair types." },
+  { heading: "Heat", body: "Use protection; keep tools below 180°C." },
+  { heading: "Condition", body: "Apply through mid-lengths and ends." },
+  { heading: "Wet hair", body: "Blot gently; use a wide-tooth comb." },
+  { heading: "Density", body: "Address changes early with a dermatologist." },
+  { heading: "Trim", body: "Every 8–12 weeks to control split ends." },
 ];
+
+export function HairCarePointers() {
+  return (
+    <section className="v2-hair-care">
+      <div className="v2-hair-care-heading">
+        <p>Care essentials</p>
+        <h3>Keep the result looking its best.</h3>
+      </div>
+      <div className="v2-care-grid">
+        {CARE_TIPS.map((tip) => (
+          <div key={tip.heading}>
+            <span aria-hidden>✓</span>
+            <p><strong>{tip.heading}</strong><small>{tip.body}</small></p>
+          </div>
+        ))}
+      </div>
+      <style>{`
+        .v2-hair-care { margin-top: 3.2rem; padding: 2.4rem 2.8rem; border: 1px solid var(--line); background: var(--surface); }
+        .v2-hair-care-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 1.8rem; }
+        .v2-hair-care-heading > p { margin: 0; color: ${ACCENT}; font-size: 1rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+        .v2-hair-care-heading h3 { margin: 0; color: var(--primary); font-size: 1.6rem; }
+        .v2-care-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+        .v2-care-grid > div { display: flex; gap: .9rem; padding: 1.3rem; background: var(--surface); }
+        .v2-care-grid > div > span { color: ${ACCENT}; font-weight: 800; }
+        .v2-care-grid p { margin: 0; }
+        .v2-care-grid strong, .v2-care-grid small { display: block; }
+        .v2-care-grid strong { margin-bottom: .25rem; color: var(--primary); font-size: 1.2rem; }
+        .v2-care-grid small { color: var(--secondary); font-size: 1.08rem; line-height: 1.4; }
+        @media (max-width: 700px) {
+          .v2-hair-care-heading { display: block; }
+          .v2-hair-care-heading h3 { margin-top: .5rem; }
+          .v2-care-grid { grid-template-columns: 1fr 1fr; }
+        }
+      `}</style>
+    </section>
+  );
+}
 
 export default function HairstylePanel({ sessionId, photo, isPremium, onRequirePremium, initialPath, initialRemaining = 0 }: Props) {
   const supabase = createClient();
@@ -100,7 +137,7 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
       </p>
       <h2 style={{ fontSize: "2.3rem", fontWeight: 800, color: "var(--primary)", letterSpacing: "-0.015em", marginBottom: "0.8rem" }}>Hairstyles For You</h2>
       <p style={{ fontSize: "1.5rem", color: "var(--secondary)", lineHeight: 1.5, marginBottom: "2.4rem" }}>
-        A look for each occasion, previewed on your own photo. Illustrative only, actual results vary by stylist.
+        Six practical looks for different occasions, previewed on you.
       </p>
 
       {url ? (
@@ -153,21 +190,6 @@ export default function HairstylePanel({ sessionId, photo, isPremium, onRequireP
         </div>
       )}
 
-      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "1.6rem", padding: "2.8rem 3.2rem" }}>
-        <p style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 1.8rem" }}>
-          Looking after your hair
-        </p>
-        <div className="v2-care-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.8rem 3.2rem" }}>
-          {CARE_TIPS.map((t) => (
-            <div key={t.heading}>
-              <p style={{ fontSize: "1.4rem", fontWeight: 600, color: "var(--primary)", margin: "0 0 0.4rem" }}>{t.heading}</p>
-              <p style={{ fontSize: "1.35rem", color: "var(--secondary)", lineHeight: 1.55, margin: 0 }}>{t.body}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <style>{`@media (max-width: 700px) { .v2-care-grid { grid-template-columns: 1fr !important; } }`}</style>
     </div>
   );
 }

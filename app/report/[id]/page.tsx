@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { ScoreReveal } from "@/components/v2/ScoreReveal";
 import ColourAnalysisPanel from "@/components/v2/ColourAnalysisPanel";
-import HairstylePanel from "@/components/v2/HairstylePanel";
+import HairstylePanel, { HairCarePointers } from "@/components/v2/HairstylePanel";
 import GroomingPanel from "@/components/v2/GroomingPanel";
 import GlassesVirtualTryOn from "@/components/v2/GlassesVirtualTryOn";
 import FrameAIPanel from "@/components/v2/FrameAIPanel";
@@ -1400,9 +1400,6 @@ export default function V2ReportPage() {
 
           {hasHairstyle && (
             <div hidden={activeTab !== "hairstyle"}>
-              {hairParts.map((p, i) => (
-                <Section key={p.id} index={i + 1} total={hairParts.length} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
-              ))}
               <HairstylePanel
                 sessionId={sessionId}
                 photo={photo}
@@ -1411,7 +1408,6 @@ export default function V2ReportPage() {
                 initialPath={hairGridPath}
                 initialRemaining={Math.max(0, MAX_GENERATIONS - hairUsed)}
               />
-              <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="hair" recommendations={recommendations} /></div>
               {beardGridPath && <GroomingPanel
                 sessionId={sessionId}
                 photo={photo}
@@ -1420,6 +1416,11 @@ export default function V2ReportPage() {
                 initialBeardPath={beardGridPath}
                 initialBeardRemaining={Math.max(0, MAX_GENERATIONS - beardUsed)}
               />}
+              {hairParts.map((p, i) => (
+                <Section key={p.id} index={i + 1} total={hairParts.length} id={p.id} title={p.title} intro={SECTION_INTRO[p.title]} metrics={p.metrics} filter={metricFilter} />
+              ))}
+              <div style={{ marginTop: "3.2rem" }}><RoutinePanel gate="hair" recommendations={recommendations} /></div>
+              <HairCarePointers />
             </div>
           )}
 
