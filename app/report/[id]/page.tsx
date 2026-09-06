@@ -637,13 +637,19 @@ function TabBar({ tabs, active, onChange, locked, variant = "sticky" }: {
                 // is the actual reason the bar was easy to skim past. Each tab
                 // now carries its own card even at rest; only the active one
                 // additionally gets the sliding gradient pill below.
-                border: "1px solid transparent",
-                background: "transparent",
+                //
+                // Hero variant got a bolder pass on top of that: a real
+                // colour-tinted border on every tab (not just transparent
+                // until active), so the bar reads as four distinct, colourful
+                // destinations rather than four identical grey buttons that
+                // happen to have different icons.
+                border: hero ? `1.5px solid color-mix(in srgb, ${meta.accent} ${on ? 55 : 22}%, var(--line))` : "1px solid transparent",
+                background: hero && !on ? `color-mix(in srgb, ${meta.accent} 5%, var(--surface))` : "transparent",
                 cursor: "pointer", whiteSpace: "nowrap",
                 fontSize: hero ? "1.45rem" : "1.4rem", fontWeight: 700,
-                color: on ? "var(--primary)" : "var(--secondary)",
-                boxShadow: "none",
-                transition: "color .3s ease, opacity .3s ease",
+                color: on ? (hero ? "#fff" : "var(--primary)") : "var(--secondary)",
+                boxShadow: hero && !on ? `0 0.4rem 1.2rem -0.8rem color-mix(in srgb, ${meta.accent} 60%, transparent)` : "none",
+                transition: "color .3s ease, opacity .3s ease, border-color .3s ease, box-shadow .3s ease",
               }}
             >
               {on && (
@@ -651,9 +657,13 @@ function TabBar({ tabs, active, onChange, locked, variant = "sticky" }: {
                   layoutId={hero ? "v2-tab-pill-hero" : "v2-tab-pill"}
                   aria-hidden
                   style={{
-                    position: "absolute", inset: 0, borderRadius: hero ? "1.4rem" : "1.2rem",
-                    background: `color-mix(in srgb, ${meta.accent} 9%, var(--surface))`,
-                    boxShadow: `inset 0 -3px 0 ${meta.accent}`,
+                    position: "absolute", inset: 0, borderRadius: hero ? "1.15rem" : "1.2rem",
+                    background: hero
+                      ? `linear-gradient(135deg, ${meta.accent}, color-mix(in srgb, ${meta.accent} 70%, #000))`
+                      : `color-mix(in srgb, ${meta.accent} 9%, var(--surface))`,
+                    boxShadow: hero
+                      ? `0 0.8rem 2rem -0.6rem color-mix(in srgb, ${meta.accent} 75%, transparent), inset 0 1px 0 rgba(255,255,255,0.25)`
+                      : `inset 0 -3px 0 ${meta.accent}`,
                   }}
                   transition={{ type: "spring", stiffness: 260, damping: 28, mass: .7 }}
                 />
@@ -673,10 +683,13 @@ function TabBar({ tabs, active, onChange, locked, variant = "sticky" }: {
                 <span aria-hidden className="v2-tab-icon" style={{
                   display: "grid", placeItems: "center", flexShrink: 0,
                   width: hero ? "3.4rem" : "3rem", height: hero ? "3.4rem" : "3rem", borderRadius: "50%",
-                  color: meta.accent,
-                  background: `color-mix(in srgb, ${meta.accent} ${on ? 16 : 9}%, transparent)`,
+                  color: hero ? "#fff" : meta.accent,
+                  background: hero
+                    ? (on ? "rgba(255,255,255,0.24)" : meta.accent)
+                    : `color-mix(in srgb, ${meta.accent} ${on ? 16 : 9}%, transparent)`,
+                  boxShadow: hero && !on ? `0 0.3rem 0.8rem -0.3rem color-mix(in srgb, ${meta.accent} 70%, transparent)` : "none",
                   transition: "color .3s ease, background .3s ease, transform .3s ease",
-                  transform: on ? "scale(1.04)" : "scale(1)",
+                  transform: on ? "scale(1.08)" : "scale(1)",
                 }}><meta.Icon size={hero ? 19 : 17} strokeWidth={1.8} /></span>
                 <span className="v2-tab-full">{meta.label}</span>
                 <span className="v2-tab-short" style={{ display: "none" }}>{meta.short}</span>
