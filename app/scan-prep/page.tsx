@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { V2Layout } from "@/components/v2/V2Layout";
+import { useFunnelV2Store } from "@/store/funnelV2";
 import styles from "./scan-prep.module.css";
 
 const CHECKLIST = [
@@ -16,9 +17,17 @@ const CHECKLIST = [
 export default function V2ScanPrepPage() {
   const router = useRouter();
   const [consent, setConsent] = useState(false);
+  const resetPhotosOnly = useFunnelV2Store((state) => state.resetPhotosOnly);
 
   function beginCapture() {
     sessionStorage.setItem("percept_photo_consent", "true");
+    // Every path into this page (dashboard, history, report "plan next scan")
+    // means "start a new scan" — there is no separate "resume" entry point
+    // anywhere in the app. Without this, a session abandoned mid-capture
+    // (closed the tab, came back later) sits in the store as "capturing" and
+    // ensureSession() in /capture/[step] resumes it: old photos from that
+    // stale attempt mix with freshly captured ones in the same report.
+    resetPhotosOnly();
     router.push("/capture/0");
   }
 
